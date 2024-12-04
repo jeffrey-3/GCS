@@ -12,9 +12,12 @@ import cv2
 import qdarktheme
 import math
 import time
+from pfd import PrimaryFlightDisplay
 
 app = QApplication([])
 qdarktheme.setup_theme()
+
+pfd = PrimaryFlightDisplay(1000, 800)
 
 class MyThread(QThread):
     frame_signal = pyqtSignal(QPixmap)
@@ -24,66 +27,11 @@ class MyThread(QThread):
         while True:
             roll = 5*math.cos(x/50)
             print(roll)
-            self.frame_signal.emit(self.draw_pfd(1000, 800, 30*math.sin(x/50), roll))
+
+            self.frame_signal.emit(pfd.update(30*math.sin(x/50), roll))
+            
             x = x + 1
             time.sleep(0.01)
-
-    def draw_pfd(self, width, height, pitch, roll):
-        # Create canvas
-        canvas = QPixmap(width, height)
-        canvas.fill(Qt.white)
-
-        # Paint
-        painter = QPainter(canvas)
-
-        horizon_left = int(height/2 - (width/2)*math.sin(math.radians(roll)) + pitch)
-        horizon_right = int(height/2+ (width/2)*math.sin(math.radians(roll)) + pitch)
-
-        # Draw sky
-        painter.setPen(QPen(QColor("#3478cc"), 1, Qt.SolidLine))
-        painter.setBrush(QBrush(QColor("#3478cc"), Qt.SolidPattern))
-
-        painter.drawPolygon(QPolygon([QPoint(0, 0),
-                                      QPoint(width, 0),
-                                      QPoint(width, horizon_right),
-                                      QPoint(0, horizon_left)]))
-        
-        # Draw ground
-        painter.setPen(QPen(QColor("#6a5200"), 1, Qt.SolidLine))
-        painter.setBrush(QBrush(QColor("#6a5200"), Qt.SolidPattern))
-        
-        painter.drawPolygon(QPolygon([QPoint(0, height),
-                                      QPoint(width, height),
-                                      QPoint(width, horizon_right),
-                                      QPoint(0, horizon_left)]))
-
-        # Draw horizon
-        painter.setPen(QPen(QColor("white"), 1, Qt.SolidLine))
-        painter.drawLine(0, horizon_left, width, horizon_right)
-
-        # Draw wings
-        painter.setPen(QPen(QColor("white"), 1, Qt.SolidLine))
-        painter.setBrush(QBrush(QColor("black"), Qt.SolidPattern))
-
-        wings_width = 6
-        wings_length = 80
-        wings_height = 20
-        wings_starting = width/2 - 200
-        painter.drawPolygon(QPolygon([QPoint(wings_starting, height/2 - wings_width/2),
-                                      QPoint(wings_starting + wings_length, height/2 - wings_width/2),
-                                      QPoint(wings_starting + wings_length, height/2 + wings_height),
-                                      QPoint(wings_starting + wings_length - wings_width, height/2 + wings_height),
-                                      QPoint(wings_starting + wings_length - wings_width, height/2 + wings_width/2),
-                                      QPoint(wings_starting, height/2 + wings_width/2)]))
-        painter.drawPolygon(QPolygon([QPoint((wings_starting - width/2) * -1 + width/2, height/2 - wings_width/2),
-                                      QPoint((wings_starting + wings_length - width/2) * -1 + width/2, height/2 - wings_width/2),
-                                      QPoint((wings_starting + wings_length - width/2) * -1 + width/2, height/2 + wings_height),
-                                      QPoint((wings_starting + wings_length - wings_width - width/2) * -1 + width/2, height/2 + wings_height),
-                                      QPoint((wings_starting + wings_length - wings_width - width/2) * -1 + width/2, height/2 + wings_width/2),
-                                      QPoint((wings_starting - width/2) * -1 + width/2, height/2 + wings_width/2)]))
-        painter.drawRect(width/2 - wings_width/2, height/2 - wings_width/2, wings_width, wings_width)
-
-        return canvas
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -105,10 +53,8 @@ class MainWindow(QMainWindow):
         return
     
     def create_main_layout(self):
-        # Create layout
         self.main_layout = QHBoxLayout()
 
-        # Add layout to window
         widget = QWidget()
         widget.setLayout(self.main_layout)
         self.setCentralWidget(widget)
