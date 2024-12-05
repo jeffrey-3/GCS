@@ -25,11 +25,14 @@ class PrimaryFlightDisplay:
 
         # Altitude and speed scale
         self.scale_height = 550
-        self.scale_width = 80
+        self.scale_width = 100
         self.scale_offset = 150
+        self.tick_length = 15
+        self.tick_thickness = 2
+        self.num_ticks = 10
 
         # Flight director
-        self.flight_director_thickness = 3
+        self.flight_director_thickness = 4
         self.flight_director_length = 150
 
     def update(self, pitch, roll, alt, pitch_setpoint, roll_setpoint):
@@ -70,10 +73,12 @@ class PrimaryFlightDisplay:
         self.painter.setOpacity(1.0)
 
         # Tick marks
-        for i in range(10):
-            offset = i * 20
+        self.painter.setPen(QPen(QColor("white"), self.tick_thickness, Qt.SolidLine))
+        for i in range(self.num_ticks):
+            offset = i * self.scale_height / self.num_ticks
 
-            self.painter.drawLine(self.scale_offset)
+            self.painter.drawLine(self.scale_offset + self.scale_width/2, self.height/2 - self.scale_height/2 + offset,
+                                  self.scale_offset + self.scale_width/2 - self.tick_length, self.height/2 - self.scale_height/2 + offset)
     
     def draw_altitude_scale(self):
         self.painter.setPen(QPen(QColor("grey"), 1, Qt.SolidLine))
@@ -84,6 +89,14 @@ class PrimaryFlightDisplay:
         self.draw_rect_center(self.width - self.scale_offset, self.height/2, self.scale_width, self.scale_height)
 
         self.painter.setOpacity(1.0)
+
+        # Tick marks
+        self.painter.setPen(QPen(QColor("white"), self.tick_thickness, Qt.SolidLine))
+        for i in range(self.num_ticks):
+            offset = i * self.scale_height / self.num_ticks
+
+            self.painter.drawLine(self.width - self.scale_offset - self.scale_width/2, self.height/2 - self.scale_height/2 + offset,
+                                  self.width - self.scale_offset - self.scale_width/2 + self.tick_length, self.height/2 - self.scale_height/2 + offset)
 
     def draw_rect_center(self, x, y, width, height):
         self.painter.drawRect(x - width/2, y - height/2, width, height)

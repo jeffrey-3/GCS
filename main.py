@@ -28,10 +28,10 @@ class MyThread(QThread):
             roll = 5*math.cos(x/20)
             pitch = 30*math.sin(x/20)
 
-            self.frame_signal.emit(pfd.update(pitch, roll, 100, 70, 10))
+            self.frame_signal.emit(pfd.update(pitch, roll, 100, 70, 40))
             
             x = x + 1
-            time.sleep(0.05)
+            time.sleep(0.06)
 
 class MainWindow(QMainWindow):
     def __init__(self):

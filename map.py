@@ -18,7 +18,7 @@ class Map(pg.PlotWidget):
         self.hideButtons()
 
         # Add arrow to plot
-        self.arrow = pg.ArrowItem(angle=90, headLen=40, tipAngle=45, baseAngle=30, pen=QColor("red"), brush=QColor("red"))
+        self.arrow = pg.ArrowItem(angle=90, headLen=60, tipAngle=45, baseAngle=30, pen=QColor("red"), brush=QColor("red"))
         self.addItem(self.arrow)
 
         # Add image to plot
