@@ -4,6 +4,11 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
+class MyArrowItem(pg.ArrowItem):
+    def paint(self, p, *args):
+        p.translate(-self.boundingRect().center())
+        pg.ArrowItem.paint(self, p, *args)
+
 class Map(pg.PlotWidget):
     def __init__(self):
         super().__init__()
@@ -18,7 +23,7 @@ class Map(pg.PlotWidget):
         self.hideButtons()
 
         # Add arrow to plot
-        self.arrow = pg.ArrowItem(angle=90, headLen=60, tipAngle=45, baseAngle=30, pen=QColor("red"), brush=QColor("red"))
+        self.arrow = MyArrowItem(angle=90, headLen=60, tipAngle=45, baseAngle=30, pen=QColor("red"), brush=QColor("red"))
         self.addItem(self.arrow)
 
         # Add image to plot

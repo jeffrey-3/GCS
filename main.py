@@ -1,13 +1,9 @@
 # Plan coordinates in google maps, then import or type the coordinates into GCS
-# Use PyQt drawing API to draw HUD on opencv pixmap
-# You can test using flightgear
 
-import pyqtgraph as pg
 from PyQt5 import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-import numpy as np
 import qdarktheme
 import math
 import time
@@ -28,8 +24,10 @@ class MyThread(QThread):
         while True:
             roll = 5*math.cos(x/20)
             pitch = 10*math.sin(x/20)
+            altitude = 50 - 30*math.sin(x/20)
+            speed = 10 - 5*math.cos(x/20)
 
-            self.frame_signal.emit(pfd.update(pitch, roll, abs(pitch), abs(roll), 70, 40))
+            self.frame_signal.emit(pfd.update(pitch, roll, altitude, speed, 80, 50))
             
             x = x + 1
             time.sleep(0.1)

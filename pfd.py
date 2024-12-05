@@ -45,13 +45,13 @@ class PrimaryFlightDisplay:
 
         # Speed scale
         self.speed_scale_spacing = 100
-        self.speed_scale_n_ticks = 20
-        self.speed_scale_intervals = 1
+        self.speed_scale_n_ticks = 6
+        self.speed_scale_intervals = 5
 
         # Altitude scale
-        self.altitude_scale_spacing = 70
+        self.altitude_scale_spacing = 100
         self.altitude_scale_n_ticks = 20
-        self.altitude_scale_intervals = 1
+        self.altitude_scale_intervals = 10
 
         # Flight director
         self.flight_director_thickness = 4
@@ -126,7 +126,7 @@ class PrimaryFlightDisplay:
             y = self.height/2 - self.scale_height/2 - offset + self.speed_to_px(self.speed)
 
             scale_painter.drawLine(x1, y, x2, y)
-            scale_painter.drawText(QPoint(x1 - 60, y + 10), str(i))
+            scale_painter.drawText(QPoint(x1 - 60, y + 10), str(i * self.speed_scale_intervals))
         
         scale_painter.end()
 
@@ -166,7 +166,7 @@ class PrimaryFlightDisplay:
             y = self.height/2 - self.scale_height/2 - offset + self.altitude_to_px(self.altitude)
 
             scale_painter.drawLine(x1, y, x2, y)
-            scale_painter.drawText(QPoint(x1 + 45, y + 10), str(int(i)))
+            scale_painter.drawText(QPoint(x1 + 45, y + 10), str(int(i * self.altitude_scale_intervals)))
         
         scale_painter.end()
 
