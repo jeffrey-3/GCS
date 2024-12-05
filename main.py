@@ -14,6 +14,7 @@ import time
 from pfd import PrimaryFlightDisplay
 from map import Map
 from altitude_graph import AltitudeGraph
+from datatable import DataTable
 
 app = QApplication([])
 
@@ -26,12 +27,12 @@ class MyThread(QThread):
         x = 0
         while True:
             roll = 5*math.cos(x/20)
-            pitch = 30*math.sin(x/20)
+            pitch = 10*math.sin(x/20)
 
-            self.frame_signal.emit(pfd.update(pitch, roll, 100, 70, 40))
+            self.frame_signal.emit(pfd.update(pitch, roll, abs(pitch), abs(roll), 70, 40))
             
             x = x + 1
-            time.sleep(0.06)
+            time.sleep(0.1)
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -42,7 +43,6 @@ class MainWindow(QMainWindow):
         self.create_left_layout()
         self.create_map_layout()
         self.add_hud()
-        self.create_ui_layout()
         self.add_ui()
         self.add_plot()
     
@@ -60,9 +60,9 @@ class MainWindow(QMainWindow):
         self.map_layout = QVBoxLayout()
         self.main_layout.addLayout(self.map_layout)
 
-    def create_ui_layout(self):
-        self.ui_layout = QGridLayout()
-        self.left_layout.addLayout(self.ui_layout)
+    def add_ui(self):
+        self.datatable = DataTable()
+        self.left_layout.addWidget(self.datatable)
 
     def create_left_layout(self):
         self.left_layout = QVBoxLayout()
@@ -79,43 +79,6 @@ class MainWindow(QMainWindow):
     @pyqtSlot(QPixmap)
     def setImage(self,image):
         self.hud_label.setPixmap(image)   
-    
-    def add_ui(self):
-        self.state_label = QLabel("State<h1>Manual</h1>")
-        self.state_label.setAlignment(Qt.AlignCenter)
-        self.ui_layout.addWidget(self.state_label, 0, 0)
-
-        self.flight_time_label = QLabel("Time<h1>00:00:00</h1>")
-        self.flight_time_label.setAlignment(Qt.AlignCenter)
-        self.ui_layout.addWidget(self.flight_time_label, 0, 1)
-
-        self.time_remaining_label = QLabel("Time Remaining<h1>00:00:00</h1>")
-        self.time_remaining_label.setAlignment(Qt.AlignCenter)
-        self.ui_layout.addWidget(self.time_remaining_label, 0, 2)
-
-        self.voltage_label = QLabel("Voltage (V)<h1>11.04</h1>")
-        self.voltage_label.setAlignment(Qt.AlignCenter)
-        self.ui_layout.addWidget(self.voltage_label, 1, 0)
-
-        self.current_label = QLabel("Current (A)<h1>30.46</h1>")
-        self.current_label.setAlignment(Qt.AlignCenter)
-        self.ui_layout.addWidget(self.current_label, 1, 1)
-
-        self.ap_current_label = QLabel("Autopilot Current (mA)<h1>30.46</h1>")
-        self.ap_current_label.setAlignment(Qt.AlignCenter)
-        self.ui_layout.addWidget(self.ap_current_label, 1, 2)
-
-        self.rssi_label = QLabel("RSSI<h1>123</h1>")
-        self.rssi_label.setAlignment(Qt.AlignCenter)
-        self.ui_layout.addWidget(self.rssi_label, 2, 0)
-
-        self.sats_label = QLabel("GPS Satellites<h1>12</h1>")
-        self.sats_label.setAlignment(Qt.AlignCenter)
-        self.ui_layout.addWidget(self.sats_label, 2, 1)
-
-        self.distance_label = QLabel("Distance (m)<h1>123</h1>")
-        self.distance_label.setAlignment(Qt.AlignCenter)
-        self.ui_layout.addWidget(self.distance_label, 2, 2)
 
     def add_plot(self):
         self.map = Map()

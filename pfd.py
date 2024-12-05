@@ -29,11 +29,12 @@ class PrimaryFlightDisplay:
         self.horizon_thickness = 1
 
         # Pitch scale
-        self.pitch_scale_spacing = 50
+        self.pitch_scale_spacing = 50 # 50px per 5deg
         self.pitch_scale_length_big = 100
         self.pitch_scale_length_small = 50
         self.pitch_scale_num = 6
         self.pitch_scale_thickness = 1
+        self.pitch_scale_intervals = 5
 
         # Altitude and speed scale
         self.scale_height = 550
@@ -45,36 +46,48 @@ class PrimaryFlightDisplay:
         # Speed scale
         self.speed_scale_spacing = 100
         self.speed_scale_n_ticks = 20
+        self.speed_scale_intervals = 1
 
         # Altitude scale
         self.altitude_scale_spacing = 70
         self.altitude_scale_n_ticks = 20
+        self.altitude_scale_intervals = 1
 
         # Flight director
         self.flight_director_thickness = 4
-        self.flight_director_length = 150
+        self.flight_director_length = 150   
 
-    def update(self, pitch, roll, alt, pitch_setpoint, roll_setpoint):
+    def update(self, pitch, roll, altitude, speed, pitch_setpoint, roll_setpoint):
         # Update flight data
         self.pitch = pitch
         self.roll = roll
-        self.altitude = alt
+        self.speed = speed
+        self.altitude = altitude
         self.pitch_setpoint = pitch_setpoint
         self.roll_setpoint = roll_setpoint
 
-        horizon_left = int(self.height/2 - (self.width/2)*math.sin(math.radians(roll)) + pitch)
-        horizon_right = int(self.height/2 + (self.width/2)*math.sin(math.radians(roll)) + pitch)
+        horizon_left = int(self.height/2 - (self.width/2)*math.sin(math.radians(roll)) + self.pitch_deg_to_px(self.pitch))
+        horizon_right = int(self.height/2 + (self.width/2)*math.sin(math.radians(roll)) + self.pitch_deg_to_px(self.pitch))
 
         self.draw_sky(horizon_right, horizon_left)
         self.draw_ground(horizon_right, horizon_left)
         self.draw_horizon(horizon_right, horizon_left)
         self.draw_wings()
         self.draw_pitch_scale()
-        self.draw_altitude_scale(pitch * 5)
-        self.draw_speed_scale(roll * 20)
+        self.draw_altitude_scale()
+        self.draw_speed_scale()
         self.draw_flight_director()
 
         return self.canvas
+
+    def pitch_deg_to_px(self, deg):
+        return deg * (self.pitch_scale_spacing / self.pitch_scale_intervals)
+
+    def speed_to_px(self, speed):
+        return speed * (self.speed_scale_spacing / self.speed_scale_intervals)
+    
+    def altitude_to_px(self, altitude):
+        return altitude * (self.altitude_scale_spacing / self.altitude_scale_intervals)
 
     def draw_flight_director(self):
         self.painter.setPen(QPen(QColor("magenta"), self.flight_director_thickness, Qt.SolidLine))
@@ -85,7 +98,7 @@ class PrimaryFlightDisplay:
         # Vertical
         self.painter.drawLine(self.width/2 + self.roll_setpoint, self.height/2 - self.flight_director_length - self.pitch_setpoint, self.width/2 + self.roll_setpoint, self.height/2 + self.flight_director_length - self.pitch_setpoint)
 
-    def draw_speed_scale(self, speed):
+    def draw_speed_scale(self):
         self.painter.setPen(QPen(QColor("grey"), 1, Qt.SolidLine))
         self.painter.setBrush(QBrush(QColor("grey"), Qt.SolidPattern))
         self.painter.setOpacity(0.5)
@@ -107,10 +120,10 @@ class PrimaryFlightDisplay:
         # Tick marks
         scale_painter.setPen(QPen(QColor("white"), self.tick_thickness, Qt.SolidLine))
         for i in range(self.speed_scale_n_ticks):
-            offset = i * self.speed_scale_spacing - 500
+            offset = i * self.speed_scale_spacing - self.scale_height/2
             x1 = self.scale_offset + self.scale_width/2
             x2 = self.scale_offset + self.scale_width/2 - self.tick_length
-            y = self.height/2 - self.scale_height/2 + offset + speed
+            y = self.height/2 - self.scale_height/2 - offset + self.speed_to_px(self.speed)
 
             scale_painter.drawLine(x1, y, x2, y)
             scale_painter.drawText(QPoint(x1 - 60, y + 10), str(i))
@@ -123,9 +136,9 @@ class PrimaryFlightDisplay:
         self.painter.setPen(QPen(QColor("white"), 1, Qt.SolidLine))
         self.painter.setBrush(QBrush(QColor("black"), Qt.SolidPattern))     
         self.draw_rect_center(self.scale_offset, self.height/2, self.scale_width - 20, 50)
-        self.painter.drawText(QPoint(self.scale_offset - 10, self.height/2 + 10), str(int(abs(speed))))
+        self.painter.drawText(QPoint(self.scale_offset - 10, self.height/2 + 10), str(int(self.speed)))
     
-    def draw_altitude_scale(self, alt):
+    def draw_altitude_scale(self):
         self.painter.setPen(QPen(QColor("grey"), 1, Qt.SolidLine))
         self.painter.setBrush(QBrush(QColor("grey"), Qt.SolidPattern))
         self.painter.setOpacity(0.5)
@@ -147,13 +160,13 @@ class PrimaryFlightDisplay:
         # Tick marks
         scale_painter.setPen(QPen(QColor("white"), self.tick_thickness, Qt.SolidLine))
         for i in range(self.altitude_scale_n_ticks):
-            offset = i * self.altitude_scale_spacing - 400
+            offset = i * self.altitude_scale_spacing - self.scale_height/2
             x1 = self.width - self.scale_offset - self.scale_width/2
             x2 = self.width - self.scale_offset - self.scale_width/2 + self.tick_length
-            y = self.height/2 - self.scale_height/2 + offset + alt
+            y = self.height/2 - self.scale_height/2 - offset + self.altitude_to_px(self.altitude)
 
             scale_painter.drawLine(x1, y, x2, y)
-            scale_painter.drawText(QPoint(x1 + 45, y + 10), str(i))
+            scale_painter.drawText(QPoint(x1 + 45, y + 10), str(int(i)))
         
         scale_painter.end()
 
@@ -163,7 +176,7 @@ class PrimaryFlightDisplay:
         self.painter.setPen(QPen(QColor("white"), 1, Qt.SolidLine))
         self.painter.setBrush(QBrush(QColor("black"), Qt.SolidPattern))     
         self.draw_rect_center(self.width - self.scale_offset, self.height/2, self.scale_width - 20, 50)
-        self.painter.drawText(QPoint(self.width - self.scale_offset - 10, self.height/2 + 10), str(int(abs(alt))))
+        self.painter.drawText(QPoint(self.width - self.scale_offset - 10, self.height/2 + 10), str(int(abs(self.altitude))))
 
     def draw_rect_center(self, x, y, width, height):
         self.painter.drawRect(x - width/2, y - height/2, width, height)
@@ -190,12 +203,15 @@ class PrimaryFlightDisplay:
             if (i % 2 == 0):
                 pitch_scale_length = self.pitch_scale_length_big
 
-            point_left = self.rotate_point((self.width/2, self.height/2), (self.width/2 - pitch_scale_length, self.height/2 - i * self.pitch_scale_spacing + self.pitch), math.radians(self.roll))
-            point_right = self.rotate_point((self.width/2, self.height/2), (self.width/2 + pitch_scale_length, self.height/2 - i * self.pitch_scale_spacing + self.pitch), math.radians(self.roll))
+            origin = (self.width/2, self.height/2)
+            height = self.height/2 - i * self.pitch_scale_spacing + self.pitch_deg_to_px(self.pitch)
+            point_left = self.rotate_point(origin, (self.width/2 - pitch_scale_length, height), math.radians(self.roll))
+            point_right = self.rotate_point(origin, (self.width/2 + pitch_scale_length, height), math.radians(self.roll))
             self.painter.drawLine(point_left[0], point_left[1], point_right[0], point_right[1])
 
-            point_left = self.rotate_point((self.width/2, self.height/2), (self.width/2 - pitch_scale_length, self.height/2 + i * self.pitch_scale_spacing + self.pitch), math.radians(self.roll))
-            point_right = self.rotate_point((self.width/2, self.height/2), (self.width/2 + pitch_scale_length, self.height/2 + i * self.pitch_scale_spacing + self.pitch), math.radians(self.roll))
+            height = self.height/2 + i * self.pitch_scale_spacing + self.pitch_deg_to_px(self.pitch)
+            point_left = self.rotate_point(origin, (self.width/2 - pitch_scale_length, height), math.radians(self.roll))
+            point_right = self.rotate_point(origin, (self.width/2 + pitch_scale_length, height), math.radians(self.roll))
             self.painter.drawLine(point_left[0], point_left[1], point_right[0], point_right[1])
 
     def draw_wings(self):
