@@ -29,7 +29,14 @@ class PrimaryFlightDisplay:
         self.scale_offset = 150
         self.tick_length = 15
         self.tick_thickness = 2
-        self.num_ticks = 10
+
+        # Speed scale
+        self.speed_scale_spacing = 100
+        self.speed_scale_n_ticks = 20
+
+        # Altitude scale
+        self.altitude_scale_spacing = 70
+        self.altitude_scale_n_ticks = 20
 
         # Flight director
         self.flight_director_thickness = 4
@@ -47,8 +54,8 @@ class PrimaryFlightDisplay:
         self.draw_horizon(horizon_right, horizon_left)
         self.draw_wings()
         self.draw_pitch_scale(math.radians(roll), pitch)
-        self.draw_altitude_scale()
-        self.draw_speed_scale()
+        self.draw_altitude_scale(pitch * 5)
+        self.draw_speed_scale(roll * 20)
         self.draw_flight_director()
 
         return self.canvas
@@ -62,7 +69,7 @@ class PrimaryFlightDisplay:
         # Vertical
         self.painter.drawLine(self.width/2 + self.roll_setpoint, self.height/2 - self.flight_director_length - self.pitch_setpoint, self.width/2 + self.roll_setpoint, self.height/2 + self.flight_director_length - self.pitch_setpoint)
 
-    def draw_speed_scale(self):
+    def draw_speed_scale(self, speed):
         self.painter.setPen(QPen(QColor("grey"), 1, Qt.SolidLine))
         self.painter.setBrush(QBrush(QColor("grey"), Qt.SolidPattern))
         self.painter.setOpacity(0.5)
@@ -72,15 +79,37 @@ class PrimaryFlightDisplay:
 
         self.painter.setOpacity(1.0)
 
-        # Tick marks
-        self.painter.setPen(QPen(QColor("white"), self.tick_thickness, Qt.SolidLine))
-        for i in range(self.num_ticks):
-            offset = i * self.scale_height / self.num_ticks
+        scale_pixmap = QPixmap(self.width, self.height)
+        scale_pixmap.fill(Qt.transparent)
+        scale_painter = QPainter(scale_pixmap)
 
-            self.painter.drawLine(self.scale_offset + self.scale_width/2, self.height/2 - self.scale_height/2 + offset,
-                                  self.scale_offset + self.scale_width/2 - self.tick_length, self.height/2 - self.scale_height/2 + offset)
+        # Mask
+        path = QPainterPath()
+        path.addRect(self.scale_offset - self.scale_width/2, self.height/2 - self.scale_height/2, self.scale_width, self.scale_height)
+        scale_painter.setClipPath(path, Qt.IntersectClip)
+
+        # Tick marks
+        scale_painter.setPen(QPen(QColor("white"), self.tick_thickness, Qt.SolidLine))
+        for i in range(self.speed_scale_n_ticks):
+            offset = i * self.speed_scale_spacing - 500
+            x1 = self.scale_offset + self.scale_width/2
+            x2 = self.scale_offset + self.scale_width/2 - self.tick_length
+            y = self.height/2 - self.scale_height/2 + offset + speed
+
+            scale_painter.drawLine(x1, y, x2, y)
+            scale_painter.drawText(QPoint(x1 - 60, y + 10), str(i))
+        
+        scale_painter.end()
+
+        self.painter.drawPixmap(QPoint(), scale_pixmap)
+
+        # Draw black box with speed reading
+        self.painter.setPen(QPen(QColor("white"), 1, Qt.SolidLine))
+        self.painter.setBrush(QBrush(QColor("black"), Qt.SolidPattern))     
+        self.draw_rect_center(self.scale_offset, self.height/2, self.scale_width - 20, 50)
+        self.painter.drawText(QPoint(self.scale_offset - 10, self.height/2 + 10), str(int(abs(speed))))
     
-    def draw_altitude_scale(self):
+    def draw_altitude_scale(self, alt):
         self.painter.setPen(QPen(QColor("grey"), 1, Qt.SolidLine))
         self.painter.setBrush(QBrush(QColor("grey"), Qt.SolidPattern))
         self.painter.setOpacity(0.5)
@@ -90,13 +119,35 @@ class PrimaryFlightDisplay:
 
         self.painter.setOpacity(1.0)
 
-        # Tick marks
-        self.painter.setPen(QPen(QColor("white"), self.tick_thickness, Qt.SolidLine))
-        for i in range(self.num_ticks):
-            offset = i * self.scale_height / self.num_ticks
+        scale_pixmap = QPixmap(self.width, self.height)
+        scale_pixmap.fill(Qt.transparent)
+        scale_painter = QPainter(scale_pixmap)
 
-            self.painter.drawLine(self.width - self.scale_offset - self.scale_width/2, self.height/2 - self.scale_height/2 + offset,
-                                  self.width - self.scale_offset - self.scale_width/2 + self.tick_length, self.height/2 - self.scale_height/2 + offset)
+        # Mask
+        path = QPainterPath()
+        path.addRect(self.width - self.scale_offset - self.scale_width/2, self.height/2 - self.scale_height/2, self.scale_width, self.scale_height)
+        scale_painter.setClipPath(path, Qt.IntersectClip)
+
+        # Tick marks
+        scale_painter.setPen(QPen(QColor("white"), self.tick_thickness, Qt.SolidLine))
+        for i in range(self.altitude_scale_n_ticks):
+            offset = i * self.altitude_scale_spacing - 400
+            x1 = self.width - self.scale_offset - self.scale_width/2
+            x2 = self.width - self.scale_offset - self.scale_width/2 + self.tick_length
+            y = self.height/2 - self.scale_height/2 + offset + alt
+
+            scale_painter.drawLine(x1, y, x2, y)
+            scale_painter.drawText(QPoint(x1 + 60, y + 10), str(i))
+        
+        scale_painter.end()
+
+        self.painter.drawPixmap(QPoint(), scale_pixmap)
+
+        # Draw black box with altitude reading
+        self.painter.setPen(QPen(QColor("white"), 1, Qt.SolidLine))
+        self.painter.setBrush(QBrush(QColor("black"), Qt.SolidPattern))     
+        self.draw_rect_center(self.width - self.scale_offset, self.height/2, self.scale_width - 20, 50)
+        self.painter.drawText(QPoint(self.width - self.scale_offset - 10, self.height/2 + 10), str(int(alt)))
 
     def draw_rect_center(self, x, y, width, height):
         self.painter.drawRect(x - width/2, y - height/2, width, height)
