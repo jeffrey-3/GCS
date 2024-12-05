@@ -11,24 +11,36 @@ class PrimaryFlightDisplay:
         self.canvas = QPixmap(self.width, self.height)
         self.painter = QPainter(self.canvas)
 
+        # Flight data
+        self.pitch = 0
+        self.roll = 0
+        self.pitch_setpoint = 0
+        self.roll_setpoint = 0
+        self.altitude = 0
+        self.speed = 0
+
         # Wings
-        self.wings_width = 6
+        self.wings_width = 8
         self.wings_length = 80
         self.wings_height = 20
         self.wings_starting = self.width/2 - 200
+
+        # Horizon
+        self.horizon_thickness = 1
 
         # Pitch scale
         self.pitch_scale_spacing = 50
         self.pitch_scale_length_big = 100
         self.pitch_scale_length_small = 50
         self.pitch_scale_num = 6
+        self.pitch_scale_thickness = 1
 
         # Altitude and speed scale
         self.scale_height = 550
         self.scale_width = 100
         self.scale_offset = 150
         self.tick_length = 15
-        self.tick_thickness = 2
+        self.tick_thickness = 1
 
         # Speed scale
         self.speed_scale_spacing = 100
@@ -43,17 +55,21 @@ class PrimaryFlightDisplay:
         self.flight_director_length = 150
 
     def update(self, pitch, roll, alt, pitch_setpoint, roll_setpoint):
-        horizon_left = int(self.height/2 - (self.width/2)*math.sin(math.radians(roll)) + pitch)
-        horizon_right = int(self.height/2 + (self.width/2)*math.sin(math.radians(roll)) + pitch)
-
+        # Update flight data
+        self.pitch = pitch
+        self.roll = roll
+        self.altitude = alt
         self.pitch_setpoint = pitch_setpoint
         self.roll_setpoint = roll_setpoint
+
+        horizon_left = int(self.height/2 - (self.width/2)*math.sin(math.radians(roll)) + pitch)
+        horizon_right = int(self.height/2 + (self.width/2)*math.sin(math.radians(roll)) + pitch)
 
         self.draw_sky(horizon_right, horizon_left)
         self.draw_ground(horizon_right, horizon_left)
         self.draw_horizon(horizon_right, horizon_left)
         self.draw_wings()
-        self.draw_pitch_scale(math.radians(roll), pitch)
+        self.draw_pitch_scale()
         self.draw_altitude_scale(pitch * 5)
         self.draw_speed_scale(roll * 20)
         self.draw_flight_director()
@@ -137,7 +153,7 @@ class PrimaryFlightDisplay:
             y = self.height/2 - self.scale_height/2 + offset + alt
 
             scale_painter.drawLine(x1, y, x2, y)
-            scale_painter.drawText(QPoint(x1 + 60, y + 10), str(i))
+            scale_painter.drawText(QPoint(x1 + 45, y + 10), str(i))
         
         scale_painter.end()
 
@@ -147,7 +163,7 @@ class PrimaryFlightDisplay:
         self.painter.setPen(QPen(QColor("white"), 1, Qt.SolidLine))
         self.painter.setBrush(QBrush(QColor("black"), Qt.SolidPattern))     
         self.draw_rect_center(self.width - self.scale_offset, self.height/2, self.scale_width - 20, 50)
-        self.painter.drawText(QPoint(self.width - self.scale_offset - 10, self.height/2 + 10), str(int(alt)))
+        self.painter.drawText(QPoint(self.width - self.scale_offset - 10, self.height/2 + 10), str(int(abs(alt))))
 
     def draw_rect_center(self, x, y, width, height):
         self.painter.drawRect(x - width/2, y - height/2, width, height)
@@ -165,23 +181,21 @@ class PrimaryFlightDisplay:
         qy = oy + math.sin(angle) * (px - ox) + math.cos(angle) * (py - oy)
         return qx, qy
 
-    def draw_pitch_scale(self, roll, pitch):
+    def draw_pitch_scale(self):
+        self.painter.setPen(QPen(QColor("white"), self.pitch_scale_thickness, Qt.SolidLine))
+
         for i in range(1, self.pitch_scale_num):
             pitch_scale_length = self.pitch_scale_length_small
 
             if (i % 2 == 0):
                 pitch_scale_length = self.pitch_scale_length_big
 
-            point_left = self.rotate_point((self.width/2, self.height/2), (self.width/2 - pitch_scale_length, self.height/2 - i * self.pitch_scale_spacing + pitch), roll)
-            point_right = self.rotate_point((self.width/2, self.height/2), (self.width/2 + pitch_scale_length, self.height/2 - i * self.pitch_scale_spacing + pitch), roll)
-
-            self.painter.setPen(QPen(QColor("white"), 1, Qt.SolidLine))
+            point_left = self.rotate_point((self.width/2, self.height/2), (self.width/2 - pitch_scale_length, self.height/2 - i * self.pitch_scale_spacing + self.pitch), math.radians(self.roll))
+            point_right = self.rotate_point((self.width/2, self.height/2), (self.width/2 + pitch_scale_length, self.height/2 - i * self.pitch_scale_spacing + self.pitch), math.radians(self.roll))
             self.painter.drawLine(point_left[0], point_left[1], point_right[0], point_right[1])
 
-            point_left = self.rotate_point((self.width/2, self.height/2), (self.width/2 - pitch_scale_length, self.height/2 + i * self.pitch_scale_spacing + pitch), roll)
-            point_right = self.rotate_point((self.width/2, self.height/2), (self.width/2 + pitch_scale_length, self.height/2 + i * self.pitch_scale_spacing + pitch), roll)
-
-            self.painter.setPen(QPen(QColor("white"), 1, Qt.SolidLine))
+            point_left = self.rotate_point((self.width/2, self.height/2), (self.width/2 - pitch_scale_length, self.height/2 + i * self.pitch_scale_spacing + self.pitch), math.radians(self.roll))
+            point_right = self.rotate_point((self.width/2, self.height/2), (self.width/2 + pitch_scale_length, self.height/2 + i * self.pitch_scale_spacing + self.pitch), math.radians(self.roll))
             self.painter.drawLine(point_left[0], point_left[1], point_right[0], point_right[1])
 
     def draw_wings(self):
@@ -208,7 +222,7 @@ class PrimaryFlightDisplay:
         self.painter.drawRect(self.width/2 - self.wings_width/2, self.height/2 - self.wings_width/2, self.wings_width, self.wings_width)
     
     def draw_horizon(self, horizon_right, horizon_left):
-        self.painter.setPen(QPen(QColor("white"), 1, Qt.SolidLine))
+        self.painter.setPen(QPen(QColor("white"), self.horizon_thickness, Qt.SolidLine))
         self.painter.drawLine(0, horizon_left, self.width, horizon_right)
     
     def draw_sky(self, horizon_right, horizon_left):
