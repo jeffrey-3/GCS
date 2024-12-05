@@ -16,8 +16,9 @@ app = QApplication([])
 
 pfd = PrimaryFlightDisplay(1000, 800)
 
-class MyThread(QThread):
+class BackgroundThread(QThread):
     frame_signal = pyqtSignal(QPixmap)
+    heading = 0
 
     def run(self):
         x = 0
@@ -26,6 +27,7 @@ class MyThread(QThread):
             pitch = 10*math.sin(x/20)
             altitude = 50 - 30*math.sin(x/20)
             speed = 10 - 5*math.cos(x/20)
+            self.heading = pitch
 
             self.frame_signal.emit(pfd.update(pitch, roll, altitude, speed, 80, 50))
             
@@ -43,6 +45,10 @@ class MainWindow(QMainWindow):
         self.add_hud()
         self.add_ui()
         self.add_plot()
+
+        self.thread = BackgroundThread()
+        self.thread.frame_signal.connect(self.update)
+        self.thread.start() 
     
     def setup_window(self):
         qdarktheme.setup_theme()
@@ -70,20 +76,17 @@ class MainWindow(QMainWindow):
         self.hud_label = QLabel()
         self.left_layout.addWidget(self.hud_label)
 
-        self.camera_thread = MyThread()
-        self.camera_thread.frame_signal.connect(self.setImage)
-        self.camera_thread.start()  
-
-    @pyqtSlot(QPixmap)
-    def setImage(self,image):
-        self.hud_label.setPixmap(image)   
-
     def add_plot(self):
         self.map = Map()
         self.map_layout.addWidget(self.map, 2)
 
         self.altitude_graph = AltitudeGraph()
         self.map_layout.addWidget(self.altitude_graph)
+    
+    @pyqtSlot(QPixmap)
+    def update(self, pixmap):
+        self.hud_label.setPixmap(pixmap)
+        self.map.update(self.thread.heading*2 + 90)
 
 main = MainWindow()
 main.showFullScreen()
