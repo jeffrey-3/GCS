@@ -29,7 +29,7 @@ class PrimaryFlightDisplay:
         self.horizon_thickness = 1
 
         # Pitch scale
-        self.pitch_scale_spacing = 50 # 50px per 5deg
+        self.pitch_scale_spacing = 50
         self.pitch_scale_length_big = 100
         self.pitch_scale_length_small = 50
         self.pitch_scale_num = 6
@@ -66,12 +66,7 @@ class PrimaryFlightDisplay:
         self.pitch_setpoint = pitch_setpoint
         self.roll_setpoint = roll_setpoint
 
-        horizon_left = int(self.height/2 - (self.width/2)*math.sin(math.radians(roll)) + self.pitch_deg_to_px(self.pitch))
-        horizon_right = int(self.height/2 + (self.width/2)*math.sin(math.radians(roll)) + self.pitch_deg_to_px(self.pitch))
-
-        self.draw_sky(horizon_right, horizon_left)
-        self.draw_ground(horizon_right, horizon_left)
-        self.draw_horizon(horizon_right, horizon_left)
+        self.draw_background()
         self.draw_wings()
         self.draw_pitch_scale()
         self.draw_altitude_scale()
@@ -236,12 +231,12 @@ class PrimaryFlightDisplay:
         
         # Center
         self.painter.drawRect(self.width/2 - self.wings_width/2, self.height/2 - self.wings_width/2, self.wings_width, self.wings_width)
-    
-    def draw_horizon(self, horizon_right, horizon_left):
-        self.painter.setPen(QPen(QColor("white"), self.horizon_thickness, Qt.SolidLine))
-        self.painter.drawLine(0, horizon_left, self.width, horizon_right)
-    
-    def draw_sky(self, horizon_right, horizon_left):
+
+    def draw_background(self):
+        horizon_left = int(self.height/2 - (self.width/2)*math.sin(math.radians(self.roll)) + self.pitch_deg_to_px(self.pitch))
+        horizon_right = int(self.height/2 + (self.width/2)*math.sin(math.radians(self.roll)) + self.pitch_deg_to_px(self.pitch))
+        
+        # Sky
         self.painter.setPen(QPen(QColor("#3478cc"), 1, Qt.SolidLine))
         self.painter.setBrush(QBrush(QColor("#3478cc"), Qt.SolidPattern))
         self.painter.drawPolygon(QPolygon([QPoint(0, 0),
@@ -249,10 +244,14 @@ class PrimaryFlightDisplay:
                                       QPoint(self.width, horizon_right),
                                       QPoint(0, horizon_left)]))
 
-    def draw_ground(self, horizon_right, horizon_left):
+        # Ground
         self.painter.setPen(QPen(QColor("#6a5200"), 1, Qt.SolidLine))
         self.painter.setBrush(QBrush(QColor("#6a5200"), Qt.SolidPattern))
         self.painter.drawPolygon(QPolygon([QPoint(0, self.height),
                                       QPoint(self.width, self.height),
                                       QPoint(self.width, horizon_right),
                                       QPoint(0, horizon_left)]))
+        
+        # Horizon
+        self.painter.setPen(QPen(QColor("white"), self.horizon_thickness, Qt.SolidLine))
+        self.painter.drawLine(0, horizon_left, self.width, horizon_right)

@@ -11,28 +11,29 @@ from pfd import PrimaryFlightDisplay
 from map import Map
 from altitude_graph import AltitudeGraph
 from datatable import DataTable
+from command_buttons import CommandButtons
+from input import Input
 
 app = QApplication([])
-
+input = Input("")
 pfd = PrimaryFlightDisplay(1000, 800)
 
 class BackgroundThread(QThread):
+    # Class variables
     frame_signal = pyqtSignal(QPixmap)
     heading = 0
+    
+    def __init__(self):
+        super().__init__()
 
     def run(self):
-        x = 0
         while True:
-            roll = 5*math.cos(x/20)
-            pitch = 10*math.sin(x/20)
-            altitude = 50 - 30*math.sin(x/20)
-            speed = 10 - 5*math.cos(x/20)
+            roll, pitch, altitude, speed = input.getData()
             self.heading = pitch
 
             self.frame_signal.emit(pfd.update(pitch, roll, altitude, speed, 80, 50))
             
-            x = x + 1
-            time.sleep(0.1)
+            time.sleep(1/15)
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -43,7 +44,7 @@ class MainWindow(QMainWindow):
         self.create_left_layout()
         self.create_map_layout()
         self.add_hud()
-        self.add_ui()
+        self.add_datatable()
         self.add_plot()
 
         self.thread = BackgroundThread()
@@ -51,6 +52,7 @@ class MainWindow(QMainWindow):
         self.thread.start() 
     
     def setup_window(self):
+        self.setWindowTitle("UAV Ground Control")
         qdarktheme.setup_theme()
     
     def create_main_layout(self):
@@ -62,11 +64,16 @@ class MainWindow(QMainWindow):
 
     def create_map_layout(self):
         self.map_layout = QVBoxLayout()
-        self.main_layout.addLayout(self.map_layout)
+        self.main_layout.addLayout(self.map_layout, 2)
 
-    def add_ui(self):
+    def add_datatable(self):
+        self.tabs = QTabWidget()
         self.datatable = DataTable()
-        self.left_layout.addWidget(self.datatable)
+        self.command_buttons = CommandButtons()
+        self.tabs.addTab(self.datatable, "Data")
+        self.tabs.addTab(self.command_buttons, "Commands")
+        self.tabs.addTab(QWidget(), "Terminal") # Raw telemetry packets
+        self.left_layout.addWidget(self.tabs)
 
     def create_left_layout(self):
         self.left_layout = QVBoxLayout()
@@ -86,8 +93,8 @@ class MainWindow(QMainWindow):
     @pyqtSlot(QPixmap)
     def update(self, pixmap):
         self.hud_label.setPixmap(pixmap)
-        self.map.update(self.thread.heading*2 + 90)
+        self.map.update(self.thread.heading*2 + 90, 0, self.thread.heading*2)
 
 main = MainWindow()
-main.showFullScreen()
+main.showMaximized()
 app.exec()

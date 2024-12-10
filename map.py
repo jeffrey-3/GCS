@@ -32,7 +32,10 @@ class Map(pg.PlotWidget):
     def __init__(self):
         super().__init__()
 
-        self.plot([0, 20, 100], [0, 50, -60], pen=pg.mkPen('magenta', width=5))
+        self.x = [0, 20, 100, 70]
+        self.y = [0, 50, -60, -100]
+
+        self.plot(self.x, self.y, pen=pg.mkPen('magenta', width=5)) # symbol="o", symbolSize=20, symbolBrush=QColor("magenta"), symbolPen=QColor("magenta")
         self.setXRange(-100, 100)
         self.setYRange(-100, 100)
         self.getPlotItem().hideAxis('bottom')
@@ -40,9 +43,23 @@ class Map(pg.PlotWidget):
         self.setAspectLocked(True)
         self.setMenuEnabled(False)
         self.hideButtons()
+        self.setBackground(QColor("#006500"))
+
+        # Add numbers
+        font = QFont()
+        font.setPixelSize(40)
+        for i in range(len(self.x)):
+            text = None 
+            if i == 1: # Show the current waypoint being tracked
+                text = pg.TextItem(text=str(i), color=QColor("red"), fill=QColor("black"), anchor=(0.5, 0.5))
+            else:
+                text = pg.TextItem(text=str(i), color=QColor("white"), fill=QColor("black"), anchor=(0.5, 0.5))
+            text.setPos(self.x[i], self.y[i])
+            text.setFont(font)
+            self.addItem(text)
 
         # Add arrow to plot
-        self.arrow = CenteredArrowItem(angle=90, headLen=60, tipAngle=45, baseAngle=30, pen=QColor("red"), brush=QColor("red"))
+        self.arrow = CenteredArrowItem(angle=90, headLen=60, tipAngle=45, baseAngle=30, pen=pg.mkPen('black', width=3), brush=QColor("red"))
         self.addItem(self.arrow)
 
         # Add image to plot
@@ -51,7 +68,10 @@ class Map(pg.PlotWidget):
         self.addItem(img)
 
         tr = QTransform()
+        tr.scale(2, 2)
         tr.translate(-img.width()/2, -img.height()/2)
         img.setTransform(tr)
-    def update(self, heading):
+
+    def update(self, heading, x, y):
         self.arrow.setStyle(angle=heading)
+        self.arrow.setPos(x, y)

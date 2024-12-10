@@ -13,19 +13,19 @@ class DataTable(QWidget):
         self.state_label.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.state_label, 0, 0)
 
-        self.flight_time_label = QLabel("Time<h1>00:00:00</h1>")
+        self.flight_time_label = QLabel("Mission Time<h1>00:00:00</h1>")
         self.flight_time_label.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.flight_time_label, 0, 1)
 
-        self.time_remaining_label = QLabel("Time Remaining<h1>00:00:00</h1>")
+        self.time_remaining_label = QLabel("EST. Time Remaining<h1>00:00:00</h1>")
         self.time_remaining_label.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.time_remaining_label, 0, 2)
 
-        self.voltage_label = QLabel("Voltage (V)<h1>11.04</h1>")
+        self.voltage_label = QLabel("Battery Voltage (V)<h1>11.04</h1>")
         self.voltage_label.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.voltage_label, 1, 0)
 
-        self.current_label = QLabel("Current (A)<h1>30.46</h1>")
+        self.current_label = QLabel("Battery Current (A)<h1>30.46</h1>")
         self.current_label.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.current_label, 1, 1)
 
