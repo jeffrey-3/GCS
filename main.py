@@ -1,3 +1,11 @@
+# Import picture of map with geo coordinates of center
+# Calculate position of the plane's geocoordinates relative to the geocoordinates of the center of map
+# Put marker at the calculated displacement in meters
+# Map tile downloaders:
+# https://github.com/AliFlux/MapTilesDownloader
+# https://www.cartograph.eu/v3/online-map-tile-downloader/
+
+
 # Plan coordinates in google maps, then import or type the coordinates into GCS
 
 from PyQt5 import *
@@ -5,7 +13,6 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import qdarktheme
-import math
 import time
 from pfd import PrimaryFlightDisplay
 from map import Map
@@ -15,7 +22,7 @@ from command_buttons import CommandButtons
 from input import Input
 
 app = QApplication([])
-input = Input("")
+input = Input("socket")
 pfd = PrimaryFlightDisplay(1000, 800)
 
 class BackgroundThread(QThread):

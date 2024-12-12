@@ -35,7 +35,7 @@ class Map(pg.PlotWidget):
         self.x = [0, 20, 100, 70]
         self.y = [0, 50, -60, -100]
 
-        self.plot(self.x, self.y, pen=pg.mkPen('magenta', width=5)) # symbol="o", symbolSize=20, symbolBrush=QColor("magenta"), symbolPen=QColor("magenta")
+        self.plot(self.x, self.y, pen=pg.mkPen('magenta', width=5), symbol="o", symbolSize=50, symbolBrush=QColor("magenta"), symbolPen=QColor("magenta"))
         self.setXRange(-100, 100)
         self.setYRange(-100, 100)
         self.getPlotItem().hideAxis('bottom')
@@ -51,9 +51,9 @@ class Map(pg.PlotWidget):
         for i in range(len(self.x)):
             text = None 
             if i == 1: # Show the current waypoint being tracked
-                text = pg.TextItem(text=str(i), color=QColor("red"), fill=QColor("black"), anchor=(0.5, 0.5))
+                text = pg.TextItem(text=str(i), color=QColor("white"), anchor=(0.5, 0.5)) # pg.TextItem(text=str(i), color=QColor("white"), fill=QColor("magenta"), anchor=(0.5, 0.5))
             else:
-                text = pg.TextItem(text=str(i), color=QColor("white"), fill=QColor("black"), anchor=(0.5, 0.5))
+                text = pg.TextItem(text=str(i), color=QColor("white"), anchor=(0.5, 0.5))
             text.setPos(self.x[i], self.y[i])
             text.setFont(font)
             self.addItem(text)
