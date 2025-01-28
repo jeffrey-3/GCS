@@ -1,46 +1,45 @@
-# Import picture of map with geo coordinates of center
-# Calculate position of the plane's geocoordinates relative to the geocoordinates of the center of map
-# Put marker at the calculated displacement in meters
-# Map tile downloaders:
-# https://github.com/AliFlux/MapTilesDownloader
-# https://www.cartograph.eu/v3/online-map-tile-downloader/
-
-
-# Plan coordinates in google maps, then import or type the coordinates into GCS
-
 from PyQt5 import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import qdarktheme
-import time
 from pfd import PrimaryFlightDisplay
 from map import Map
 from altitude_graph import AltitudeGraph
 from datatable import DataTable
 from command_buttons import CommandButtons
-from input import Input
+from input_random import InputRandom
+from input_bluetooth import InputBluetooth
+import time
 
 app = QApplication([])
-input = Input("socket")
-pfd = PrimaryFlightDisplay(1000, 800)
+input = InputRandom()
+# input = InputBluetooth()
+pfd = PrimaryFlightDisplay()
 
 class BackgroundThread(QThread):
-    # Class variables
     frame_signal = pyqtSignal(QPixmap)
-    heading = 0
     
     def __init__(self):
         super().__init__()
 
     def run(self):
         while True:
-            roll, pitch, altitude, speed = input.getData()
-            self.heading = pitch
+            input.getData()
 
-            self.frame_signal.emit(pfd.update(pitch, roll, altitude, speed, 80, 50))
-            
-            time.sleep(1/15)
+            self.roll = input.roll
+            self.pitch = input.pitch
+            self.heading = input.heading
+            self.altitude = input.altitude
+            self.speed = input.speed 
+            self.lat = input.lat 
+            self.lon = input.lon
+
+            input.send()
+
+            self.frame_signal.emit((pfd.update(self.pitch, self.roll, self.altitude, self.speed, 80, 50)))
+
+            time.sleep(0.00001)
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -53,10 +52,12 @@ class MainWindow(QMainWindow):
         self.add_hud()
         self.add_datatable()
         self.add_plot()
-
+        self.start_thread()
+    
+    def start_thread(self):
         self.thread = BackgroundThread()
         self.thread.frame_signal.connect(self.update)
-        self.thread.start() 
+        self.thread.start()
     
     def setup_window(self):
         self.setWindowTitle("UAV Ground Control")
@@ -100,7 +101,7 @@ class MainWindow(QMainWindow):
     @pyqtSlot(QPixmap)
     def update(self, pixmap):
         self.hud_label.setPixmap(pixmap)
-        self.map.update(self.thread.heading*2 + 90, 0, self.thread.heading*2)
+        self.map.update(self.thread.heading, self.thread.lat, self.thread.lon)
 
 main = MainWindow()
 main.showMaximized()

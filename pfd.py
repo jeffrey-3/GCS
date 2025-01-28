@@ -4,10 +4,10 @@ from PyQt5.QtGui import *
 import math
 
 class PrimaryFlightDisplay:
-    def __init__(self, width, height):
+    def __init__(self):
         # Canvas setup
-        self.width = width
-        self.height = height
+        self.width = 1300
+        self.height = 800
         self.canvas = QPixmap(self.width, self.height)
         self.painter = QPainter(self.canvas)
 
@@ -50,7 +50,7 @@ class PrimaryFlightDisplay:
 
         # Altitude scale
         self.altitude_scale_spacing = 100
-        self.altitude_scale_n_ticks = 20
+        self.altitude_scale_n_ticks = 50
         self.altitude_scale_intervals = 10
 
         # Flight director
@@ -60,7 +60,7 @@ class PrimaryFlightDisplay:
     def update(self, pitch, roll, altitude, speed, pitch_setpoint, roll_setpoint):
         # Update flight data
         self.pitch = pitch
-        self.roll = roll
+        self.roll = -roll
         self.speed = speed
         self.altitude = altitude
         self.pitch_setpoint = pitch_setpoint
@@ -122,6 +122,8 @@ class PrimaryFlightDisplay:
 
             scale_painter.drawLine(x1, y, x2, y)
             scale_painter.drawText(QPoint(x1 - 60, y + 10), str(i * self.speed_scale_intervals))
+
+            # If y less than zero, break
         
         scale_painter.end()
 

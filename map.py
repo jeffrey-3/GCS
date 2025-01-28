@@ -1,14 +1,13 @@
 import pyqtgraph as pg
-import cv2
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from pyqtgraph import functions as fn
+import math
 
 # https://stackoverflow.com/questions/49219278/pyqtgraph-move-origin-of-arrowitem-to-local-center
 class CenteredArrowItem(pg.ArrowItem):
     def setStyle(self, **opts):
-        # http://www.pyqtgraph.org/documentation/_modules/pyqtgraph/graphicsItems/ArrowItem.html#ArrowItem.setStyle
         self.opts.update(opts)
 
         opt = dict([(k,self.opts[k]) for k in ['headLen', 'tipAngle', 'baseAngle', 'tailLen', 'tailWidth']])
@@ -32,18 +31,22 @@ class Map(pg.PlotWidget):
     def __init__(self):
         super().__init__()
 
-        self.x = [0, 20, 100, 70]
-        self.y = [0, 50, -60, -100]
+        # Geocoordinates at the center of map tile
+        self.center_lat = 33.017826
+        self.center_lon = -118.602432
 
-        self.plot(self.x, self.y, pen=pg.mkPen('magenta', width=5), symbol="o", symbolSize=50, symbolBrush=QColor("magenta"), symbolPen=QColor("magenta"))
-        self.setXRange(-100, 100)
-        self.setYRange(-100, 100)
-        self.getPlotItem().hideAxis('bottom')
-        self.getPlotItem().hideAxis('left')
+        # Position of waypoints in meters
+        self.x = [0, 200, 1000, 700, 1000]
+        self.y = [0, 500, -600, -1000, 1000]
+
+        self.plot(self.x, self.y, pen=pg.mkPen('magenta', width=5), symbol="o", symbolSize=50, symbolBrush=QColor("black"), symbolPen=pg.mkPen(QColor("magenta"), width=5))
+        # self.getPlotItem().hideAxis('bottom')
+        # self.getPlotItem().hideAxis('left')
         self.setAspectLocked(True)
         self.setMenuEnabled(False)
         self.hideButtons()
-        self.setBackground(QColor("#006500"))
+        self.showGrid(x=True, y=True)
+        self.setBackground(QColor("#202124"))
 
         # Add numbers
         font = QFont()
@@ -59,19 +62,30 @@ class Map(pg.PlotWidget):
             self.addItem(text)
 
         # Add arrow to plot
-        self.arrow = CenteredArrowItem(angle=90, headLen=60, tipAngle=45, baseAngle=30, pen=pg.mkPen('black', width=3), brush=QColor("red"))
+        self.arrow = CenteredArrowItem(angle=90, headLen=60, tipAngle=45, baseAngle=30, pen=pg.mkPen('white', width=2), brush=QColor("black"))
         self.addItem(self.arrow)
 
-        # Add image to plot
-        img = pg.ImageItem(cv2.cvtColor(cv2.imread("map.png"), cv2.COLOR_BGR2RGB))
-        img.setZValue(-100)
-        self.addItem(img)
-
-        tr = QTransform()
-        tr.scale(2, 2)
-        tr.translate(-img.width()/2, -img.height()/2)
-        img.setTransform(tr)
-
-    def update(self, heading, x, y):
-        self.arrow.setStyle(angle=heading)
-        self.arrow.setPos(x, y)
+    def update(self, heading, lat, lon):
+        position = self.calculate_displacement_meters(lat, lon)
+        self.arrow.setStyle(angle=heading + 90)
+        self.arrow.setPos(position[0], position[1])
+    
+    def calculate_displacement_meters(self, lat, lon):
+        # Earth's radius in meters
+        R = 6378137.0
+        
+        # Convert degrees to radians
+        center_lat_rad = math.radians(self.center_lat)
+        center_lon_rad = math.radians(self.center_lon)
+        lat_rad = math.radians(lat)
+        lon_rad = math.radians(lon)
+        
+        # Differences in coordinates
+        delta_lat = lat_rad - center_lat_rad
+        delta_lon = lon_rad - center_lon_rad
+        
+        # Approximate Cartesian coordinates
+        x = R * delta_lon * math.cos((center_lat_rad + lat_rad) / 2)
+        y = R * delta_lat
+        
+        return x, y
