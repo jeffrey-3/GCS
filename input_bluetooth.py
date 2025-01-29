@@ -1,6 +1,7 @@
 import serial
 import time
 import math
+import struct
 
 class InputBluetooth():
     def __init__(self):
@@ -15,18 +16,26 @@ class InputBluetooth():
         self.bluetooth = serial.Serial('COM9', 115200, timeout=1000)
     
     def getData(self):
-        data = self.bluetooth.readline()
-        print(data)
+        if self.bluetooth.in_waiting > 0:
+            data = self.bluetooth.read_all() # Flush buffer
+            idx = data.rfind(b'\n')
+            data = data[idx-29:idx+1]
+            data = struct.unpack('fffffff?c', data)
+            print(data)
 
-        t = time.time()
+            valid = True
+            for i in range(len(data) - 1): # Ignore the "\n" footer at the end
+                if abs(data[i]) > 1000000000:
+                    valid = False
 
-        self.roll = 5 * math.cos(t / 1)
-        self.pitch = 10 * math.sin(t / 1)
-        self.altitude = 50 - 30 * math.sin(t / 1)
-        self.speed = 10 - 5 * math.cos(t / 1)
-        self.lat = 33.017826
-        self.lon = -118.602432
-        self.heading = 30*math.sin(t)
+            if valid:
+                self.roll = data[0]
+                self.pitch = data[1]
+                self.heading = data[2]
+                self.altitude = data[3]
+                self.speed = data[4]
+                self.lat = data[5]
+                self.lon = data[6]
 
     def send(self):
-        return
+        self.bluetooth.write(b'Hello\n')

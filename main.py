@@ -10,36 +10,11 @@ from datatable import DataTable
 from command_buttons import CommandButtons
 from input_random import InputRandom
 from input_bluetooth import InputBluetooth
-import time
 
 app = QApplication([])
-input = InputRandom()
-# input = InputBluetooth()
+# input = InputRandom()
+input = InputBluetooth()
 pfd = PrimaryFlightDisplay()
-
-class BackgroundThread(QThread):
-    frame_signal = pyqtSignal(QPixmap)
-    
-    def __init__(self):
-        super().__init__()
-
-    def run(self):
-        while True:
-            input.getData()
-
-            self.roll = input.roll
-            self.pitch = input.pitch
-            self.heading = input.heading
-            self.altitude = input.altitude
-            self.speed = input.speed 
-            self.lat = input.lat 
-            self.lon = input.lon
-
-            input.send()
-
-            self.frame_signal.emit((pfd.update(self.pitch, self.roll, self.altitude, self.speed, 80, 50)))
-
-            time.sleep(0.00001)
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -55,9 +30,9 @@ class MainWindow(QMainWindow):
         self.start_thread()
     
     def start_thread(self):
-        self.thread = BackgroundThread()
-        self.thread.frame_signal.connect(self.update)
-        self.thread.start()
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update)
+        self.timer.start(15)
     
     def setup_window(self):
         self.setWindowTitle("UAV Ground Control")
@@ -98,10 +73,23 @@ class MainWindow(QMainWindow):
         self.altitude_graph = AltitudeGraph()
         self.map_layout.addWidget(self.altitude_graph)
     
-    @pyqtSlot(QPixmap)
-    def update(self, pixmap):
-        self.hud_label.setPixmap(pixmap)
-        self.map.update(self.thread.heading, self.thread.lat, self.thread.lon)
+    def update(self):
+        # Get data
+        input.getData()
+        roll = input.roll
+        pitch = input.pitch
+        heading = input.heading
+        altitude = input.altitude
+        speed = input.speed 
+        lat = input.lat 
+        lon = input.lon
+
+        # Transmit data
+        input.send()
+        
+        # Update GUI
+        self.hud_label.setPixmap(pfd.update(pitch, roll, altitude, speed, 80, 50))
+        self.map.update(heading, lat, lon)
 
 main = MainWindow()
 main.showMaximized()
