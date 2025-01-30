@@ -29,10 +29,10 @@ class PrimaryFlightDisplay:
         self.horizon_thickness = 1
 
         # Pitch scale
-        self.pitch_scale_spacing = 50
-        self.pitch_scale_length_big = 100
-        self.pitch_scale_length_small = 50
-        self.pitch_scale_num = 6
+        self.pitch_scale_spacing = 60
+        self.pitch_scale_length_big = 200
+        self.pitch_scale_length_small = 100
+        self.pitch_scale_num = 20
         self.pitch_scale_thickness = 1
         self.pitch_scale_intervals = 5
 

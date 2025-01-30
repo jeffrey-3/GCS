@@ -12,8 +12,8 @@ from input_random import InputRandom
 from input_bluetooth import InputBluetooth
 
 app = QApplication([])
-# input = InputRandom()
-input = InputBluetooth()
+input = InputRandom()
+# input = InputBluetooth()
 pfd = PrimaryFlightDisplay()
 
 class MainWindow(QMainWindow):
