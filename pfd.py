@@ -20,20 +20,22 @@ class PrimaryFlightDisplay:
         self.speed = 0
 
         # Wings
-        self.wings_width = 8
+        self.wings_center_square_size = 15
+        self.wings_width = 10
+        self.wings_border_width = 3
         self.wings_length = 80
         self.wings_height = 20
-        self.wings_starting = self.width/2 - 200
+        self.wings_starting = self.width/2 - 300 # How far apart the sides are
 
         # Horizon
-        self.horizon_thickness = 1
+        self.horizon_thickness = 2
 
         # Pitch scale
         self.pitch_scale_spacing = 60
         self.pitch_scale_length_big = 200
         self.pitch_scale_length_small = 100
         self.pitch_scale_num = 20
-        self.pitch_scale_thickness = 1
+        self.pitch_scale_thickness = 2
         self.pitch_scale_intervals = 5
 
         # Altitude and speed scale
@@ -41,7 +43,8 @@ class PrimaryFlightDisplay:
         self.scale_width = 150
         self.scale_offset = 150
         self.tick_length = 30
-        self.tick_thickness = 3
+        self.tick_thickness = 4
+        self.box_height = 60
 
         # Speed scale
         self.speed_scale_spacing = 100
@@ -67,11 +70,11 @@ class PrimaryFlightDisplay:
         self.roll_setpoint = roll_setpoint
 
         self.draw_background()
-        self.draw_wings()
         self.draw_pitch_scale()
         self.draw_altitude_scale()
         self.draw_speed_scale()
-        self.draw_flight_director()
+        self.draw_wings()
+        # self.draw_flight_director()
 
         return self.canvas
 
@@ -94,9 +97,9 @@ class PrimaryFlightDisplay:
         self.painter.drawLine(self.width/2 + self.roll_setpoint, self.height/2 - self.flight_director_length - self.pitch_setpoint, self.width/2 + self.roll_setpoint, self.height/2 + self.flight_director_length - self.pitch_setpoint)
 
     def draw_speed_scale(self):
-        self.painter.setPen(QPen(QColor("grey"), 1, Qt.SolidLine))
-        self.painter.setBrush(QBrush(QColor("grey"), Qt.SolidPattern))
-        self.painter.setOpacity(0.5)
+        self.painter.setPen(QPen(QColor("black"), 1, Qt.SolidLine))
+        self.painter.setBrush(QBrush(QColor("black"), Qt.SolidPattern))
+        self.painter.setOpacity(0.4)
 
         # Grey container
         self.painter.drawRect(0, 0, self.scale_width, self.height)
@@ -108,7 +111,7 @@ class PrimaryFlightDisplay:
         scale_painter = QPainter(scale_pixmap)
 
         # Tick marks
-        scale_painter.setPen(QPen(QColor("white"), self.tick_thickness, Qt.SolidLine))
+        scale_painter.setPen(QPen(QColor("#b4b2b4"), self.tick_thickness, Qt.SolidLine))
         for i in range(self.speed_scale_n_ticks):
             offset = i * self.speed_scale_spacing - self.scale_height/2
             x1 = 0
@@ -116,7 +119,7 @@ class PrimaryFlightDisplay:
             y = self.height/2 - self.scale_height/2 - offset + self.speed_to_px(self.speed)
 
             scale_painter.drawLine(x1, y, x2, y)
-            scale_painter.drawText(QPoint(x1 - 60, y + 10), str(i * self.speed_scale_intervals))
+            scale_painter.drawText(QPoint(60, y + 10), str(i * self.speed_scale_intervals))
 
             # If y less than zero, break
 
@@ -127,15 +130,16 @@ class PrimaryFlightDisplay:
         self.painter.drawPixmap(QPoint(), scale_pixmap)
 
         # Draw black box with speed reading
+        self.painter.setPen(QPen(QColor("#b4b2b4"), self.tick_thickness, Qt.SolidLine))
+        self.painter.setBrush(QBrush(QColor("#383434"), Qt.SolidPattern))     
+        self.draw_rect_center(self.scale_width/2, self.height/2, self.scale_width, self.box_height)
         self.painter.setPen(QPen(QColor("white"), 1, Qt.SolidLine))
-        self.painter.setBrush(QBrush(QColor("black"), Qt.SolidPattern))     
-        self.draw_rect_center(self.scale_width/2, self.height/2, self.scale_width, 50)
         self.painter.drawText(QPoint(self.scale_width/2, self.height/2 + 10), str(int(self.speed)))
     
     def draw_altitude_scale(self):
-        self.painter.setPen(QPen(QColor("grey"), 1, Qt.SolidLine))
-        self.painter.setBrush(QBrush(QColor("grey"), Qt.SolidPattern))
-        self.painter.setOpacity(0.5)
+        self.painter.setPen(QPen(QColor("black"), 1, Qt.SolidLine))
+        self.painter.setBrush(QBrush(QColor("black"), Qt.SolidPattern))
+        self.painter.setOpacity(0.4)
 
         # Grey container
         self.painter.drawRect(self.width - self.scale_width, 0, self.width, self.height)
@@ -147,7 +151,7 @@ class PrimaryFlightDisplay:
         scale_painter = QPainter(scale_pixmap)
 
         # Tick marks
-        scale_painter.setPen(QPen(QColor("white"), self.tick_thickness, Qt.SolidLine))
+        scale_painter.setPen(QPen(QColor("#b4b2b4"), self.tick_thickness, Qt.SolidLine))
         for i in range(self.altitude_scale_n_ticks):
             offset = i * self.altitude_scale_spacing - self.scale_height/2
             x1 = self.width
@@ -155,7 +159,8 @@ class PrimaryFlightDisplay:
             y = self.height/2 - self.scale_height/2 - offset + self.altitude_to_px(self.altitude)
 
             scale_painter.drawLine(x1, y, x2, y)
-            scale_painter.drawText(QPoint(x1 + 45, y + 10), str(int(i * self.altitude_scale_intervals)))
+
+            scale_painter.drawText(QPoint(self.width - 100, y + 10), str(int(i * self.altitude_scale_intervals)))
         
         scale_painter.drawLine(self.width, 0, self.width, self.height) # Scale
 
@@ -164,9 +169,10 @@ class PrimaryFlightDisplay:
         self.painter.drawPixmap(QPoint(), scale_pixmap)
 
         # Draw black box with altitude reading
+        self.painter.setPen(QPen(QColor("#b4b2b4"), self.tick_thickness, Qt.SolidLine))
+        self.painter.setBrush(QBrush(QColor("#383434"), Qt.SolidPattern))     
+        self.draw_rect_center(self.width - self.scale_width/2, self.height/2, self.scale_width, self.box_height)
         self.painter.setPen(QPen(QColor("white"), 1, Qt.SolidLine))
-        self.painter.setBrush(QBrush(QColor("black"), Qt.SolidPattern))     
-        self.draw_rect_center(self.width - self.scale_width/2, self.height/2, self.scale_width, 50)
         self.painter.drawText(QPoint(self.width - self.scale_width/2 - 10, self.height/2 + 10), str(int(abs(self.altitude))))
 
     def draw_rect_center(self, x, y, width, height):
@@ -186,7 +192,7 @@ class PrimaryFlightDisplay:
         return [qx, qy]
 
     def draw_pitch_scale(self):
-        self.painter.setPen(QPen(QColor("white"), self.pitch_scale_thickness, Qt.SolidLine))
+        self.painter.setPen(QPen(QColor("#b4b6b4"), self.pitch_scale_thickness, Qt.SolidLine))
 
         for i in range(1, self.pitch_scale_num):
             pitch_scale_length = self.pitch_scale_length_small
@@ -206,7 +212,7 @@ class PrimaryFlightDisplay:
             self.painter.drawLine(point_left[0], point_left[1], point_right[0], point_right[1])
 
     def draw_wings(self):
-        self.painter.setPen(QPen(QColor("white"), 1, Qt.SolidLine))
+        self.painter.setPen(QPen(QColor("#f6d210"), self.wings_border_width, Qt.SolidLine))
         self.painter.setBrush(QBrush(QColor("black"), Qt.SolidPattern))
 
         # Left wing
@@ -226,31 +232,33 @@ class PrimaryFlightDisplay:
                                       QPoint((self.wings_starting - self.width/2) * -1 + self.width/2, self.height/2 + self.wings_width/2)]))
         
         # Center
-        self.painter.drawRect(self.width/2 - self.wings_width/2, self.height/2 - self.wings_width/2, self.wings_width, self.wings_width)
+        self.painter.drawRect(self.width/2 - self.wings_center_square_size/2, self.height/2 - self.wings_center_square_size/2, self.wings_center_square_size, self.wings_center_square_size)
 
     def draw_background(self):
         origin = (self.width/2, self.height/2)
-        point_left = self.rotate_point(origin, (0, self.height/2), math.radians(self.roll))
-        point_right = self.rotate_point(origin, (self.width, self.height/2), math.radians(self.roll))
-        point_left[1] += self.pitch_deg_to_px(self.pitch)
-        point_right[1] += self.pitch_deg_to_px(self.pitch)
+        
+        # x point is just for margin to ensure it extends beyond canvas
+        original_left = (-500, self.height/2 + self.pitch_deg_to_px(self.pitch))
+        original_right = (self.width + 500, self.height/2 + self.pitch_deg_to_px(self.pitch))
+        point_left = self.rotate_point(origin, original_left, math.radians(self.roll))
+        point_right = self.rotate_point(origin, original_right, math.radians(self.roll))
         
         # Sky
-        self.painter.setPen(QPen(QColor("#3478cc"), 1, Qt.SolidLine))
-        self.painter.setBrush(QBrush(QColor("#3478cc"), Qt.SolidPattern))
+        self.painter.setPen(QPen(QColor("#0079b4"), 1, Qt.SolidLine))
+        self.painter.setBrush(QBrush(QColor("#0079b4"), Qt.SolidPattern))
         self.painter.drawPolygon(QPolygon([QPoint(0, 0),
                                            QPoint(self.width, 0),
                                            QPoint(point_right[0], point_right[1]),
                                            QPoint(point_left[0], point_left[1])]))
 
         # Ground
-        self.painter.setPen(QPen(QColor("#6a5200"), 1, Qt.SolidLine))
-        self.painter.setBrush(QBrush(QColor("#6a5200"), Qt.SolidPattern))
+        self.painter.setPen(QPen(QColor("#624408"), 1, Qt.SolidLine))
+        self.painter.setBrush(QBrush(QColor("#624408"), Qt.SolidPattern))
         self.painter.drawPolygon(QPolygon([QPoint(0, self.height),
                                            QPoint(self.width, self.height),
                                            QPoint(point_right[0], point_right[1]),
                                            QPoint(point_left[0], point_left[1])]))
         
         # Horizon
-        self.painter.setPen(QPen(QColor("white"), self.horizon_thickness, Qt.SolidLine))
+        self.painter.setPen(QPen(QColor("#b4b6b4"), self.horizon_thickness, Qt.SolidLine))
         self.painter.drawLine(point_left[0], point_left[1], point_right[0], point_right[1])
