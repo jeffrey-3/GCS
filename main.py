@@ -88,7 +88,7 @@ class MainWindow(QMainWindow):
         input.send()
         
         # Update GUI
-        self.hud_label.setPixmap(pfd.update(pitch, roll, altitude, speed, 80, 50))
+        self.hud_label.setPixmap(pfd.update(pitch, roll, heading, altitude, speed, 80, 50))
         self.map.update(heading, lat, lon)
 
 main = MainWindow()
