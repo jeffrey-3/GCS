@@ -10,6 +10,8 @@ class PrimaryFlightDisplay:
         self.height = 600
         self.canvas = QPixmap(self.width, self.height)
         self.painter = QPainter(self.canvas)
+        self.font = QFont("Arial", 20)  # Set font family and size
+        self.painter.setFont(self.font)
 
         # Flight data
         self.pitch = 0
@@ -44,7 +46,7 @@ class PrimaryFlightDisplay:
         self.scale_width = 180
         self.tick_length = 30
         self.tick_thickness = 4
-        self.box_height = 60
+        self.box_height = 70
 
         # Speed scale
         self.speed_scale_spacing = 100
@@ -53,7 +55,7 @@ class PrimaryFlightDisplay:
 
         # Altitude scale
         self.altitude_scale_spacing = 100
-        self.altitude_scale_n_ticks = 50
+        self.altitude_scale_n_ticks = 20
         self.altitude_scale_intervals = 10
 
         # Flight director
@@ -63,6 +65,8 @@ class PrimaryFlightDisplay:
         # Heading scale
 
     def update(self, pitch, roll, heading, altitude, speed, pitch_setpoint, roll_setpoint):
+        # self.canvas.fill(Qt.transparent)
+
         # Update flight data
         self.pitch = pitch
         self.roll = -roll
@@ -103,7 +107,7 @@ class PrimaryFlightDisplay:
         self.draw_rect_center(self.width/2, self.height - self.box_height/2, self.scale_width, self.box_height)
 
         self.painter.setPen(QPen(QColor("white"), 1, Qt.SolidLine))
-        self.painter.drawText(QPoint(self.width/2, self.height - self.box_height/2 + 10), str(int(self.heading)))
+        self.painter.drawText(QRect(self.width/2 - self.scale_width/2, self.height - self.box_height, self.scale_width, self.box_height), Qt.AlignCenter, "{:.1f}".format(self.heading))
 
     def pitch_deg_to_px(self, deg):
         return deg * (self.pitch_scale_spacing / self.pitch_scale_intervals)
@@ -141,7 +145,9 @@ class PrimaryFlightDisplay:
             y = self.height/2 - self.scale_height/2 - offset + self.speed_to_px(self.speed)
 
             self.painter.drawLine(x1, y, x2, y)
-            self.painter.drawText(QPoint(60, y + 10), str(i * self.speed_scale_intervals))
+
+            margin = 30
+            self.painter.drawText(QRect(self.tick_length + margin, y - self.speed_scale_spacing/2, self.scale_width - self.tick_length, self.speed_scale_spacing), Qt.AlignVCenter | Qt.AlignLeft, str(i * self.speed_scale_intervals))
 
             # If y less than zero, break
 
@@ -150,9 +156,9 @@ class PrimaryFlightDisplay:
         # Draw black box with speed reading
         self.painter.setPen(QPen(QColor("#b4b2b4"), self.tick_thickness, Qt.SolidLine))
         self.painter.setBrush(QBrush(QColor("#383434"), Qt.SolidPattern))     
-        self.draw_rect_center(self.scale_width/2, self.height/2, self.scale_width, self.box_height)
+        self.draw_rect_center(self.scale_width/2, self.height/2, self.scale_width- self.tick_thickness, self.box_height)
         self.painter.setPen(QPen(QColor("white"), 1, Qt.SolidLine))
-        self.painter.drawText(QPoint(self.scale_width/2, self.height/2 + 10), str(int(self.speed)))
+        self.painter.drawText(QRect(0, self.height/2 - self.box_height/2, self.scale_width, self.box_height), Qt.AlignCenter, "{:.1f}".format(self.speed))
     
     def draw_altitude_scale(self):
         self.painter.setPen(QPen(QColor("black"), 1, Qt.SolidLine))
@@ -173,16 +179,20 @@ class PrimaryFlightDisplay:
 
             self.painter.drawLine(x1, y, x2, y)
 
-            self.painter.drawText(QPoint(self.width - 100, y + 10), str(int(i * self.altitude_scale_intervals)))
+            margin = 30
+            self.painter.drawText(QRect(self.width - self.scale_width, 
+                                        y - self.altitude_scale_spacing/2, 
+                                        self.scale_width - self.tick_length - margin,
+                                        self.altitude_scale_spacing), Qt.AlignVCenter | Qt.AlignRight, str(int(i * self.altitude_scale_intervals)))
         
         self.painter.drawLine(self.width - self.tick_thickness/2, 0, self.width - self.tick_thickness/2, self.height) # Scale
 
         # Draw black box with altitude reading
         self.painter.setPen(QPen(QColor("#b4b2b4"), self.tick_thickness, Qt.SolidLine))
         self.painter.setBrush(QBrush(QColor("#383434"), Qt.SolidPattern))     
-        self.draw_rect_center(self.width - self.scale_width/2, self.height/2, self.scale_width, self.box_height)
+        self.draw_rect_center(self.width - self.scale_width/2, self.height/2, self.scale_width - self.tick_thickness, self.box_height)
         self.painter.setPen(QPen(QColor("white"), 1, Qt.SolidLine))
-        self.painter.drawText(QPoint(self.width - self.scale_width/2 - 10, self.height/2 + 10), str(int(abs(self.altitude))))
+        self.painter.drawText(QRect(self.width - self.scale_width, self.height/2 - self.box_height/2, self.scale_width, self.box_height), Qt.AlignCenter, "{:.1f}".format(self.altitude))
 
     def draw_rect_center(self, x, y, width, height):
         self.painter.drawRect(x - width/2, y - height/2, width, height)
@@ -248,8 +258,8 @@ class PrimaryFlightDisplay:
         origin = (self.width/2, self.height/2)
         
         # x point is just for margin to ensure it extends beyond canvas
-        original_left = (-500, self.height/2 + self.pitch_deg_to_px(self.pitch))
-        original_right = (self.width + 500, self.height/2 + self.pitch_deg_to_px(self.pitch))
+        original_left = (-1000, self.height/2 + self.pitch_deg_to_px(self.pitch))
+        original_right = (self.width + 1000, self.height/2 + self.pitch_deg_to_px(self.pitch))
         point_left = self.rotate_point(origin, original_left, math.radians(self.roll))
         point_right = self.rotate_point(origin, original_right, math.radians(self.roll))
         

@@ -17,18 +17,11 @@ class InputBluetooth():
     
     def getData(self):
         if self.bluetooth.in_waiting > 0:
-            data = self.bluetooth.read_all() # Flush buffer
-            idx = data.rfind(b'\n')
-            data = data[idx-29:idx+1]
-            data = struct.unpack('fffffff?c', data)
-            print(data)
-
-            valid = True
-            for i in range(len(data) - 1): # Ignore the "\n" footer at the end
-                if abs(data[i]) > 1000000000:
-                    valid = False
-
-            if valid:
+            data_raw = self.bluetooth.read_all() # Flush buffer
+            idx = data_raw.rfind(b'\n')
+            if data_raw[idx-32] == 10: # Go back to previous packet and see if it ends with correct footer
+                data = struct.unpack('fffffff?c', data_raw[idx-29:idx+1])
+                print(data)
                 self.roll = data[0]
                 self.pitch = data[1]
                 self.heading = data[2]

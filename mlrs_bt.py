@@ -9,7 +9,8 @@ while True:
         data_raw = bluetooth.read_all() # Flush buffer
         idx = data_raw.rfind(b'\n')
         data = data_raw[idx-29:idx+1]
-
-        print(struct.unpack('fffffff?c', data))
+        if data_raw[idx-32] == 10:
+            # print(data)
+            print(struct.unpack('fffffff?c', data))
 
         time.sleep(0.1)
