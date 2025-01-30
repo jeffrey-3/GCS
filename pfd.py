@@ -6,8 +6,8 @@ import math
 class PrimaryFlightDisplay:
     def __init__(self):
         # Canvas setup
-        self.width = 1300
-        self.height = 800
+        self.width = 1200
+        self.height = 600
         self.canvas = QPixmap(self.width, self.height)
         self.painter = QPainter(self.canvas)
 
@@ -38,10 +38,10 @@ class PrimaryFlightDisplay:
 
         # Altitude and speed scale
         self.scale_height = 550
-        self.scale_width = 100
+        self.scale_width = 150
         self.scale_offset = 150
-        self.tick_length = 15
-        self.tick_thickness = 1
+        self.tick_length = 30
+        self.tick_thickness = 3
 
         # Speed scale
         self.speed_scale_spacing = 100
@@ -99,7 +99,7 @@ class PrimaryFlightDisplay:
         self.painter.setOpacity(0.5)
 
         # Grey container
-        self.draw_rect_center(self.scale_offset, self.height/2, self.scale_width, self.scale_height)
+        self.painter.drawRect(0, 0, self.scale_width, self.height)
 
         self.painter.setOpacity(1.0)
 
@@ -107,23 +107,20 @@ class PrimaryFlightDisplay:
         scale_pixmap.fill(Qt.transparent)
         scale_painter = QPainter(scale_pixmap)
 
-        # Mask
-        path = QPainterPath()
-        path.addRect(self.scale_offset - self.scale_width/2, self.height/2 - self.scale_height/2, self.scale_width, self.scale_height)
-        scale_painter.setClipPath(path, Qt.IntersectClip)
-
         # Tick marks
         scale_painter.setPen(QPen(QColor("white"), self.tick_thickness, Qt.SolidLine))
         for i in range(self.speed_scale_n_ticks):
             offset = i * self.speed_scale_spacing - self.scale_height/2
-            x1 = self.scale_offset + self.scale_width/2
-            x2 = self.scale_offset + self.scale_width/2 - self.tick_length
+            x1 = 0
+            x2 = self.tick_length
             y = self.height/2 - self.scale_height/2 - offset + self.speed_to_px(self.speed)
 
             scale_painter.drawLine(x1, y, x2, y)
             scale_painter.drawText(QPoint(x1 - 60, y + 10), str(i * self.speed_scale_intervals))
 
             # If y less than zero, break
+
+        scale_painter.drawLine(0, 0, 0, self.height) # Scale
         
         scale_painter.end()
 
@@ -132,8 +129,8 @@ class PrimaryFlightDisplay:
         # Draw black box with speed reading
         self.painter.setPen(QPen(QColor("white"), 1, Qt.SolidLine))
         self.painter.setBrush(QBrush(QColor("black"), Qt.SolidPattern))     
-        self.draw_rect_center(self.scale_offset, self.height/2, self.scale_width - 20, 50)
-        self.painter.drawText(QPoint(self.scale_offset - 10, self.height/2 + 10), str(int(self.speed)))
+        self.draw_rect_center(self.scale_width/2, self.height/2, self.scale_width, 50)
+        self.painter.drawText(QPoint(self.scale_width/2, self.height/2 + 10), str(int(self.speed)))
     
     def draw_altitude_scale(self):
         self.painter.setPen(QPen(QColor("grey"), 1, Qt.SolidLine))
@@ -141,7 +138,7 @@ class PrimaryFlightDisplay:
         self.painter.setOpacity(0.5)
 
         # Grey container
-        self.draw_rect_center(self.width - self.scale_offset, self.height/2, self.scale_width, self.scale_height)
+        self.painter.drawRect(self.width - self.scale_width, 0, self.width, self.height)
 
         self.painter.setOpacity(1.0)
 
@@ -149,22 +146,19 @@ class PrimaryFlightDisplay:
         scale_pixmap.fill(Qt.transparent)
         scale_painter = QPainter(scale_pixmap)
 
-        # Mask
-        path = QPainterPath()
-        path.addRect(self.width - self.scale_offset - self.scale_width/2, self.height/2 - self.scale_height/2, self.scale_width, self.scale_height)
-        scale_painter.setClipPath(path, Qt.IntersectClip)
-
         # Tick marks
         scale_painter.setPen(QPen(QColor("white"), self.tick_thickness, Qt.SolidLine))
         for i in range(self.altitude_scale_n_ticks):
             offset = i * self.altitude_scale_spacing - self.scale_height/2
-            x1 = self.width - self.scale_offset - self.scale_width/2
-            x2 = self.width - self.scale_offset - self.scale_width/2 + self.tick_length
+            x1 = self.width
+            x2 = self.width - self.tick_length
             y = self.height/2 - self.scale_height/2 - offset + self.altitude_to_px(self.altitude)
 
             scale_painter.drawLine(x1, y, x2, y)
             scale_painter.drawText(QPoint(x1 + 45, y + 10), str(int(i * self.altitude_scale_intervals)))
         
+        scale_painter.drawLine(self.width, 0, self.width, self.height) # Scale
+
         scale_painter.end()
 
         self.painter.drawPixmap(QPoint(), scale_pixmap)
@@ -172,8 +166,8 @@ class PrimaryFlightDisplay:
         # Draw black box with altitude reading
         self.painter.setPen(QPen(QColor("white"), 1, Qt.SolidLine))
         self.painter.setBrush(QBrush(QColor("black"), Qt.SolidPattern))     
-        self.draw_rect_center(self.width - self.scale_offset, self.height/2, self.scale_width - 20, 50)
-        self.painter.drawText(QPoint(self.width - self.scale_offset - 10, self.height/2 + 10), str(int(abs(self.altitude))))
+        self.draw_rect_center(self.width - self.scale_width/2, self.height/2, self.scale_width, 50)
+        self.painter.drawText(QPoint(self.width - self.scale_width/2 - 10, self.height/2 + 10), str(int(abs(self.altitude))))
 
     def draw_rect_center(self, x, y, width, height):
         self.painter.drawRect(x - width/2, y - height/2, width, height)
@@ -189,7 +183,7 @@ class PrimaryFlightDisplay:
 
         qx = ox + math.cos(angle) * (px - ox) - math.sin(angle) * (py - oy)
         qy = oy + math.sin(angle) * (px - ox) + math.cos(angle) * (py - oy)
-        return qx, qy
+        return [qx, qy]
 
     def draw_pitch_scale(self):
         self.painter.setPen(QPen(QColor("white"), self.pitch_scale_thickness, Qt.SolidLine))
@@ -235,25 +229,28 @@ class PrimaryFlightDisplay:
         self.painter.drawRect(self.width/2 - self.wings_width/2, self.height/2 - self.wings_width/2, self.wings_width, self.wings_width)
 
     def draw_background(self):
-        horizon_left = int(self.height/2 - (self.width/2)*math.sin(math.radians(self.roll)) + self.pitch_deg_to_px(self.pitch))
-        horizon_right = int(self.height/2 + (self.width/2)*math.sin(math.radians(self.roll)) + self.pitch_deg_to_px(self.pitch))
+        origin = (self.width/2, self.height/2)
+        point_left = self.rotate_point(origin, (0, self.height/2), math.radians(self.roll))
+        point_right = self.rotate_point(origin, (self.width, self.height/2), math.radians(self.roll))
+        point_left[1] += self.pitch_deg_to_px(self.pitch)
+        point_right[1] += self.pitch_deg_to_px(self.pitch)
         
         # Sky
         self.painter.setPen(QPen(QColor("#3478cc"), 1, Qt.SolidLine))
         self.painter.setBrush(QBrush(QColor("#3478cc"), Qt.SolidPattern))
         self.painter.drawPolygon(QPolygon([QPoint(0, 0),
-                                      QPoint(self.width, 0),
-                                      QPoint(self.width, horizon_right),
-                                      QPoint(0, horizon_left)]))
+                                           QPoint(self.width, 0),
+                                           QPoint(point_right[0], point_right[1]),
+                                           QPoint(point_left[0], point_left[1])]))
 
         # Ground
         self.painter.setPen(QPen(QColor("#6a5200"), 1, Qt.SolidLine))
         self.painter.setBrush(QBrush(QColor("#6a5200"), Qt.SolidPattern))
         self.painter.drawPolygon(QPolygon([QPoint(0, self.height),
-                                      QPoint(self.width, self.height),
-                                      QPoint(self.width, horizon_right),
-                                      QPoint(0, horizon_left)]))
+                                           QPoint(self.width, self.height),
+                                           QPoint(point_right[0], point_right[1]),
+                                           QPoint(point_left[0], point_left[1])]))
         
         # Horizon
         self.painter.setPen(QPen(QColor("white"), self.horizon_thickness, Qt.SolidLine))
-        self.painter.drawLine(0, horizon_left, self.width, horizon_right)
+        self.painter.drawLine(point_left[0], point_left[1], point_right[0], point_right[1])
