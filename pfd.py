@@ -26,7 +26,7 @@ class PrimaryFlightDisplay:
         self.wings_border_width = 2
         self.wings_length = 100
         self.wings_height = 20
-        self.wings_starting = self.width/2 - 300 # How far apart the sides are
+        self.wings_starting = self.width/2 - 250 # How far apart the sides are
 
         # Horizon
         self.horizon_thickness = 2
@@ -41,8 +41,7 @@ class PrimaryFlightDisplay:
 
         # Altitude and speed scale
         self.scale_height = 550
-        self.scale_width = 150
-        self.scale_offset = 150
+        self.scale_width = 180
         self.tick_length = 30
         self.tick_thickness = 4
         self.box_height = 60
@@ -132,30 +131,21 @@ class PrimaryFlightDisplay:
         # Grey container
         self.painter.drawRect(0, 0, self.scale_width, self.height)
 
-        self.painter.setOpacity(1.0)
-
-        scale_pixmap = QPixmap(self.width, self.height)
-        scale_pixmap.fill(Qt.transparent)
-        scale_painter = QPainter(scale_pixmap)
-
         # Tick marks
-        scale_painter.setPen(QPen(QColor("#b4b2b4"), self.tick_thickness, Qt.SolidLine))
+        self.painter.setOpacity(1.0)
+        self.painter.setPen(QPen(QColor("#b4b2b4"), self.tick_thickness, Qt.SolidLine))
         for i in range(self.speed_scale_n_ticks):
             offset = i * self.speed_scale_spacing - self.scale_height/2
             x1 = 0
             x2 = self.tick_length
             y = self.height/2 - self.scale_height/2 - offset + self.speed_to_px(self.speed)
 
-            scale_painter.drawLine(x1, y, x2, y)
-            scale_painter.drawText(QPoint(60, y + 10), str(i * self.speed_scale_intervals))
+            self.painter.drawLine(x1, y, x2, y)
+            self.painter.drawText(QPoint(60, y + 10), str(i * self.speed_scale_intervals))
 
             # If y less than zero, break
 
-        scale_painter.drawLine(self.tick_thickness/2, 0, self.tick_thickness/2, self.height) # Scale
-        
-        scale_painter.end()
-
-        self.painter.drawPixmap(QPoint(), scale_pixmap)
+        self.painter.drawLine(self.tick_thickness/2, 0, self.tick_thickness/2, self.height) # Scale
 
         # Draw black box with speed reading
         self.painter.setPen(QPen(QColor("#b4b2b4"), self.tick_thickness, Qt.SolidLine))
@@ -172,29 +162,20 @@ class PrimaryFlightDisplay:
         # Grey container
         self.painter.drawRect(self.width - self.scale_width, 0, self.width, self.height)
 
-        self.painter.setOpacity(1.0)
-
-        scale_pixmap = QPixmap(self.width, self.height)
-        scale_pixmap.fill(Qt.transparent)
-        scale_painter = QPainter(scale_pixmap)
-
         # Tick marks
-        scale_painter.setPen(QPen(QColor("#b4b2b4"), self.tick_thickness, Qt.SolidLine))
+        self.painter.setOpacity(1.0)
+        self.painter.setPen(QPen(QColor("#b4b2b4"), self.tick_thickness, Qt.SolidLine))
         for i in range(self.altitude_scale_n_ticks):
             offset = i * self.altitude_scale_spacing - self.scale_height/2
             x1 = self.width
             x2 = self.width - self.tick_length
             y = self.height/2 - self.scale_height/2 - offset + self.altitude_to_px(self.altitude)
 
-            scale_painter.drawLine(x1, y, x2, y)
+            self.painter.drawLine(x1, y, x2, y)
 
-            scale_painter.drawText(QPoint(self.width - 100, y + 10), str(int(i * self.altitude_scale_intervals)))
+            self.painter.drawText(QPoint(self.width - 100, y + 10), str(int(i * self.altitude_scale_intervals)))
         
-        scale_painter.drawLine(self.width - self.tick_thickness/2, 0, self.width - self.tick_thickness/2, self.height) # Scale
-
-        scale_painter.end()
-
-        self.painter.drawPixmap(QPoint(), scale_pixmap)
+        self.painter.drawLine(self.width - self.tick_thickness/2, 0, self.width - self.tick_thickness/2, self.height) # Scale
 
         # Draw black box with altitude reading
         self.painter.setPen(QPen(QColor("#b4b2b4"), self.tick_thickness, Qt.SolidLine))
