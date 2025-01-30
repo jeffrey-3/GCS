@@ -21,17 +21,17 @@ class DataTable(QWidget):
         self.time_remaining_label.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.time_remaining_label, 0, 2)
 
-        # self.voltage_label = QLabel("Battery Voltage (V)<h1>11.04</h1>")
-        # self.voltage_label.setAlignment(Qt.AlignCenter)
-        # self.layout.addWidget(self.voltage_label, 1, 0)
+        self.voltage_label = QLabel("Battery Voltage (V)<h1>11.04</h1>")
+        self.voltage_label.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(self.voltage_label, 1, 0)
 
-        # self.current_label = QLabel("Battery Current (A)<h1>30.46</h1>")
-        # self.current_label.setAlignment(Qt.AlignCenter)
-        # self.layout.addWidget(self.current_label, 1, 1)
+        self.current_label = QLabel("Battery Current (A)<h1>30.46</h1>")
+        self.current_label.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(self.current_label, 1, 1)
 
-        # self.ap_current_label = QLabel("Autopilot Current (mA)<h1>30.46</h1>")
-        # self.ap_current_label.setAlignment(Qt.AlignCenter)
-        # self.layout.addWidget(self.ap_current_label, 1, 2)
+        self.ap_current_label = QLabel("Autopilot Current (mA)<h1>30.46</h1>")
+        self.ap_current_label.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(self.ap_current_label, 1, 2)
 
         self.rssi_label = QLabel("RSSI<h1>123</h1>")
         self.rssi_label.setAlignment(Qt.AlignCenter)

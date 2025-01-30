@@ -11,14 +11,13 @@ from command_buttons import CommandButtons
 from input_random import InputRandom
 from input_bluetooth import InputBluetooth
 
-app = QApplication([])
-input = InputRandom()
-# input = InputBluetooth()
-pfd = PrimaryFlightDisplay()
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+
+        self.pfd = PrimaryFlightDisplay()
+        self.input = InputRandom()
+        # self.input = InputBluetooth()
 
         self.setup_window()
         self.create_main_layout()
@@ -75,22 +74,24 @@ class MainWindow(QMainWindow):
     
     def update(self):
         # Get data
-        input.getData()
-        roll = input.roll
-        pitch = input.pitch
-        heading = input.heading
-        altitude = input.altitude
-        speed = input.speed 
-        lat = input.lat 
-        lon = input.lon
+        self.input.getData()
+        roll = self.input.roll
+        pitch = self.input.pitch
+        heading = self.input.heading
+        altitude = self.input.altitude
+        speed = self.input.speed 
+        lat = self.input.lat 
+        lon = self.input.lon
 
         # Transmit data
-        input.send()
+        self.input.send()
         
         # Update GUI
-        self.hud_label.setPixmap(pfd.update(pitch, roll, heading, altitude, speed, 80, 50))
+        self.hud_label.setPixmap(self.pfd.update(pitch, roll, heading, altitude, speed, 80, 50))
         self.map.update(heading, lat, lon)
 
-main = MainWindow()
-main.showMaximized()
-app.exec()
+if __name__ == "__main__":
+    app = QApplication([])
+    main = MainWindow()
+    main.showMaximized()
+    app.exec()
