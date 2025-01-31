@@ -2,6 +2,7 @@ import serial
 import time
 import math
 import struct
+from cobs import cobs
 
 class InputBluetooth():
     def __init__(self):
@@ -30,5 +31,16 @@ class InputBluetooth():
                 self.lat = data[5]
                 self.lon = data[6]
 
+                return True
+        return False
+
     def send(self):
-        self.bluetooth.write(b'Hello\n')
+        # Interface layer
+        command_payload = bytearray([0x00] * 38)
+        command_payload[0] = 0b00000001 # Payload type
+        command_payload[1] = 0b00000000 # Command type
+
+        # Transport protocol layer
+        packet = bytes([0x00]) + cobs.encode(command_payload)
+
+        self.bluetooth.write(packet)

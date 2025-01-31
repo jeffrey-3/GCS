@@ -1,12 +1,16 @@
 import pyqtgraph as pg
 from PyQt5.QtGui import *
+import numpy as np
+import math
 
 class AltitudeGraph(pg.PlotWidget):
-    def __init__(self):
+    def __init__(self, waypoints):
         super().__init__()
 
-        self.x = [0, 1, 2, 5, 6, 10]
-        self.y = [0, 50, 70, 70, 40, 0]
+        self.waypoints = waypoints
+
+        self.x = [math.sqrt(self.waypoints[i, 0]**2 + self.waypoints[i, 1]**2) for i in range(self.waypoints.shape[0])]
+        self.y = self.waypoints[:, 2] * -1
 
         font = QFont()
         font.setPixelSize(30)

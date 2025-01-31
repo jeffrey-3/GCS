@@ -22,5 +22,7 @@ class InputRandom():
         self.lon = -118.602432
         self.heading = 30*math.sin(t)
 
+        return True
+
     def send(self):
         return

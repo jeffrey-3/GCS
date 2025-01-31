@@ -10,14 +10,19 @@ from datatable import DataTable
 from command_buttons import CommandButtons
 from input_random import InputRandom
 from input_bluetooth import InputBluetooth
+import numpy as np
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.waypoints = np.array([[300, 500, -80],
+                                   [-100, 800, -80],
+                                   [-600, 800, -80]])
+        
         self.pfd = PrimaryFlightDisplay()
-        self.input = InputRandom()
-        # self.input = InputBluetooth()
+        # self.input = InputRandom()
+        self.input = InputBluetooth()
 
         self.setup_window()
         self.create_main_layout()
@@ -31,7 +36,7 @@ class MainWindow(QMainWindow):
     def start_thread(self):
         self.timer = QTimer()
         self.timer.timeout.connect(self.update)
-        self.timer.start(15)
+        self.timer.start(1)
     
     def setup_window(self):
         self.setWindowTitle("UAV Ground Control")
@@ -66,29 +71,28 @@ class MainWindow(QMainWindow):
         self.left_layout.addWidget(self.hud_label)
 
     def add_plot(self):
-        self.map = Map()
+        self.map = Map(self.waypoints)
         self.map_layout.addWidget(self.map, 2)
 
-        self.altitude_graph = AltitudeGraph()
+        self.altitude_graph = AltitudeGraph(self.waypoints)
         self.map_layout.addWidget(self.altitude_graph)
     
     def update(self):
-        # Get data
-        self.input.getData()
-        roll = self.input.roll
-        pitch = self.input.pitch
-        heading = self.input.heading
-        altitude = self.input.altitude
-        speed = self.input.speed 
-        lat = self.input.lat 
-        lon = self.input.lon
+        if self.input.getData():
+            roll = self.input.roll
+            pitch = self.input.pitch
+            heading = self.input.heading
+            altitude = self.input.altitude
+            speed = self.input.speed 
+            lat = self.input.lat 
+            lon = self.input.lon
 
-        # Transmit data
-        self.input.send()
-        
-        # Update GUI
-        self.hud_label.setPixmap(self.pfd.update(pitch, roll, heading, altitude, speed, 80, 50))
-        self.map.update(heading, lat, lon)
+            # Transmit data
+            self.input.send()
+            
+            # Update GUI
+            self.hud_label.setPixmap(self.pfd.update(pitch, roll, heading, altitude, speed, 80, 50))
+            self.map.update(heading, lat, lon)
 
 if __name__ == "__main__":
     app = QApplication([])

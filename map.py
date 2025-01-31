@@ -4,6 +4,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from pyqtgraph import functions as fn
 import math
+import numpy as np
 
 # https://stackoverflow.com/questions/49219278/pyqtgraph-move-origin-of-arrowitem-to-local-center
 class CenteredArrowItem(pg.ArrowItem):
@@ -28,18 +29,21 @@ class CenteredArrowItem(pg.ArrowItem):
             self.setFlags(self.flags() & ~self.ItemIgnoresTransformations)
 
 class Map(pg.PlotWidget):
-    def __init__(self):
+    def __init__(self, waypoints):
         super().__init__()
+
+        self.waypoints = waypoints
 
         # Geocoordinates at the center of map tile
         self.center_lat = 33.017826
         self.center_lon = -118.602432
 
-        # Position of waypoints in meters
-        self.x = [0, 200, 1000, 700, 1000]
-        self.y = [0, 500, -600, -1000, 1000]
+        # custom_pen = QPen(QColor("#FFFFFF"))
+        # custom_pen.setWidth(2)
+        # custom_pen.setDashPattern([10, 5])
+        # self.dashed_line = self.plot([0, 300], [0, 300], pen=custom_pen)
 
-        self.plot(self.x, self.y, pen=pg.mkPen('magenta', width=5), symbol="o", symbolSize=50, symbolBrush=QColor("black"), symbolPen=pg.mkPen(QColor("magenta"), width=5))
+        self.plot(self.waypoints[:, 1], self.waypoints[:, 0], pen=pg.mkPen('magenta', width=5), symbol="o", symbolSize=50, symbolBrush=QColor("black"), symbolPen=pg.mkPen(QColor("magenta"), width=5))
         # self.getPlotItem().hideAxis('bottom')
         # self.getPlotItem().hideAxis('left')
         self.setAspectLocked(True)
@@ -51,13 +55,13 @@ class Map(pg.PlotWidget):
         # Add numbers
         font = QFont()
         font.setPixelSize(40)
-        for i in range(len(self.x)):
+        for i in range(self.waypoints.shape[0]):
             text = None 
             if i == 1: # Show the current waypoint being tracked
                 text = pg.TextItem(text=str(i), color=QColor("white"), anchor=(0.5, 0.5)) # pg.TextItem(text=str(i), color=QColor("white"), fill=QColor("magenta"), anchor=(0.5, 0.5))
             else:
                 text = pg.TextItem(text=str(i), color=QColor("white"), anchor=(0.5, 0.5))
-            text.setPos(self.x[i], self.y[i])
+            text.setPos(self.waypoints[i, 1], self.waypoints[i, 0])
             text.setFont(font)
             self.addItem(text)
 
@@ -69,6 +73,11 @@ class Map(pg.PlotWidget):
         position = self.calculate_displacement_meters(lat, lon)
         self.arrow.setStyle(angle=heading + 90)
         self.arrow.setPos(position[0], position[1])
+
+        # Heading line
+        # length = 800
+        # self.dashed_line.setData([position[0], position[0] + length*math.sin(math.radians(heading))], 
+        #                          [position[1], position[1] + length*math.cos(math.radians(heading))])
     
     def calculate_displacement_meters(self, lat, lon):
         # Earth's radius in meters
