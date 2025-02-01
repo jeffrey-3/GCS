@@ -9,8 +9,13 @@ class AltitudeGraph(pg.PlotWidget):
 
         self.waypoints = waypoints
 
-        self.x = [math.sqrt(self.waypoints[i, 0]**2 + self.waypoints[i, 1]**2) for i in range(self.waypoints.shape[0])]
-        self.y = self.waypoints[:, 2]
+        self.x = [math.sqrt((self.waypoints[0, 0])**2 + (self.waypoints[0, 1])**2)]
+        for i in range(1, len(self.waypoints)):
+            wp = self.waypoints[i]
+            prev_wp = self.waypoints[i - 1]    
+            dist = math.sqrt((wp[0] - prev_wp[0])**2 + (wp[1] - prev_wp[1])**2)
+            self.x.append(self.x[i - 1] + dist)
+        self.y = self.waypoints[:, 2] * -1
 
         font = QFont()
         font.setPixelSize(30)

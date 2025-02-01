@@ -12,20 +12,23 @@ from input_random import InputRandom
 from input_bluetooth import InputBluetooth
 import numpy as np
 
+# Bug: Doesn't work when USB used. You have to load waypoints first.
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.waypoints = np.array([[300, 500, 80],
-                                   [-100, 800, 100],
-                                   [-600, 800, 80]])
-        # When command needs to be sent, it gets added here.
-        # When it recieves acknowledgement, it gets removed
-        self.command_queue = []
+        # North, east, down
+        self.waypoints = np.array([[300, 500, -80],
+                                   [-100, 800, -100],
+                                   [-600, 400, -80],
+                                   [0, -200, -80]])
         
         self.pfd = PrimaryFlightDisplay()
         # self.input = InputRandom()
         self.input = InputBluetooth()
+
+        for i in range(len(self.waypoints)):
+            self.input.append_queue(self.input.generate_waypoint_packet(self.waypoints[i], i))
 
         self.setup_window()
         self.create_main_layout()
@@ -91,8 +94,8 @@ class MainWindow(QMainWindow):
             lon = self.input.lon
 
             # Transmit data
-            # self.input.send()
-            self.input.send_waypoints(self.waypoints[0], 0)
+            self.input.send()
+            print(len(self.input.command_queue))
             
             # Update GUI
             self.hud_label.setPixmap(self.pfd.update(pitch, roll, heading, altitude, speed, 80, 50))
