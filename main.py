@@ -19,6 +19,9 @@ class MainWindow(QMainWindow):
         self.waypoints = np.array([[300, 500, 80],
                                    [-100, 800, 100],
                                    [-600, 800, 80]])
+        # When command needs to be sent, it gets added here.
+        # When it recieves acknowledgement, it gets removed
+        self.command_queue = []
         
         self.pfd = PrimaryFlightDisplay()
         # self.input = InputRandom()

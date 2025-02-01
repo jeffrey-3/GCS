@@ -24,13 +24,13 @@ class InputBluetooth():
             data = data_raw[second_last_idx:last_idx]
 
             if len(data) == 40:
+                data = data[1:] # Remove start byte
+                data = cobs.decode(data) # Decode COBS
+                
                 # Figure out what type of payload
                 if data[0] == 0: # Telemetry payload
-                    data = data[1:] # Remove start byte
-                    data = cobs.decode(data) # Decode COBS
                     data = data[1:-9] # Remove empty bytes and the "payload type" byte
                     data = struct.unpack("<fffffff", data) # Use endian to remove padding
-                    
                     self.roll = data[0]
                     self.pitch = data[1]
                     self.heading = data[2]
@@ -38,8 +38,14 @@ class InputBluetooth():
                     self.speed = data[4]
                     self.lat = data[5]
                     self.lon = data[6]
-                    
+                    print("received telemetry")
                     return True
+                elif data[0] == 1: # Command payload
+                    print("received command")
+                    return False
+                elif data[0] == 2: # Waypoint payload
+                    print("received waypoint")
+                    return False
         return False
 
     def send(self):
