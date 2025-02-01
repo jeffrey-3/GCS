@@ -13,15 +13,17 @@ from input_bluetooth import InputBluetooth
 import numpy as np
 
 # Bug: Doesn't work when USB used. You have to load waypoints first.
+# The slow loading of waypoints is due to the delay
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
         # North, east, down
-        self.waypoints = np.array([[300, 500, -80],
-                                   [-100, 800, -100],
-                                   [-600, 400, -80],
-                                   [0, -200, -80]])
+        self.waypoints = np.array([[-400, 200, -80],
+                                   [-200, -300, -80],
+                                   [200, -200, -100],
+                                   [200, 200, -80],
+                                   [-100, 400, -80]])
         
         self.pfd = PrimaryFlightDisplay()
         # self.input = InputRandom()
