@@ -16,9 +16,9 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.waypoints = np.array([[300, 500, -80],
-                                   [-100, 800, -80],
-                                   [-600, 800, -80]])
+        self.waypoints = np.array([[300, 500, 80],
+                                   [-100, 800, 100],
+                                   [-600, 800, 80]])
         
         self.pfd = PrimaryFlightDisplay()
         # self.input = InputRandom()
@@ -88,7 +88,8 @@ class MainWindow(QMainWindow):
             lon = self.input.lon
 
             # Transmit data
-            self.input.send()
+            # self.input.send()
+            self.input.send_waypoints(self.waypoints[0], 0)
             
             # Update GUI
             self.hud_label.setPixmap(self.pfd.update(pitch, roll, heading, altitude, speed, 80, 50))

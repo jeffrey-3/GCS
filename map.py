@@ -38,10 +38,10 @@ class Map(pg.PlotWidget):
         self.center_lat = 33.017826
         self.center_lon = -118.602432
 
-        # custom_pen = QPen(QColor("#FFFFFF"))
-        # custom_pen.setWidth(2)
-        # custom_pen.setDashPattern([10, 5])
-        # self.dashed_line = self.plot([0, 300], [0, 300], pen=custom_pen)
+        custom_pen = QPen(QColor("#FFFFFF"))
+        # custom_pen.setWidth(3)
+        custom_pen.setDashPattern([10, 5])
+        self.dashed_line = self.plot([0, 300], [0, 300], pen=custom_pen)
 
         self.plot(self.waypoints[:, 1], self.waypoints[:, 0], pen=pg.mkPen('magenta', width=5), symbol="o", symbolSize=50, symbolBrush=QColor("black"), symbolPen=pg.mkPen(QColor("magenta"), width=5))
         # self.getPlotItem().hideAxis('bottom')
@@ -51,6 +51,8 @@ class Map(pg.PlotWidget):
         self.hideButtons()
         self.showGrid(x=True, y=True)
         self.setBackground(QColor("#202124"))
+
+        self.setRange(xRange=(-1000, 1000), yRange=(-1000, 1000))
 
         # Add numbers
         font = QFont()
@@ -75,9 +77,10 @@ class Map(pg.PlotWidget):
         self.arrow.setPos(position[0], position[1])
 
         # Heading line
-        # length = 800
-        # self.dashed_line.setData([position[0], position[0] + length*math.sin(math.radians(heading))], 
-        #                          [position[1], position[1] + length*math.cos(math.radians(heading))])
+        length = 0
+        # length = math.sqrt((self.viewRange()[0][1] - self.viewRange()[0][0])**2 + (self.viewRange()[1][1] - self.viewRange()[1][0])**2)
+        self.dashed_line.setData([position[0], position[0] + length*math.sin(math.radians(heading))], 
+                                 [position[1], position[1] + length*math.cos(math.radians(heading))])
     
     def calculate_displacement_meters(self, lat, lon):
         # Earth's radius in meters

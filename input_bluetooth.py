@@ -19,28 +19,48 @@ class InputBluetooth():
     def getData(self):
         if self.bluetooth.in_waiting > 0:
             data_raw = self.bluetooth.read_all() # Flush buffer
-            idx = data_raw.rfind(b'\n')
-            if data_raw[idx-32] == 10: # Go back to previous packet and see if it ends with correct footer
-                data = struct.unpack('fffffff?c', data_raw[idx-29:idx+1])
-                print(data)
-                self.roll = data[0]
-                self.pitch = data[1]
-                self.heading = data[2]
-                self.altitude = data[3]
-                self.speed = data[4]
-                self.lat = data[5]
-                self.lon = data[6]
+            last_idx = data_raw.rfind(0b00000000)
+            second_last_idx = data_raw.rfind(0b00000000, 0, last_idx)
+            data = data_raw[second_last_idx:last_idx]
 
-                return True
+            if len(data) == 40:
+                # Figure out what type of payload
+                if data[0] == 0: # Telemetry payload
+                    data = data[1:] # Remove start byte
+                    data = cobs.decode(data) # Decode COBS
+                    data = data[1:-9] # Remove empty bytes and the "payload type" byte
+                    data = struct.unpack("<fffffff", data) # Use endian to remove padding
+                    
+                    self.roll = data[0]
+                    self.pitch = data[1]
+                    self.heading = data[2]
+                    self.altitude = data[3]
+                    self.speed = data[4]
+                    self.lat = data[5]
+                    self.lon = data[6]
+                    
+                    return True
         return False
 
     def send(self):
         # Interface layer
         command_payload = bytearray([0x00] * 38)
         command_payload[0] = 0b00000001 # Payload type
-        command_payload[1] = 0b00000000 # Command type
+        command_payload[1] = 0b00000000 # Command
 
         # Transport protocol layer
         packet = bytes([0x00]) + cobs.encode(command_payload)
+
+        self.bluetooth.write(packet)
+    
+    def send_waypoints(self, waypoint, waypoint_index):
+        # Interface layer
+        waypoint_payload = bytearray([0x00] * 38)
+        waypoint_payload[0] = 2 # Payload type
+        waypoint_payload[1] = waypoint_index # Waypoint index
+        waypoint_payload[2:14] = struct.pack("3f", waypoint[0], waypoint[1], waypoint[2])
+
+        # Transport protocol layer
+        packet = bytes([0x00]) + cobs.encode(waypoint_payload)
 
         self.bluetooth.write(packet)
