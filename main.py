@@ -19,11 +19,10 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         # North, east, down
-        self.waypoints = np.array([[-400, 200, -80],
-                                   [-200, -300, -80],
-                                   [200, -200, -100],
-                                   [200, 200, -80],
-                                   [-100, 400, -80]])
+        self.waypoints = np.array([[-400, 200, -40],
+                                   [-200, -200, -40],
+                                   [200, 0, -40],
+                                   [0, 400, -40]])
         
         self.pfd = PrimaryFlightDisplay()
         # self.input = InputRandom()
@@ -76,6 +75,7 @@ class MainWindow(QMainWindow):
 
     def add_hud(self):
         self.hud_label = QLabel()
+        self.hud_label.setPixmap(self.pfd.update(0, 0, 0, 0, 0, 0, 0))
         self.left_layout.addWidget(self.hud_label)
 
     def add_plot(self):

@@ -34,27 +34,40 @@ class Map(pg.PlotWidget):
 
         self.waypoints = waypoints
 
-        # Geocoordinates at the center of map tile
+        # Use runway as center?
+        # Geocoordinates at the center of map
         self.center_lat = 33.017826
         self.center_lon = -118.602432
 
-        custom_pen = QPen(QColor("#FFFFFF"))
-        # custom_pen.setWidth(3)
-        custom_pen.setDashPattern([10, 5])
-        self.dashed_line = self.plot([0, 300], [0, 300], pen=custom_pen)
-
-        self.plot(self.waypoints[:, 1], self.waypoints[:, 0], pen=pg.mkPen('magenta', width=5), symbol="o", symbolSize=50, symbolBrush=QColor("black"), symbolPen=pg.mkPen(QColor("magenta"), width=5))
-        # self.getPlotItem().hideAxis('bottom')
-        # self.getPlotItem().hideAxis('left')
+        self.add_style()
+        self.add_waypoints()
+        self.add_arrow()
+        self.add_runway()
+        
+    def add_runway(self):
+        return
+    
+    def add_style(self):
         self.setAspectLocked(True)
         self.setMenuEnabled(False)
         self.hideButtons()
         self.showGrid(x=True, y=True)
         self.setBackground(QColor("#202124"))
 
-        self.setRange(xRange=(-1000, 1000), yRange=(-1000, 1000))
+    def add_arrow(self):
+        self.arrow = CenteredArrowItem(angle=90, headLen=60, tipAngle=45, baseAngle=30, pen=pg.mkPen('white', width=2), brush=QColor("black"))
+        self.addItem(self.arrow)
 
-        # Add numbers
+    def add_waypoints(self):
+        self.plot(self.waypoints[:, 1], 
+                  self.waypoints[:, 0], 
+                  pen=pg.mkPen('magenta', width=5), 
+                  symbol="o", 
+                  symbolSize=50, 
+                  symbolBrush=QColor("black"), 
+                  symbolPen=pg.mkPen(QColor("magenta"), width=5))
+    
+        # Waypoint Numbers
         font = QFont()
         font.setPixelSize(40)
         for i in range(self.waypoints.shape[0]):
@@ -67,20 +80,10 @@ class Map(pg.PlotWidget):
             text.setFont(font)
             self.addItem(text)
 
-        # Add arrow to plot
-        self.arrow = CenteredArrowItem(angle=90, headLen=60, tipAngle=45, baseAngle=30, pen=pg.mkPen('white', width=2), brush=QColor("black"))
-        self.addItem(self.arrow)
-
     def update(self, heading, lat, lon):
         position = self.calculate_displacement_meters(lat, lon)
         self.arrow.setStyle(angle=heading + 90)
         self.arrow.setPos(position[0], position[1])
-
-        # Heading line
-        length = 0
-        # length = math.sqrt((self.viewRange()[0][1] - self.viewRange()[0][0])**2 + (self.viewRange()[1][1] - self.viewRange()[1][0])**2)
-        self.dashed_line.setData([position[0], position[0] + length*math.sin(math.radians(heading))], 
-                                 [position[1], position[1] + length*math.cos(math.radians(heading))])
     
     def calculate_displacement_meters(self, lat, lon):
         # Earth's radius in meters
@@ -101,3 +104,4 @@ class Map(pg.PlotWidget):
         y = R * delta_lat
         
         return x, y
+    

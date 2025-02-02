@@ -26,3 +26,9 @@ class InputRandom():
 
     def send(self):
         return
+
+    def append_queue(self, packet):
+        return
+    
+    def generate_waypoint_packet(self, waypoint, waypoint_index):
+        return
