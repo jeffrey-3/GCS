@@ -97,11 +97,12 @@ class MainWindow(QMainWindow):
 
             # Transmit data
             self.input.send()
-            print(len(self.input.command_queue))
             
             # Update GUI
             self.hud_label.setPixmap(self.pfd.update(pitch, roll, heading, altitude, speed, 80, 50))
             self.map.update(heading, lat, lon)
+            self.datatable.update(self.input.mode_id)
+            self.command_buttons.update(len(self.input.command_queue))
 
 if __name__ == "__main__":
     app = QApplication([])

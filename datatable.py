@@ -44,3 +44,20 @@ class DataTable(QWidget):
         self.distance_label = QLabel("Distance (m)<h1>123</h1>")
         self.distance_label.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.distance_label, 2, 2)
+    
+    def update(self, mode_id):
+        state = "???"
+        if mode_id == 0:
+            state = "BOOT"
+        elif mode_id == 2:
+            state = "MANUAL"
+        elif mode_id == 3:
+            state = "STABILIZED"
+        elif mode_id == 4:
+            state = "READY"
+        elif mode_id == 5:
+            state = "TAKEOFF"
+        elif mode_id == 6:
+            state = "MISSION"
+            
+        self.state_label.setText("State<h1>" + state + "</h1>")

@@ -13,6 +13,7 @@ class InputBluetooth():
         self.speed = 0
         self.lat = 0
         self.lon = 0
+        self.mode_id = -1
 
         # When command needs to be sent, it gets added here.
         # When it recieves acknowledgement, it gets removed
@@ -33,8 +34,8 @@ class InputBluetooth():
                 
                 # Figure out what type of payload
                 if packet[0] == 0: # Telemetry payload
-                    packet = packet[1:-9] # Remove empty bytes and the "payload type" byte
-                    packet = struct.unpack("<fffffff", packet) # Use endian to remove padding
+                    packet = packet[1:-8] # Remove empty bytes and the "payload type" byte
+                    packet = struct.unpack("<fffffffB", packet) # Use endian to remove padding
                     print(packet)
                     self.roll = packet[0]
                     self.pitch = packet[1]
@@ -43,6 +44,8 @@ class InputBluetooth():
                     self.speed = packet[4]
                     self.lat = packet[5]
                     self.lon = packet[6]
+                    self.mode_id = packet[7]
+
                     return True
                 elif packet[0] == 1: # Command payload
                     return False
