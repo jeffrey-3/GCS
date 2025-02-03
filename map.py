@@ -105,35 +105,65 @@ class Map(pg.PlotWidget):
             y_pt, x_pt = self.calculate_displacement_meters(waypoint[0], waypoint[1])
             x.append(x_pt)
             y.append(y_pt)
-        self.plot(x, 
-                  y, 
-                  pen=pg.mkPen('magenta', width=5), 
-                  symbol="o", 
-                  symbolSize=50, 
-                  symbolBrush=QColor("black"), 
-                  symbolPen=pg.mkPen(QColor("magenta"), width=5))
+
+        self.waypoints_line = self.plot(x, 
+                                        y, 
+                                        pen=pg.mkPen('magenta', width=5), 
+                                        symbol="o", 
+                                        symbolSize=50, 
+                                        symbolBrush=QColor("black"), 
+                                        symbolPen=pg.mkPen(QColor("magenta"), width=5))
         
-        # Create Ttrget waypoint, setPos later
+        # Create Target waypoint, setData later
         self.target_marker = pg.ScatterPlotItem([], [], size=100, brush=pg.mkBrush(0, 0, 0, 0), pen=pg.mkPen('white', width=2))
         self.addItem(self.target_marker)
     
         # Waypoint Numbers
         font = QFont()
         font.setPixelSize(40)
-        for i in range(self.waypoints.shape[0]):
+        self.waypoints_numbers = []
+        for i in range(len(self.waypoints)):
             text = pg.TextItem(text=str(i), color=QColor("white"), anchor=(0.5, 0.5))
             text.setPos(x[i], y[i])
             text.setFont(font)
             self.addItem(text)
+            self.waypoints_numbers.append(text)
 
-    def update(self, heading, lat, lon, wp_idx):
+    def update(self, heading, lat, lon, wp_idx, waypoints):
+        self.waypoints = waypoints
+
         position = self.calculate_displacement_meters(lat, lon)
         self.arrow.setStyle(angle=heading + 90)
         self.arrow.setPos(position[0], position[1])
 
-        y, x = self.calculate_displacement_meters(self.waypoints[wp_idx, 0], self.waypoints[wp_idx, 1])
+        y, x = self.calculate_displacement_meters(self.waypoints[wp_idx][0], self.waypoints[wp_idx][1])
         self.target_marker.setData([x], [y])
+
+        self.update_waypoints()
     
+    def update_waypoints(self):
+        x = []
+        y = []
+        for waypoint in self.waypoints:
+            y_pt, x_pt = self.calculate_displacement_meters(waypoint[0], waypoint[1])
+            x.append(x_pt)
+            y.append(y_pt)
+        self.waypoints_line.setData(x, y)
+
+        if len(self.waypoints_numbers) > len(self.waypoints): # WP has been removed
+            for i in range(len(self.waypoints), len(self.waypoints_numbers)):
+                self.removeItem(self.waypoints_numbers[i])
+                self.waypoints_numbers.pop(i)
+        elif len(self.waypoints) > len(self.waypoints_numbers): # WP has been added
+            for i in range(len(self.waypoints_numbers), len(self.waypoints)):
+                font = QFont()
+                font.setPixelSize(40)
+                text = pg.TextItem(text=str(i), color=QColor("white"), anchor=(0.5, 0.5))
+                text.setPos(x[i], y[i])
+                text.setFont(font)
+                self.addItem(text)
+                self.waypoints_numbers.append(text)
+
     def calculate_displacement_meters(self, lat, lon):
         # Earth's radius in meters
         R = 6378137.0

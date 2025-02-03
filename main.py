@@ -25,14 +25,15 @@ class MainWindow(QMainWindow):
         # self.input = InputBluetooth()
 
         # Lat, lon, down
-        self.waypoints = np.array([[33.02139326113648, -118.59806466254331, -40],
-                                   [33.02139326113648, -118.60235, -40],
-                                   [33.01959663056824, -118.60235, -40],
-                                   [33.01959663056824, -118.59806466254331, -40],
-                                   [33.0222915764206, -118.59699332817914, -40],
-                                   [33.0222915764206, -118.60127866563585, -40],
-                                   [33.020494945852356, -118.60127866563585, -40],
-                                   [33.020494945852356, -118.59699332817914, -40]])
+        self.waypoints = [[33.02139326113648, -118.59806466254331, -40],
+                          [33.02139326113648, -118.60235, -40],
+                          [33.01959663056824, -118.60235, -40],
+                          [33.01959663056824, -118.59806466254331, -40],
+                          [33.0222915764206, -118.59699332817914, -40],
+                          [33.0222915764206, -118.60127866563585, -40],
+                          [33.020494945852356, -118.60127866563585, -40],
+                          [33.020494945852356, -118.59699332817914, -40]]
+        self.waypointEditor.setDefaultWaypoints(self.waypoints)
         
         for i in range(len(self.waypoints)):
             self.input.append_queue(self.input.generate_waypoint_packet(self.waypoints[i], i)) 
@@ -49,7 +50,7 @@ class MainWindow(QMainWindow):
     def start_thread(self):
         self.timer = QTimer()
         self.timer.timeout.connect(self.update)
-        self.timer.start(1)
+        self.timer.start(100)
     
     def setup_window(self):
         self.setWindowTitle("UAV Ground Control")
@@ -73,7 +74,7 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.datatable, "Data")
         self.tabs.addTab(self.command_buttons, "Commands")
         self.tabs.addTab(self.waypointEditor, "Mission")
-        self.tabs.addTab(QWidget(), "Terminal") # Raw telemetry packets
+        self.tabs.addTab(QWidget(), "Raw Data")
         self.left_layout.addWidget(self.tabs)
 
     def create_left_layout(self):
@@ -105,14 +106,15 @@ class MainWindow(QMainWindow):
                                                      self.input.speed, 
                                                      0, 
                                                      0))
+            self.waypoints = self.waypointEditor.getWaypoints()
+            self.altitude_graph.update(self.waypoints)
             self.map.update(self.input.heading, 
                             self.input.lat, 
                             self.input.lon, 
-                            self.input.wp_idx)
+                            self.input.wp_idx,
+                            self.waypoints)
             self.datatable.update(self.input.mode_id)
             self.command_buttons.update(len(self.input.command_queue))
-
-            print(self.waypointEditor.getWaypoints())
 
 if __name__ == "__main__":
     app = QApplication([])

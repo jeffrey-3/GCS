@@ -19,7 +19,7 @@ class CommandButtons(QWidget):
         self.queue_label = QLabel("Transmit Queue: 0")
         self.layout.addWidget(self.queue_label, 0, 0)
 
-        self.return_button = QPushButton("Return to Home")
+        self.return_button = QPushButton("Send Waypoints")
         self.return_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.return_button.setFont(self.font)
         self.layout.addWidget(self.return_button, 1, 0)

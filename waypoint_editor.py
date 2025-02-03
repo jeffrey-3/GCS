@@ -8,7 +8,7 @@ class WaypointEditor(QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
-        self.setDefaultWaypoints()
+        # self.setDefaultWaypoints()
 
     def initUI(self):
         layout = QVBoxLayout()
@@ -35,14 +35,8 @@ class WaypointEditor(QWidget):
         layout.addLayout(buttonLayout)
         self.setLayout(layout)
 
-    def setDefaultWaypoints(self):
-        default_waypoints = [
-            (37.7749, -122.4194, 30),
-            (34.0522, -118.2437, 50),
-            (40.7128, -74.0060, 100)
-        ]
-        
-        for lat, lon, alt in default_waypoints:
+    def setDefaultWaypoints(self, waypoints):
+        for lat, lon, alt in waypoints:
             self.addWaypoint(str(lat), str(lon), str(alt))
 
     def addWaypoint(self, lat="", lon="", alt=""):
@@ -62,8 +56,20 @@ class WaypointEditor(QWidget):
     def getWaypoints(self):
         waypoints = []
         for row in range(self.table.rowCount()):
-            lat = self.table.item(row, 0).text() if self.table.item(row, 0) else ""
-            lon = self.table.item(row, 1).text() if self.table.item(row, 1) else ""
-            alt = self.table.item(row, 2).text() if self.table.item(row, 2) else ""
-            waypoints.append((float(lat), float(lon), float(alt)))
+            if not self.is_float(self.table.item(row, 0).text()) or not self.is_float(self.table.item(row, 1).text()) or not self.is_float(self.table.item(row, 2).text()):
+                break
+            lat = self.table.item(row, 0).text()
+            lon = self.table.item(row, 1).text()
+            alt = self.table.item(row, 2).text()
+            waypoints.append([float(lat), float(lon), float(alt)])
         return waypoints
+
+    def is_float(self, element: any) -> bool:
+        #If you expect None to be passed:
+        if element is None: 
+            return False
+        try:
+            float(element)
+            return True
+        except ValueError:
+            return False
