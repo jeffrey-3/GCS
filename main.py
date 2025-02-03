@@ -19,14 +19,18 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         # North, east, down
-        self.waypoints = np.array([[-400, 200, -40],
-                                   [-200, -200, -40],
-                                   [200, 0, -40],
-                                   [0, 400, -40]])
+        self.waypoints = np.array([[400, 400, -40],
+                                   [0, 400, -40],
+                                   [0, 200, -40],
+                                   [400, 200, -40],
+                                   [500, 500, -40],
+                                   [100, 500, -40],
+                                   [100, 300, -40],
+                                   [500, 300, -40]])
         
         self.pfd = PrimaryFlightDisplay()
-        # self.input = InputRandom()
-        self.input = InputBluetooth()
+        self.input = InputRandom()
+        # self.input = InputBluetooth()
 
         for i in range(len(self.waypoints)):
             self.input.append_queue(self.input.generate_waypoint_packet(self.waypoints[i], i))
@@ -87,20 +91,21 @@ class MainWindow(QMainWindow):
     
     def update(self):
         if self.input.getData():
-            roll = self.input.roll
-            pitch = self.input.pitch
-            heading = self.input.heading
-            altitude = self.input.altitude
-            speed = self.input.speed 
-            lat = self.input.lat 
-            lon = self.input.lon
-
             # Transmit data
-            self.input.send()
+            self.input.send() # Move this out?
             
             # Update GUI
-            self.hud_label.setPixmap(self.pfd.update(pitch, roll, heading, altitude, speed, 80, 50))
-            self.map.update(heading, lat, lon)
+            self.hud_label.setPixmap(self.pfd.update(self.input.pitch, 
+                                                     self.input.roll, 
+                                                     self.input.heading, 
+                                                     self.input.altitude, 
+                                                     self.input.speed, 
+                                                     0, 
+                                                     0))
+            self.map.update(self.input.heading, 
+                            self.input.lat, 
+                            self.input.lon, 
+                            self.input.wp_idx)
             self.datatable.update(self.input.mode_id)
             self.command_buttons.update(len(self.input.command_queue))
 
