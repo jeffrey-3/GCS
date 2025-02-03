@@ -11,6 +11,7 @@ from command_buttons import CommandButtons
 from input_random import InputRandom
 from input_bluetooth import InputBluetooth
 import numpy as np
+from waypoint_editor import WaypointEditor
 
 # Bug: Doesn't work when USB used. You have to load waypoints first.
 # The slow loading of waypoints is due to the delay
@@ -18,22 +19,23 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        # North, east, down
-        self.waypoints = np.array([[400, 400, -40],
-                                   [0, 400, -40],
-                                   [0, 200, -40],
-                                   [400, 200, -40],
-                                   [500, 500, -40],
-                                   [100, 500, -40],
-                                   [100, 300, -40],
-                                   [500, 300, -40]])
-        
+        self.waypointEditor = WaypointEditor()   
         self.pfd = PrimaryFlightDisplay()
         self.input = InputRandom()
         # self.input = InputBluetooth()
 
+        # Lat, lon, down
+        self.waypoints = np.array([[33.02139326113648, -118.59806466254331, -40],
+                                   [33.02139326113648, -118.60235, -40],
+                                   [33.01959663056824, -118.60235, -40],
+                                   [33.01959663056824, -118.59806466254331, -40],
+                                   [33.0222915764206, -118.59699332817914, -40],
+                                   [33.0222915764206, -118.60127866563585, -40],
+                                   [33.020494945852356, -118.60127866563585, -40],
+                                   [33.020494945852356, -118.59699332817914, -40]])
+        
         for i in range(len(self.waypoints)):
-            self.input.append_queue(self.input.generate_waypoint_packet(self.waypoints[i], i))
+            self.input.append_queue(self.input.generate_waypoint_packet(self.waypoints[i], i)) 
 
         self.setup_window()
         self.create_main_layout()
@@ -70,6 +72,7 @@ class MainWindow(QMainWindow):
         self.command_buttons = CommandButtons()
         self.tabs.addTab(self.datatable, "Data")
         self.tabs.addTab(self.command_buttons, "Commands")
+        self.tabs.addTab(self.waypointEditor, "Mission")
         self.tabs.addTab(QWidget(), "Terminal") # Raw telemetry packets
         self.left_layout.addWidget(self.tabs)
 
@@ -108,6 +111,8 @@ class MainWindow(QMainWindow):
                             self.input.wp_idx)
             self.datatable.update(self.input.mode_id)
             self.command_buttons.update(len(self.input.command_queue))
+
+            print(self.waypointEditor.getWaypoints())
 
 if __name__ == "__main__":
     app = QApplication([])

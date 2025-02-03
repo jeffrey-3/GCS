@@ -2,6 +2,16 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
+# Bar graphs:
+# - Capacity consumed
+# - Cell voltage
+# - RSSI
+# Data:
+# - Time
+# - GPS sats
+# - State
+# Map has distance
+
 class DataTable(QWidget):
     def __init__(self):
         super().__init__()
@@ -50,7 +60,7 @@ class DataTable(QWidget):
         if mode_id == 0:
             state = "BOOT"
         elif mode_id == 2:
-            state = "MANUAL"
+            state = "DIRECT"
         elif mode_id == 3:
             state = "STABILIZED"
         elif mode_id == 4:

@@ -42,16 +42,19 @@ class CenteredArrowItem(pg.ArrowItem):
             self.setFlags(self.flags() & ~self.ItemIgnoresTransformations)
 
 class Map(pg.PlotWidget):
+    # Geocoordinates at the center of map
+    # Use runway as home?
+    # Set center as first GPS packet
+    center_lat = 33.0178
+    center_lon = -118.60235
+
     def __init__(self, waypoints):
         super().__init__()
 
         self.waypoints = waypoints
 
-        # Geocoordinates at the center of map
-        # Use runway as home?
-        # Set center as first GPS packet
-        self.center_lat = 33.017
-        self.center_lon = -118.602
+        # for waypoint in waypoints:
+        #     print(self.calculate_lat_lon(waypoint[0], waypoint[1]))
 
         self.rwy_lat = 33.017826
         self.rwy_lon = -118.602432
@@ -96,16 +99,22 @@ class Map(pg.PlotWidget):
         self.addItem(self.arrow)
 
     def add_waypoints(self):
-        self.plot(self.waypoints[:, 1], 
-                  self.waypoints[:, 0], 
+        x = []
+        y = []
+        for waypoint in self.waypoints:
+            y_pt, x_pt = self.calculate_displacement_meters(waypoint[0], waypoint[1])
+            x.append(x_pt)
+            y.append(y_pt)
+        self.plot(x, 
+                  y, 
                   pen=pg.mkPen('magenta', width=5), 
                   symbol="o", 
                   symbolSize=50, 
                   symbolBrush=QColor("black"), 
                   symbolPen=pg.mkPen(QColor("magenta"), width=5))
         
-        # Target waypoint
-        self.target_marker = pg.ScatterPlotItem([self.waypoints[0, 1]], [self.waypoints[0, 0]], size=100, brush=pg.mkBrush(0, 0, 0, 0), pen=pg.mkPen('white', width=2))
+        # Create Ttrget waypoint, setPos later
+        self.target_marker = pg.ScatterPlotItem([], [], size=100, brush=pg.mkBrush(0, 0, 0, 0), pen=pg.mkPen('white', width=2))
         self.addItem(self.target_marker)
     
         # Waypoint Numbers
@@ -113,7 +122,7 @@ class Map(pg.PlotWidget):
         font.setPixelSize(40)
         for i in range(self.waypoints.shape[0]):
             text = pg.TextItem(text=str(i), color=QColor("white"), anchor=(0.5, 0.5))
-            text.setPos(self.waypoints[i, 1], self.waypoints[i, 0])
+            text.setPos(x[i], y[i])
             text.setFont(font)
             self.addItem(text)
 
@@ -121,7 +130,9 @@ class Map(pg.PlotWidget):
         position = self.calculate_displacement_meters(lat, lon)
         self.arrow.setStyle(angle=heading + 90)
         self.arrow.setPos(position[0], position[1])
-        self.target_marker.setData([self.waypoints[wp_idx, 1]], [self.waypoints[wp_idx, 0]])
+
+        y, x = self.calculate_displacement_meters(self.waypoints[wp_idx, 0], self.waypoints[wp_idx, 1])
+        self.target_marker.setData([x], [y])
     
     def calculate_displacement_meters(self, lat, lon):
         # Earth's radius in meters
@@ -143,3 +154,19 @@ class Map(pg.PlotWidget):
         
         return x, y
     
+    def calculate_lat_lon(self, x, y):
+        # Earth's radius in meters
+        R = 6378137.0
+
+        # Convert center latitude to radians
+        center_lat_rad = math.radians(self.center_lat)
+        
+        # Compute new latitude
+        lat_rad = center_lat_rad + (y / R)
+        lat = math.degrees(lat_rad)
+
+        # Compute new longitude
+        lon_rad = math.radians(self.center_lon) + (x / (R * math.cos(center_lat_rad)))
+        lon = math.degrees(lon_rad)
+
+        return lat, lon
