@@ -1,8 +1,5 @@
 import sys
-from PyQt5.QtWidgets import (
-    QApplication, QWidget, QVBoxLayout, QPushButton, QTableWidget,
-    QTableWidgetItem, QHBoxLayout
-)
+from PyQt5.QtWidgets import *
 
 class WaypointEditor(QWidget):
     def __init__(self):
@@ -14,7 +11,6 @@ class WaypointEditor(QWidget):
         self.table = QTableWidget()
         self.table.setColumnCount(3)
         self.table.setHorizontalHeaderLabels(["Latitude", "Longitude", "Altitude"])
-        self.table.horizontalHeader().setStretchLastSection(True)
         for col in range(self.table.columnCount()):
             self.table.horizontalHeader().setSectionResizeMode(col, 1)  # 1 means stretching mode
         layout.addWidget(self.table)

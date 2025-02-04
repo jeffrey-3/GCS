@@ -52,6 +52,7 @@ class Map(pg.PlotWidget):
         super().__init__()
 
         self.waypoints = waypoints
+        self.waypoints_numbers = []
 
         self.rwy_lat = 33.017826
         self.rwy_lon = -118.602432
@@ -118,7 +119,6 @@ class Map(pg.PlotWidget):
         # Waypoint Numbers
         font = QFont()
         font.setPixelSize(40)
-        self.waypoints_numbers = []
         for i in range(len(self.waypoints)):
             text = pg.TextItem(text=str(i), color=QColor("white"), anchor=(0.5, 0.5))
             text.setPos(x[i], y[i])
@@ -146,6 +146,10 @@ class Map(pg.PlotWidget):
             x.append(x_pt)
             y.append(y_pt)
         self.waypoints_line.setData(x, y)
+
+        # Update waypoint number labels
+        for i in range(min(len(self.waypoints), len(self.waypoints_numbers))):
+            self.waypoints_numbers[i].setPos(x[i], y[i])
 
         if len(self.waypoints_numbers) > len(self.waypoints): # WP has been removed
             for i in range(len(self.waypoints), len(self.waypoints_numbers)):

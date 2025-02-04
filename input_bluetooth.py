@@ -28,7 +28,7 @@ class InputBluetooth(Input):
                 if packet[0] == 0: # Telemetry payload
                     packet = packet[1:-7] # Remove empty bytes at end of packet and the "payload type" byte at start of packet
                     packet = struct.unpack("<fffffffBB", packet) # Use endian to remove padding
-                    print(packet)
+                    # print(packet)
                     self.roll = packet[0]
                     self.pitch = packet[1]
                     self.heading = packet[2]

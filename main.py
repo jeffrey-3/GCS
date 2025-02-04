@@ -30,15 +30,12 @@ class MainWindow(QMainWindow):
         self.input = InputBluetooth()
 
         # Lat, lon, down
-        self.waypoints = [[33.02139326113648, -118.59806466254331, -40],
-                          [33.02139326113648, -118.60235, -40],
-                          [33.01959663056824, -118.60235, -40],
-                          [33.01959663056824, -118.59806466254331, -40],
-                          [33.0222915764206, -118.59699332817914, -40]]
+        self.waypoints = [[33.0214, -118.5981, -40],
+                          [33.0214, -118.6024, -40],
+                          [33.0196, -118.6024, -40],
+                          [33.0196, -118.5981, -40],
+                          [33.0223, -118.5970, -40]]
         self.waypointEditor.setDefaultWaypoints(self.waypoints)
-        
-        for i in range(len(self.waypoints)):
-            self.input.append_queue(self.input.generate_waypoint_packet(self.waypoints[i], i)) 
 
         self.setup_window()
         self.create_main_layout()
@@ -73,6 +70,7 @@ class MainWindow(QMainWindow):
         self.tabs = QTabWidget()
         self.datatable = DataTable()
         self.command_buttons = CommandButtons()
+        self.command_buttons.wp_button.clicked.connect(self.upload_waypoints)
         self.tabs.addTab(self.datatable, "Data")
         self.tabs.addTab(self.command_buttons, "Commands")
         self.tabs.addTab(self.waypointEditor, "Mission")
@@ -95,10 +93,14 @@ class MainWindow(QMainWindow):
         self.altitude_graph = AltitudeGraph(self.waypoints)
         self.map_layout.addWidget(self.altitude_graph)
     
+    def upload_waypoints(self):
+        for i in range(len(self.waypoints)):
+            self.input.append_queue(self.input.generate_waypoint_packet(self.waypoints[i], i)) 
+    
     def update(self):
+        self.input.send()
+        
         if self.input.getData():
-            self.input.send()
-
             # Update GUI
             self.hud_label.setPixmap(self.pfd.update(self.input.pitch, 
                                                      self.input.roll, 

@@ -19,10 +19,10 @@ class CommandButtons(QWidget):
         self.queue_label = QLabel("Transmit Queue: 0")
         self.layout.addWidget(self.queue_label, 0, 0)
 
-        self.return_button = QPushButton("Send Waypoints")
-        self.return_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.return_button.setFont(self.font)
-        self.layout.addWidget(self.return_button, 1, 0)
+        self.wp_button = QPushButton("Send Waypoints")
+        self.wp_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.wp_button.setFont(self.font)
+        self.layout.addWidget(self.wp_button, 1, 0)
 
         self.calibrate_button = QPushButton("Calibrate Gyroscopes")
         self.calibrate_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -41,7 +41,3 @@ class CommandButtons(QWidget):
     
     def update(self, transmit_queue_len):
         self.queue_label.setText("Transmit Queue: " + str(transmit_queue_len))
-    
-    def waypoint_button_pressed(self):
-        # Add to command queue
-        pass
