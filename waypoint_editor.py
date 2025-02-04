@@ -7,10 +7,7 @@ from PyQt5.QtWidgets import (
 class WaypointEditor(QWidget):
     def __init__(self):
         super().__init__()
-        self.initUI()
-        # self.setDefaultWaypoints()
 
-    def initUI(self):
         layout = QVBoxLayout()
         
         # Table setup

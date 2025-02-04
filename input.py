@@ -9,6 +9,9 @@ class Input():
         self.lon = 0
         self.mode_id = -1
         self.wp_idx = 0
+
+        # When command needs to be sent, it gets added here.
+        # When it recieves acknowledgement, it gets removed
         self.command_queue = []
     def getData(self):
         pass

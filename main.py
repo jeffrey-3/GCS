@@ -12,6 +12,11 @@ from input_random import InputRandom
 from input_bluetooth import InputBluetooth
 import numpy as np
 from waypoint_editor import WaypointEditor
+import csv
+import time
+
+csvfile = open('log.csv', 'w', newline='')
+csvwriter = csv.writer(csvfile, delimiter=',')
 
 # Bug: Doesn't work when USB used. You have to load waypoints first.
 # The slow loading of waypoints is due to the delay
@@ -21,18 +26,15 @@ class MainWindow(QMainWindow):
 
         self.waypointEditor = WaypointEditor()   
         self.pfd = PrimaryFlightDisplay()
-        self.input = InputRandom()
-        # self.input = InputBluetooth()
+        # self.input = InputRandom()
+        self.input = InputBluetooth()
 
         # Lat, lon, down
         self.waypoints = [[33.02139326113648, -118.59806466254331, -40],
                           [33.02139326113648, -118.60235, -40],
                           [33.01959663056824, -118.60235, -40],
                           [33.01959663056824, -118.59806466254331, -40],
-                          [33.0222915764206, -118.59699332817914, -40],
-                          [33.0222915764206, -118.60127866563585, -40],
-                          [33.020494945852356, -118.60127866563585, -40],
-                          [33.020494945852356, -118.59699332817914, -40]]
+                          [33.0222915764206, -118.59699332817914, -40]]
         self.waypointEditor.setDefaultWaypoints(self.waypoints)
         
         for i in range(len(self.waypoints)):
@@ -50,7 +52,7 @@ class MainWindow(QMainWindow):
     def start_thread(self):
         self.timer = QTimer()
         self.timer.timeout.connect(self.update)
-        self.timer.start(100)
+        self.timer.start(10)
     
     def setup_window(self):
         self.setWindowTitle("UAV Ground Control")
@@ -95,9 +97,8 @@ class MainWindow(QMainWindow):
     
     def update(self):
         if self.input.getData():
-            # Transmit data
-            self.input.send() # Move this out?
-            
+            self.input.send()
+
             # Update GUI
             self.hud_label.setPixmap(self.pfd.update(self.input.pitch, 
                                                      self.input.roll, 
@@ -115,6 +116,17 @@ class MainWindow(QMainWindow):
                             self.waypoints)
             self.datatable.update(self.input.mode_id)
             self.command_buttons.update(len(self.input.command_queue))
+
+            csvwriter.writerow([time.time(),
+                                self.input.roll, 
+                                self.input.pitch, 
+                                self.input.heading, 
+                                self.input.altitude, 
+                                self.input.speed,
+                                self.input.lat,
+                                self.input.lon,
+                                self.input.mode_id,
+                                self.input.wp_idx])
 
 if __name__ == "__main__":
     app = QApplication([])

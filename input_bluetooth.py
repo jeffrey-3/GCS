@@ -3,22 +3,11 @@ import time
 import math
 import struct
 from cobs import cobs
+from input import Input
 
-class InputBluetooth():
+class InputBluetooth(Input):
     def __init__(self):
-        self.roll = 0
-        self.pitch = 0
-        self.heading = 0
-        self.altitude = 0
-        self.speed = 0
-        self.lat = 0
-        self.lon = 0
-        self.mode_id = -1
-        self.wp_idx = 0
-
-        # When command needs to be sent, it gets added here.
-        # When it recieves acknowledgement, it gets removed
-        self.command_queue = []
+        super().__init__()
 
         self.bluetooth = serial.Serial('COM9', 115200, timeout=1000)
     
@@ -32,10 +21,12 @@ class InputBluetooth():
             if len(packet_raw) == 40:
                 packet = packet_raw[1:] # Remove start byte
                 packet = cobs.decode(packet) # Decode COBS
+
+                print(packet[0])
                 
                 # Figure out what type of payload
                 if packet[0] == 0: # Telemetry payload
-                    packet = packet[1:-7] # Remove empty bytes and the "payload type" byte
+                    packet = packet[1:-7] # Remove empty bytes at end of packet and the "payload type" byte at start of packet
                     packet = struct.unpack("<fffffffBB", packet) # Use endian to remove padding
                     print(packet)
                     self.roll = packet[0]
@@ -47,11 +38,9 @@ class InputBluetooth():
                     self.lon = packet[6]
                     self.mode_id = packet[7]
                     self.wp_idx = packet[8]
-
                     return True
-                elif packet[0] == 1: # Command payload
-                    return False
-                elif packet[0] == 2: # Waypoint payload
+                elif packet[0] == 1 or packet[0] == 2: # Command or waypoint acknowledgement payload
+                    print(packet_raw)
                     if packet_raw in self.command_queue:
                         self.command_queue.remove(packet_raw)
                     return False
@@ -82,7 +71,6 @@ class InputBluetooth():
     
     def send(self):
         if len(self.command_queue) > 0:
-            # print("send")
             self.bluetooth.write(self.command_queue[0])
     
     def append_queue(self, packet):

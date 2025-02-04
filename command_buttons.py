@@ -41,3 +41,7 @@ class CommandButtons(QWidget):
     
     def update(self, transmit_queue_len):
         self.queue_label.setText("Transmit Queue: " + str(transmit_queue_len))
+    
+    def waypoint_button_pressed(self):
+        # Add to command queue
+        pass

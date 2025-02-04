@@ -53,14 +53,11 @@ class Map(pg.PlotWidget):
 
         self.waypoints = waypoints
 
-        # for waypoint in waypoints:
-        #     print(self.calculate_lat_lon(waypoint[0], waypoint[1]))
-
         self.rwy_lat = 33.017826
         self.rwy_lon = -118.602432
-        self.rwy_len = 100
-        self.rwy_width = 10
-        self.rwy_hdg = 70
+        self.rwy_len = 1000
+        self.rwy_width = 50
+        self.rwy_hdg = 67
         self.landing_dist = 500
 
         self.add_style()
@@ -71,14 +68,14 @@ class Map(pg.PlotWidget):
     def add_runway(self):
         rwy_e, rwy_n = self.calculate_displacement_meters(self.rwy_lat, self.rwy_lon)
 
-        self.plot([rwy_e - self.rwy_len*0.5*math.sin(math.radians(self.rwy_hdg)), rwy_e - self.landing_dist*math.sin(math.radians(self.rwy_hdg))], 
-                  [rwy_n - self.rwy_len*0.5*math.cos(math.radians(self.rwy_hdg)), rwy_n - self.landing_dist*math.cos(math.radians(self.rwy_hdg))], 
+        self.plot([rwy_e, rwy_e - self.landing_dist*math.sin(math.radians(self.rwy_hdg))], 
+                  [rwy_n, rwy_n - self.landing_dist*math.cos(math.radians(self.rwy_hdg))], 
                   pen=pg.mkPen("white", width=2, style=Qt.DashLine))
 
         rwy = FixedOutlineRectItem(0, 0, self.rwy_width, self.rwy_len)
         transform = QTransform()
         transform.rotate(-self.rwy_hdg)
-        transform.translate(-self.rwy_width/2, -self.rwy_len/2)
+        transform.translate(-self.rwy_width/2, 0)
         rwy.setTransform(transform)
         self.addItem(rwy)
 
@@ -102,7 +99,7 @@ class Map(pg.PlotWidget):
         x = []
         y = []
         for waypoint in self.waypoints:
-            y_pt, x_pt = self.calculate_displacement_meters(waypoint[0], waypoint[1])
+            x_pt, y_pt = self.calculate_displacement_meters(waypoint[0], waypoint[1])
             x.append(x_pt)
             y.append(y_pt)
 
@@ -136,7 +133,7 @@ class Map(pg.PlotWidget):
         self.arrow.setStyle(angle=heading + 90)
         self.arrow.setPos(position[0], position[1])
 
-        y, x = self.calculate_displacement_meters(self.waypoints[wp_idx][0], self.waypoints[wp_idx][1])
+        x, y = self.calculate_displacement_meters(self.waypoints[wp_idx][0], self.waypoints[wp_idx][1])
         self.target_marker.setData([x], [y])
 
         self.update_waypoints()
@@ -145,7 +142,7 @@ class Map(pg.PlotWidget):
         x = []
         y = []
         for waypoint in self.waypoints:
-            y_pt, x_pt = self.calculate_displacement_meters(waypoint[0], waypoint[1])
+            x_pt, y_pt = self.calculate_displacement_meters(waypoint[0], waypoint[1])
             x.append(x_pt)
             y.append(y_pt)
         self.waypoints_line.setData(x, y)
