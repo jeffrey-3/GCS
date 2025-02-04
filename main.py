@@ -26,15 +26,14 @@ class MainWindow(QMainWindow):
 
         self.waypointEditor = WaypointEditor()   
         self.pfd = PrimaryFlightDisplay()
-        # self.input = InputRandom()
-        self.input = InputBluetooth()
+        self.input = InputRandom()
+        # self.input = InputBluetooth()
 
         # Lat, lon, down
-        self.waypoints = [[33.0214, -118.5981, -40],
-                          [33.0214, -118.6024, -40],
-                          [33.0196, -118.6024, -40],
-                          [33.0196, -118.5981, -40],
-                          [33.0223, -118.5970, -40]]
+        self.waypoints = [[33.021, -118.6, -40],
+                          [33.022, -118.598, -40],
+                          [33.022, -118.594, -30],
+                          [33.02, -118.595, -30]]
         self.waypointEditor.setDefaultWaypoints(self.waypoints)
 
         self.setup_window()

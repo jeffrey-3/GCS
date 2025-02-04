@@ -69,10 +69,6 @@ class Map(pg.PlotWidget):
     def add_runway(self):
         rwy_e, rwy_n = self.calculate_displacement_meters(self.rwy_lat, self.rwy_lon)
 
-        self.plot([rwy_e, rwy_e - self.landing_dist*math.sin(math.radians(self.rwy_hdg))], 
-                  [rwy_n, rwy_n - self.landing_dist*math.cos(math.radians(self.rwy_hdg))], 
-                  pen=pg.mkPen("white", width=2, style=Qt.DashLine))
-
         rwy = FixedOutlineRectItem(0, 0, self.rwy_width, self.rwy_len)
         transform = QTransform()
         transform.rotate(-self.rwy_hdg)
