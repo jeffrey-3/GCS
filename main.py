@@ -14,11 +14,6 @@ import datetime
 import csv
 import time
 
-csvfile = open('logs/{date:%Y_%m_%d_%H_%M_%S}.csv'.format(date=datetime.datetime.now()), 'w', newline='')
-csvwriter = csv.writer(csvfile, delimiter=',')
-
-# Bug: Doesn't work when USB used. You have to load waypoints first.
-# The slow loading of waypoints is due to the delay
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -31,6 +26,9 @@ class MainWindow(QMainWindow):
         self.waypoints = [[33.0205, -118.595, -80],
                           [33.022, -118.592, -80]]
         self.waypointEditor.setDefaultWaypoints(self.waypoints)
+
+        self.csvfile = open('logs/{date:%Y_%m_%d_%H_%M_%S}.csv'.format(date=datetime.datetime.now()), 'w', newline='')
+        self.csvwriter = csv.writer(self.csvfile, delimiter=',')
 
         self.setup_window()
         self.create_main_layout()
@@ -115,16 +113,16 @@ class MainWindow(QMainWindow):
             self.datatable.update(self.input.mode_id)
             self.command_buttons.update(len(self.input.command_queue))
 
-            csvwriter.writerow([time.time(),
-                                self.input.roll, 
-                                self.input.pitch, 
-                                self.input.heading, 
-                                self.input.altitude, 
-                                self.input.speed,
-                                self.input.lat,
-                                self.input.lon,
-                                self.input.mode_id,
-                                self.input.wp_idx])
+            self.csvwriter.writerow([time.time(),
+                                    self.input.roll, 
+                                    self.input.pitch, 
+                                    self.input.heading, 
+                                    self.input.altitude, 
+                                    self.input.speed,
+                                    self.input.lat,
+                                    self.input.lon,
+                                    self.input.mode_id,
+                                    self.input.wp_idx])
 
 if __name__ == "__main__":
     app = QApplication([])
