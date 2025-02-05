@@ -6,6 +6,8 @@ class CommandButtons(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.buttons = []
+
         self.font = QFont("Arial", 16)
 
         self.create_layout()
@@ -19,25 +21,14 @@ class CommandButtons(QWidget):
         self.queue_label = QLabel("Transmit Queue: 0")
         self.layout.addWidget(self.queue_label, 0, 0)
 
-        self.wp_button = QPushButton("Send Waypoints")
-        self.wp_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.wp_button.setFont(self.font)
-        self.layout.addWidget(self.wp_button, 1, 0)
-
-        self.calibrate_button = QPushButton("Calibrate Gyroscopes")
-        self.calibrate_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.calibrate_button.setFont(self.font)
-        self.layout.addWidget(self.calibrate_button, 1, 1)
-
-        self.confirm_button = QPushButton("Confirm Changes")
-        self.confirm_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.confirm_button.setFont(self.font)
-        self.layout.addWidget(self.confirm_button, 2, 0)
-
-        self.cancel_button = QPushButton("Cancel")
-        self.cancel_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.cancel_button.setFont(self.font)
-        self.layout.addWidget(self.cancel_button, 2, 1)
+        button_names = ["Send Waypoints", "Calibrate Gyroscopes", "Button 0", "Button 1"]
+        for row in range(2):
+            for col in range(2):
+                button = QPushButton(button_names[row*2+col])
+                button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+                button.setFont(self.font)
+                self.layout.addWidget(button, 1+row, col)
+                self.buttons.append(button)
     
     def update(self, transmit_queue_len):
         self.queue_label.setText("Transmit Queue: " + str(transmit_queue_len))

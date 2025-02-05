@@ -10,12 +10,12 @@ from datatable import DataTable
 from command_buttons import CommandButtons
 from input_random import InputRandom
 from input_bluetooth import InputBluetooth
-import numpy as np
 from waypoint_editor import WaypointEditor
+import datetime
 import csv
 import time
 
-csvfile = open('log.csv', 'w', newline='')
+csvfile = open('logs/{date:%Y_%m_%d_%H_%M_%S}.csv'.format(date=datetime.datetime.now()), 'w', newline='')
 csvwriter = csv.writer(csvfile, delimiter=',')
 
 # Bug: Doesn't work when USB used. You have to load waypoints first.
@@ -30,10 +30,9 @@ class MainWindow(QMainWindow):
         # self.input = InputBluetooth()
 
         # Lat, lon, down
-        self.waypoints = [[33.021, -118.6, -40],
-                          [33.022, -118.598, -40],
-                          [33.022, -118.594, -30],
-                          [33.02, -118.595, -30]]
+        self.waypoints = [[33.0235, -118.595, -80],
+                          [33.025, -118.592, -80],
+                          [33.023, -118.59, -80]]
         self.waypointEditor.setDefaultWaypoints(self.waypoints)
 
         self.setup_window()
@@ -69,11 +68,10 @@ class MainWindow(QMainWindow):
         self.tabs = QTabWidget()
         self.datatable = DataTable()
         self.command_buttons = CommandButtons()
-        self.command_buttons.wp_button.clicked.connect(self.upload_waypoints)
+        self.command_buttons.buttons[0].clicked.connect(self.upload_waypoints)
         self.tabs.addTab(self.datatable, "Data")
         self.tabs.addTab(self.command_buttons, "Commands")
         self.tabs.addTab(self.waypointEditor, "Mission")
-        self.tabs.addTab(QWidget(), "Raw Data")
         self.left_layout.addWidget(self.tabs)
 
     def create_left_layout(self):
@@ -98,7 +96,7 @@ class MainWindow(QMainWindow):
     
     def update(self):
         self.input.send()
-        
+
         if self.input.getData():
             # Update GUI
             self.hud_label.setPixmap(self.pfd.update(self.input.pitch, 

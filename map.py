@@ -13,7 +13,8 @@ class FixedOutlineRectItem(QGraphicsRectItem):
         
         # Draw the outline with a fixed width
         # pen = QPen(Qt.white)
-        pen = pg.mkPen("white", style=Qt.DashLine)  # Outline color
+        # pen = pg.mkPen("white", style=Qt.DashLine)  # Outline color
+        pen = pg.mkPen("white")
         pen.setWidthF(2)  # Fixed outline width in pixels
         pen.setCosmetic(True)  # Ensures the width stays constant
         painter.setPen(pen)
@@ -56,10 +57,7 @@ class Map(pg.PlotWidget):
 
         self.rwy_lat = 33.017826
         self.rwy_lon = -118.602432
-        self.rwy_len = 1000
-        self.rwy_width = 50
-        self.rwy_hdg = 67
-        self.landing_dist = 500
+        self.rwy_hdg = 247
 
         self.add_style()
         self.add_runway()
@@ -68,18 +66,8 @@ class Map(pg.PlotWidget):
         
     def add_runway(self):
         rwy_e, rwy_n = self.calculate_displacement_meters(self.rwy_lat, self.rwy_lon)
-
-        rwy = FixedOutlineRectItem(0, 0, self.rwy_width, self.rwy_len)
-        transform = QTransform()
-        transform.rotate(-self.rwy_hdg)
-        transform.translate(-self.rwy_width/2, 0)
-        rwy.setTransform(transform)
-        self.addItem(rwy)
-
-        rwy.setPos(rwy_e, rwy_n)
-
-        # Create final approach WP
-        # Don't need to create waypoint, but landing guidance uses waypoint at landing point and virtual approach WP at same heading, distance away
+        self.plot([rwy_e, rwy_e - 500*math.sin(math.radians(self.rwy_hdg))], [rwy_n, rwy_n - 500*math.cos(math.radians(self.rwy_hdg))], pen=pg.mkPen('white', width=2))
+        self.addItem(self.plot([rwy_e], [rwy_n], symbol="s", symbolSize=30, symbolBrush='w'))
     
     def add_style(self):
         self.setAspectLocked(True)

@@ -5,7 +5,7 @@ class WaypointEditor(QWidget):
     def __init__(self):
         super().__init__()
 
-        layout = QVBoxLayout()
+        self.layout = QVBoxLayout()
         
         # Table setup
         self.table = QTableWidget()
@@ -13,7 +13,7 @@ class WaypointEditor(QWidget):
         self.table.setHorizontalHeaderLabels(["Latitude", "Longitude", "Altitude"])
         for col in range(self.table.columnCount()):
             self.table.horizontalHeader().setSectionResizeMode(col, 1)  # 1 means stretching mode
-        layout.addWidget(self.table)
+        self.layout.addWidget(self.table)
         
         # Buttons for adding and removing rows
         buttonLayout = QHBoxLayout()
@@ -25,8 +25,19 @@ class WaypointEditor(QWidget):
         buttonLayout.addWidget(self.addButton)
         buttonLayout.addWidget(self.removeButton)
         
-        layout.addLayout(buttonLayout)
-        self.setLayout(layout)
+        self.layout.addLayout(buttonLayout)
+        self.setLayout(self.layout)
+
+        self.createForm()
+    
+    def createForm(self):
+        formGroupBox = QGroupBox("Landing Target")
+        layout = QFormLayout()
+        layout.addRow(QLabel("Lat"), QLineEdit())
+        layout.addRow(QLabel("Lon"), QLineEdit())
+        layout.addRow(QLabel("Hdg"), QLineEdit())
+        formGroupBox.setLayout(layout)
+        self.layout.addWidget(formGroupBox)
 
     def setDefaultWaypoints(self, waypoints):
         for lat, lon, alt in waypoints:
