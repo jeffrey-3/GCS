@@ -2,7 +2,6 @@ from PyQt5 import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-import qdarktheme
 from pfd import PrimaryFlightDisplay
 from map import Map
 from altitude_graph import AltitudeGraph
@@ -29,10 +28,8 @@ class MainWindow(QMainWindow):
         self.input = InputRandom()
         # self.input = InputBluetooth()
 
-        # Lat, lon, down
-        self.waypoints = [[33.0235, -118.595, -80],
-                          [33.025, -118.592, -80],
-                          [33.023, -118.59, -80]]
+        self.waypoints = [[33.0205, -118.595, -80],
+                          [33.022, -118.592, -80]]
         self.waypointEditor.setDefaultWaypoints(self.waypoints)
 
         self.setup_window()
@@ -51,7 +48,6 @@ class MainWindow(QMainWindow):
     
     def setup_window(self):
         self.setWindowTitle("UAV Ground Control")
-        qdarktheme.setup_theme()
     
     def create_main_layout(self):
         self.main_layout = QHBoxLayout()
@@ -88,7 +84,7 @@ class MainWindow(QMainWindow):
         self.map_layout.addWidget(self.map, 2)
 
         self.altitude_graph = AltitudeGraph(self.waypoints)
-        self.map_layout.addWidget(self.altitude_graph)
+        self.map_layout.addWidget(self.altitude_graph, 1)
     
     def upload_waypoints(self):
         for i in range(len(self.waypoints)):
@@ -106,13 +102,16 @@ class MainWindow(QMainWindow):
                                                      self.input.speed, 
                                                      0, 
                                                      0))
-            self.waypoints = self.waypointEditor.getWaypoints()
+            self.waypoints, rwy_lat, rwy_lon, rwy_hdg = self.waypointEditor.getWaypoints()
             self.altitude_graph.update(self.waypoints)
             self.map.update(self.input.heading, 
                             self.input.lat, 
                             self.input.lon, 
                             self.input.wp_idx,
-                            self.waypoints)
+                            self.waypoints,
+                            rwy_lat,
+                            rwy_lon,
+                            rwy_hdg)
             self.datatable.update(self.input.mode_id)
             self.command_buttons.update(len(self.input.command_queue))
 

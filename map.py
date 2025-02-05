@@ -55,19 +55,14 @@ class Map(pg.PlotWidget):
         self.waypoints = waypoints
         self.waypoints_numbers = []
 
-        self.rwy_lat = 33.017826
-        self.rwy_lon = -118.602432
-        self.rwy_hdg = 247
-
         self.add_style()
         self.add_runway()
         self.add_waypoints()
         self.add_arrow()
         
     def add_runway(self):
-        rwy_e, rwy_n = self.calculate_displacement_meters(self.rwy_lat, self.rwy_lon)
-        self.plot([rwy_e, rwy_e - 500*math.sin(math.radians(self.rwy_hdg))], [rwy_n, rwy_n - 500*math.cos(math.radians(self.rwy_hdg))], pen=pg.mkPen('white', width=2))
-        self.addItem(self.plot([rwy_e], [rwy_n], symbol="s", symbolSize=30, symbolBrush='w'))
+        self.rwy_line = self.plot([0], [0], pen=pg.mkPen('white', width=2))
+        self.rwy_marker = self.plot([0], [0], symbol="s", symbolSize=30, symbolBrush='w')
     
     def add_style(self):
         self.setAspectLocked(True)
@@ -110,7 +105,9 @@ class Map(pg.PlotWidget):
             self.addItem(text)
             self.waypoints_numbers.append(text)
 
-    def update(self, heading, lat, lon, wp_idx, waypoints):
+    def update(self, heading, lat, lon, wp_idx, waypoints, rwy_lat, rwy_lon, rwy_hdg):
+        self.setTitle(f"<p style='white-space:pre;'>Lat:{lat:.6f}      Lon:{lon:.6f}</p>")
+
         self.waypoints = waypoints
 
         position = self.calculate_displacement_meters(lat, lon)
@@ -121,6 +118,10 @@ class Map(pg.PlotWidget):
         self.target_marker.setData([x], [y])
 
         self.update_waypoints()
+
+        rwy_e, rwy_n = self.calculate_displacement_meters(rwy_lat, rwy_lon)
+        self.rwy_line.setData([rwy_e, rwy_e - 500*math.sin(math.radians(rwy_hdg))], [rwy_n, rwy_n - 500*math.cos(math.radians(rwy_hdg))])
+        self.rwy_marker.setData([rwy_e], [rwy_n])
     
     def update_waypoints(self):
         x = []

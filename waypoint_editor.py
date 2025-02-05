@@ -33,9 +33,12 @@ class WaypointEditor(QWidget):
     def createForm(self):
         formGroupBox = QGroupBox("Landing Target")
         layout = QFormLayout()
-        layout.addRow(QLabel("Lat"), QLineEdit())
-        layout.addRow(QLabel("Lon"), QLineEdit())
-        layout.addRow(QLabel("Hdg"), QLineEdit())
+        self.rwy_lat = QLineEdit("33.0178")
+        self.rwy_lon = QLineEdit("-118.6024")
+        self.rwy_hdg = QLineEdit("67")
+        layout.addRow(QLabel("Lat"), self.rwy_lat)
+        layout.addRow(QLabel("Lon"), self.rwy_lon)
+        layout.addRow(QLabel("Hdg"), self.rwy_hdg)
         formGroupBox.setLayout(layout)
         self.layout.addWidget(formGroupBox)
 
@@ -66,7 +69,7 @@ class WaypointEditor(QWidget):
             lon = self.table.item(row, 1).text()
             alt = self.table.item(row, 2).text()
             waypoints.append([float(lat), float(lon), float(alt)])
-        return waypoints
+        return waypoints, float(self.rwy_lat.text()), float(self.rwy_lon.text()), float(self.rwy_hdg.text())
 
     def is_float(self, element: any) -> bool:
         #If you expect None to be passed:
