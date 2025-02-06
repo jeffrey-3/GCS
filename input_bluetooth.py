@@ -25,15 +25,15 @@ class InputBluetooth(Input):
             if payload_type == 0: # Telemetry payload
                 packet = packet[1:-7] # Remove empty bytes at end of packet and the "payload type" byte at start of packet
                 packet = struct.unpack("<fffffffBB", packet) # Use endian to remove padding
-                self.roll = packet[0]
-                self.pitch = packet[1]
-                self.heading = packet[2]
-                self.altitude = packet[3]
-                self.speed = packet[4]
-                self.lat = packet[5]
-                self.lon = packet[6]
-                self.mode_id = packet[7]
-                self.wp_idx = packet[8]
+                self.flight_data.roll = packet[0]
+                self.flight_data.pitch = packet[1]
+                self.flight_data.heading = packet[2]
+                self.flight_data.altitude = packet[3]
+                self.flight_data.speed = packet[4]
+                self.flight_data.lat = packet[5]
+                self.flight_data.lon = packet[6]
+                self.flight_data.mode_id = packet[7]
+                self.flight_data.wp_idx = packet[8]
                 return True
             elif payload_type == 1 or payload_type == 2 or payload_type == 3: # Command/waypoint/landing target acknowledgement payload
                 if packet_raw in self.command_queue:

@@ -57,7 +57,7 @@ class PrimaryFlightDisplay:
         self.flight_director_length = 150   
 
         # Heading scale
-        self.hdg_scale_spacing = 200
+        self.hdg_scale_spacing = 150
         self.hdg_scale_length = 30
         self.hdg_tick_interval = 22.5 # Degrees per tick on scale
 
@@ -76,10 +76,10 @@ class PrimaryFlightDisplay:
     
     def draw_heading_scale(self):
         scale_width = (360 / self.hdg_tick_interval) * self.hdg_scale_spacing
-# Scale on edge
-        self.draw_hdg_ticks(-scale_width)
-        self.draw_hdg_ticks(0)
-        self.draw_hdg_ticks(scale_width)
+        x_offset = self.width/2 - (self.flight_data.heading / self.hdg_tick_interval) * self.hdg_scale_spacing
+        self.draw_hdg_ticks(-scale_width + x_offset)
+        self.draw_hdg_ticks(x_offset)
+        self.draw_hdg_ticks(scale_width + x_offset)
 
         # Scale on edge
         self.painter.setPen(QPen(QColor("#b4b2b4"), self.tick_thickness, Qt.SolidLine))
@@ -99,6 +99,18 @@ class PrimaryFlightDisplay:
         for i in range(num_ticks):
             x = i * self.hdg_scale_spacing + x_offset
             self.painter.drawLine(x, self.height, x, self.height - self.hdg_scale_length)
+
+            val = i * self.hdg_tick_interval
+            s = ""
+            if val == 0:
+                s = "N"
+            elif val == 90:
+                s = "E"
+            elif val == 180:
+                s = "S"
+            elif val == 270:
+                s = "W"
+            self.painter.drawText(QRect(x, self.height - self.box_height, self.hdg_scale_spacing, self.box_height), Qt.AlignCenter, s)
 
     def pitch_deg_to_px(self, deg):
         return deg * (self.pitch_scale_spacing / self.pitch_scale_intervals)
