@@ -7,8 +7,13 @@ class Input():
         self.speed = 0
         self.lat = 0
         self.lon = 0
-        self.mode_id = -1
+        self.mode_id = 2
         self.wp_idx = 0
+        
+        self.pitch_setpoint = 0
+        self.heading_setpoint = 0
+        self.alt_setpoint = 0
+        self.speed_setpoint = 0
 
         # When command needs to be sent, it gets added here
         # When it recieves acknowledgement, it gets removed

@@ -26,13 +26,11 @@ class MainWindow(QMainWindow):
         else:
             self.input = InputBluetooth()
 
-        self.waypointEditor.setDefaultWaypoints([[33.0205, -118.595, -80],
-                                                 [33.022, -118.592, -80]])
+        self.waypointEditor.loadWaypoints([[33.019, -118.598, -60],
+                                           [33.020, -118.596, -60]])
         self.waypoints, self.rwy_lat, self.rwy_lon, self.rwy_hdg = self.waypointEditor.getWaypoints()
 
-        self.csvfile = open('logs/{date:%Y_%m_%d_%H_%M_%S}.csv'.format(date=datetime.datetime.now()), 'w', newline='')
-        self.csvwriter = csv.writer(self.csvfile, delimiter=',')
-
+        self.setup_filewriter()
         self.setup_window()
         self.create_main_layout()
         self.create_left_layout()
@@ -41,11 +39,55 @@ class MainWindow(QMainWindow):
         self.add_datatable()
         self.add_plot()
         self.start_thread()
-    
+
+    def update(self):
+        self.input.send()
+
+        if self.input.getData():
+            if self.map.center_lat == 0:
+                self.map.center_lat = self.input.lat
+                self.map.center_lon = self.input.lon
+
+            # Update GUI
+            self.hud_label.setPixmap(self.pfd.update(self.input.pitch, 
+                                                     self.input.roll, 
+                                                     self.input.heading, 
+                                                     self.input.altitude, 
+                                                     self.input.speed, 
+                                                     self.input.pitch_setpoint, 
+                                                     self.input.heading_setpoint))
+            self.waypoints, self.rwy_lat, self.rwy_lon, self.rwy_hdg = self.waypointEditor.getWaypoints()
+            self.altitude_graph.update(self.waypoints)
+            self.map.update(self.input.heading, 
+                            self.input.lat, 
+                            self.input.lon, 
+                            self.input.wp_idx,
+                            self.waypoints,
+                            self.rwy_lat,
+                            self.rwy_lon,
+                            self.rwy_hdg)
+            self.datatable.update(self.input.mode_id)
+            self.command_buttons.update(len(self.input.command_queue))
+
+            self.csvwriter.writerow([time.time(),
+                                     self.input.roll, 
+                                     self.input.pitch, 
+                                     self.input.heading, 
+                                     self.input.altitude, 
+                                     self.input.speed,
+                                     self.input.lat,
+                                     self.input.lon,
+                                     self.input.mode_id,
+                                     self.input.wp_idx])
+            
     def start_thread(self):
         self.timer = QTimer()
         self.timer.timeout.connect(self.update)
         self.timer.start(10)
+    
+    def setup_filewriter(self):
+        self.csvfile = open('logs/{date:%Y_%m_%d_%H_%M_%S}.csv'.format(date=datetime.datetime.now()), 'w', newline='')
+        self.csvwriter = csv.writer(self.csvfile, delimiter=',')
     
     def setup_window(self):
         self.setWindowTitle("UAV Ground Control")
@@ -94,42 +136,6 @@ class MainWindow(QMainWindow):
         
         # Upload landing target
         self.input.append_queue(self.input.generate_landing_target_packet(self.rwy_lat, self.rwy_lon, self.rwy_hdg))
-    
-    def update(self):
-        self.input.send()
-
-        if self.input.getData():
-            # Update GUI
-            self.hud_label.setPixmap(self.pfd.update(self.input.pitch, 
-                                                     self.input.roll, 
-                                                     self.input.heading, 
-                                                     self.input.altitude, 
-                                                     self.input.speed, 
-                                                     0, 
-                                                     0))
-            self.waypoints, self.rwy_lat, self.rwy_lon, self.rwy_hdg = self.waypointEditor.getWaypoints()
-            self.altitude_graph.update(self.waypoints)
-            self.map.update(self.input.heading, 
-                            self.input.lat, 
-                            self.input.lon, 
-                            self.input.wp_idx,
-                            self.waypoints,
-                            self.rwy_lat,
-                            self.rwy_lon,
-                            self.rwy_hdg)
-            self.datatable.update(self.input.mode_id)
-            self.command_buttons.update(len(self.input.command_queue))
-
-            self.csvwriter.writerow([time.time(),
-                                     self.input.roll, 
-                                     self.input.pitch, 
-                                     self.input.heading, 
-                                     self.input.altitude, 
-                                     self.input.speed,
-                                     self.input.lat,
-                                     self.input.lon,
-                                     self.input.mode_id,
-                                     self.input.wp_idx])
 
 if __name__ == "__main__":
     app = QApplication([])

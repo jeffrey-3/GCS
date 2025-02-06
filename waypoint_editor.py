@@ -33,8 +33,8 @@ class WaypointEditor(QWidget):
     def createForm(self):
         formGroupBox = QGroupBox("Landing Target")
         layout = QFormLayout()
-        self.rwy_lat = QLineEdit("33.0178")
-        self.rwy_lon = QLineEdit("-118.6024")
+        self.rwy_lat = QLineEdit("33.021984")
+        self.rwy_lon = QLineEdit("-118.590790")
         self.rwy_hdg = QLineEdit("67")
         layout.addRow(QLabel("Latitude"), self.rwy_lat)
         layout.addRow(QLabel("Longitude"), self.rwy_lon)
@@ -42,7 +42,7 @@ class WaypointEditor(QWidget):
         formGroupBox.setLayout(layout)
         self.layout.addWidget(formGroupBox)
 
-    def setDefaultWaypoints(self, waypoints):
+    def loadWaypoints(self, waypoints):
         for lat, lon, alt in waypoints:
             self.addWaypoint(str(lat), str(lon), str(alt))
 

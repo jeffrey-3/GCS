@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
+import time
 
 # Bar graphs:
 # - Capacity consumed
@@ -15,6 +16,8 @@ from PyQt5.QtGui import *
 class DataTable(QWidget):
     def __init__(self):
         super().__init__()
+
+        self.start_time = time.time()
 
         self.layout = QGridLayout()
         self.setLayout(self.layout)
@@ -67,6 +70,7 @@ class DataTable(QWidget):
         state = "???"
         if mode_id == 0:
             state = "BOOT"
+            self.start_time = time.time()
         elif mode_id == 2:
             state = "DIRECT"
         elif mode_id == 3:
@@ -83,10 +87,16 @@ class DataTable(QWidget):
             state = "FLARE"
         elif mode_id == 9:
             state = "SAFE"
+    
+        elapsed_time = time.time() - self.start_time
+        elapsed_hours = int(elapsed_time // 3600)
+        elapsed_minutes = int((elapsed_time % 3600) // 60)
+        elapsed_seconds = int(elapsed_time % 60)
+        formatted_time = f"{elapsed_hours:02}:{elapsed_minutes:02}:{elapsed_seconds:02}"
 
         self.values = [state, 
-                       "00:00:00",
-                       "00:00:00",
+                       formatted_time,
+                       formatted_time,
                        "11.04",
                        "30.46",
                        "30.46",

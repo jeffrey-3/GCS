@@ -78,11 +78,11 @@ class PrimaryFlightDisplay:
 
         self.draw_background()
         self.draw_pitch_scale()
+        self.draw_flight_director()
         self.draw_altitude_scale()
         self.draw_speed_scale()
         self.draw_heading_scale()
         self.draw_wings()
-        # self.draw_flight_director()
 
         return self.canvas
     

@@ -46,8 +46,8 @@ class Map(pg.PlotWidget):
     # Geocoordinates at the center of map
     # Use runway as home?
     # Set center as first GPS packet
-    center_lat = 33.0178
-    center_lon = -118.60235
+    center_lat = 0
+    center_lon = 0
 
     def __init__(self, waypoints):
         super().__init__()
