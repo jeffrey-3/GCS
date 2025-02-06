@@ -57,7 +57,7 @@ class InputBluetooth(Input):
         waypoint_payload[1] = waypoint_index # Waypoint index
         waypoint_payload[2:14] = struct.pack("3f", waypoint[0], waypoint[1], waypoint[2])
 
-        # Transport protocol layer
+        # T ransport protocol layer
         return bytes([0x00]) + cobs.encode(waypoint_payload)
 
     def generate_landing_target_packet(self, lat, lon, hdg):
