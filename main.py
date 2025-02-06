@@ -10,6 +10,7 @@ from command_buttons import CommandButtons
 from input_random import InputRandom
 from input_bluetooth import InputBluetooth
 from waypoint_editor import WaypointEditor
+from flight_data import FlightData
 import datetime
 import csv
 import time
@@ -17,6 +18,8 @@ import time
 class MainWindow(QMainWindow):
     def __init__(self, testing):
         super().__init__()
+
+        self.flight_data = FlightData()
 
         self.waypointEditor = WaypointEditor()   
         self.pfd = PrimaryFlightDisplay()
@@ -44,41 +47,31 @@ class MainWindow(QMainWindow):
         self.input.send()
 
         if self.input.getData():
-            if self.map.center_lat == 0:
-                self.map.center_lat = self.input.lat
-                self.map.center_lon = self.input.lon
+            self.flight_data = self.input.flight_data
 
-            # Update GUI
-            self.hud_label.setPixmap(self.pfd.update(self.input.pitch, 
-                                                     self.input.roll, 
-                                                     self.input.heading, 
-                                                     self.input.altitude, 
-                                                     self.input.speed, 
-                                                     self.input.pitch_setpoint, 
-                                                     self.input.heading_setpoint))
+            if self.map.center_lat == 0:
+                self.map.center_lat = self.flight_data.lat
+                self.map.center_lon = self.flight_data.lon
+            
+            self.hud_label.setPixmap(self.pfd.update(self.flight_data))
             self.waypoints, self.rwy_lat, self.rwy_lon, self.rwy_hdg = self.waypointEditor.getWaypoints()
             self.altitude_graph.update(self.waypoints)
-            self.map.update(self.input.heading, 
-                            self.input.lat, 
-                            self.input.lon, 
-                            self.input.wp_idx,
-                            self.waypoints,
-                            self.rwy_lat,
-                            self.rwy_lon,
-                            self.rwy_hdg)
-            self.datatable.update(self.input.mode_id)
+            self.map.update(self.flight_data, self.waypoints, self.rwy_lat, self.rwy_lon, self.rwy_hdg)
+            self.datatable.update(self.flight_data.mode_id)
             self.command_buttons.update(len(self.input.command_queue))
-
-            self.csvwriter.writerow([time.time(),
-                                     self.input.roll, 
-                                     self.input.pitch, 
-                                     self.input.heading, 
-                                     self.input.altitude, 
-                                     self.input.speed,
-                                     self.input.lat,
-                                     self.input.lon,
-                                     self.input.mode_id,
-                                     self.input.wp_idx])
+            self.write_log()
+    
+    def write_log(self):
+        self.csvwriter.writerow([time.time(),
+                                 self.flight_data.roll, 
+                                 self.flight_data.pitch, 
+                                 self.flight_data.heading, 
+                                 self.flight_data.altitude, 
+                                 self.flight_data.speed,
+                                 self.flight_data.lat,
+                                 self.flight_data.lon,
+                                 self.flight_data.mode_id,
+                                 self.flight_data.wp_idx])
             
     def start_thread(self):
         self.timer = QTimer()
@@ -119,7 +112,7 @@ class MainWindow(QMainWindow):
 
     def add_hud(self):
         self.hud_label = QLabel()
-        self.hud_label.setPixmap(self.pfd.update(0, 0, 0, 0, 0, 0, 0))
+        self.hud_label.setPixmap(self.pfd.update(self.flight_data))
         self.left_layout.addWidget(self.hud_label)
 
     def add_plot(self):

@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from pyqtgraph import functions as fn
+from flight_data import FlightData
 import math
 import numpy as np
 
@@ -51,6 +52,8 @@ class Map(pg.PlotWidget):
 
     def __init__(self, waypoints):
         super().__init__()
+
+        self.flight_data = FlightData()
 
         self.waypoints = waypoints
         self.waypoints_numbers = []
@@ -105,16 +108,18 @@ class Map(pg.PlotWidget):
             self.addItem(text)
             self.waypoints_numbers.append(text)
 
-    def update(self, heading, lat, lon, wp_idx, waypoints, rwy_lat, rwy_lon, rwy_hdg):
-        self.setTitle(f"<p style='white-space:pre;'>Lat:{lat:.6f}      Lon:{lon:.6f}</p>")
+    def update(self, flight_data, waypoints, rwy_lat, rwy_lon, rwy_hdg):
+        self.flight_data = flight_data
+
+        self.setTitle(f"<p style='white-space:pre;'>Lat:{self.flight_data.lat:.6f}      Lon:{self.flight_data.lon:.6f}</p>")
 
         self.waypoints = waypoints
 
-        position = self.calculate_displacement_meters(lat, lon)
-        self.arrow.setStyle(angle=heading + 90)
+        position = self.calculate_displacement_meters(self.flight_data.lat, self.flight_data.lon)
+        self.arrow.setStyle(angle=self.flight_data.heading + 90)
         self.arrow.setPos(position[0], position[1])
 
-        x, y = self.calculate_displacement_meters(self.waypoints[wp_idx][0], self.waypoints[wp_idx][1])
+        x, y = self.calculate_displacement_meters(self.waypoints[self.flight_data.wp_idx][0], self.waypoints[self.flight_data.wp_idx][1])
         self.target_marker.setData([x], [y])
 
         self.update_waypoints()
