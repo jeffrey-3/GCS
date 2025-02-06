@@ -115,8 +115,6 @@ class MainWindow(QMainWindow):
         self.left_layout.addWidget(self.hud_label)
 
     def add_plot(self):
-        waypoints, rwy_lat, rwy_lon, rwy_hdg = self.waypointEditor.getWaypoints()
-
         self.map = Map()
         self.map_layout.addWidget(self.map, 2)
 

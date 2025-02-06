@@ -59,6 +59,7 @@ class PrimaryFlightDisplay:
         # Heading scale
         self.hdg_scale_spacing = 200
         self.hdg_scale_length = 30
+        self.hdg_tick_interval = 22.5 # Degrees per tick on scale
 
     def update(self, flight_data):
         self.flight_data = flight_data
@@ -74,16 +75,15 @@ class PrimaryFlightDisplay:
         return self.canvas
     
     def draw_heading_scale(self):
-        # Ticks
-        self.painter.setPen(QPen(QColor("white"), self.tick_thickness, Qt.SolidLine))
-        for i in range(20):
-            x = self.width/2 + i * self.hdg_scale_spacing - self.flight_data.heading * 5
-            self.painter.drawLine(x, self.height, x, self.height - self.hdg_scale_length)
-            x = self.width/2 - i * self.hdg_scale_spacing - self.flight_data.heading * 5
-            self.painter.drawLine(x, self.height, x, self.height - self.hdg_scale_length)
+        scale_width = (360 / self.hdg_tick_interval) * self.hdg_scale_spacing
+# Scale on edge
+        self.draw_hdg_ticks(-scale_width)
+        self.draw_hdg_ticks(0)
+        self.draw_hdg_ticks(scale_width)
 
+        # Scale on edge
         self.painter.setPen(QPen(QColor("#b4b2b4"), self.tick_thickness, Qt.SolidLine))
-        self.painter.drawLine(0, self.height - self.tick_thickness/2, self.width, self.height - self.tick_thickness/2) # Scale
+        self.painter.drawLine(0, self.height - self.tick_thickness/2, self.width, self.height - self.tick_thickness/2)
 
         # Box
         self.painter.setPen(QPen(QColor("#b4b2b4"), self.tick_thickness, Qt.SolidLine))
@@ -92,6 +92,13 @@ class PrimaryFlightDisplay:
 
         self.painter.setPen(QPen(QColor("white"), 1, Qt.SolidLine))
         self.painter.drawText(QRect(self.width/2 - self.scale_width/2, self.height - self.box_height, self.scale_width, self.box_height), Qt.AlignCenter, "{:.1f}".format(self.flight_data.heading))
+
+    def draw_hdg_ticks(self, x_offset):
+        num_ticks = int(360 / self.hdg_tick_interval)
+        self.painter.setPen(QPen(QColor("white"), self.tick_thickness, Qt.SolidLine))
+        for i in range(num_ticks):
+            x = i * self.hdg_scale_spacing + x_offset
+            self.painter.drawLine(x, self.height, x, self.height - self.hdg_scale_length)
 
     def pitch_deg_to_px(self, deg):
         return deg * (self.pitch_scale_spacing / self.pitch_scale_intervals)
