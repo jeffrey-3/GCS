@@ -53,8 +53,9 @@ class PrimaryFlightDisplay:
         self.altitude_scale_intervals = 10
 
         # Flight director
-        self.flight_director_thickness = 4
-        self.flight_director_length = 150   
+        self.flight_director_thickness = 5
+        self.flight_director_length = 170
+        self.fd_px_per_hdg_deg = 2
 
         # Heading scale
         self.hdg_scale_spacing = 150
@@ -66,11 +67,11 @@ class PrimaryFlightDisplay:
 
         self.draw_background()
         self.draw_pitch_scale()
-        self.draw_flight_director()
         self.draw_altitude_scale()
         self.draw_speed_scale()
         self.draw_heading_scale()
         self.draw_wings()
+        # self.draw_flight_director()
 
         return self.canvas
     
@@ -126,23 +127,29 @@ class PrimaryFlightDisplay:
         pitch_error = self.flight_data.pitch_setpoint - self.flight_data.pitch
         heading_error = self.flight_data.heading_setpoint - self.flight_data.heading
 
+        # Normalize heading error to nearest
+        while heading_error >= 180:
+            heading_error -= 360
+        while heading_error < -180:
+            heading_error += 360
+
         self.painter.setPen(QPen(QColor("magenta"), self.flight_director_thickness, Qt.SolidLine))
         
         # Horizontal
-        y = self.height/2 - pitch_error
+        y = self.height/2 - self.pitch_deg_to_px(pitch_error)
         y = self.clamp(y, 
-                       self.height/2 - self.flight_director_length, 
-                       self.height/2 + self.flight_director_length)
+                       self.height/2 - self.flight_director_length*0.8, 
+                       self.height/2 + self.flight_director_length*0.8)
         self.painter.drawLine(self.width/2 - self.flight_director_length, 
                               y,
                               self.width/2 + self.flight_director_length, 
                               y)
 
         # Vertical
-        x = self.width/2 + heading_error
+        x = self.width/2 + heading_error*self.fd_px_per_hdg_deg
         x = self.clamp(x, 
-                       self.width/2 - self.flight_director_length, 
-                       self.width/2 + self.flight_director_length)
+                       self.width/2 - self.flight_director_length*0.8, 
+                       self.width/2 + self.flight_director_length*0.8)
         self.painter.drawLine(x, 
                               self.height/2 - self.flight_director_length - self.flight_data.pitch_setpoint, 
                               x, 
@@ -245,13 +252,13 @@ class PrimaryFlightDisplay:
             origin = (self.width/2, self.height/2)
             
             height = self.height/2 - i * self.pitch_scale_spacing + self.pitch_deg_to_px(self.flight_data.pitch)
-            point_left = self.rotate_point(origin, (self.width/2 - pitch_scale_length, height), math.radians(self.flight_data.roll))
-            point_right = self.rotate_point(origin, (self.width/2 + pitch_scale_length, height), math.radians(self.flight_data.roll))
+            point_left = self.rotate_point(origin, (self.width/2 - pitch_scale_length, height), -math.radians(self.flight_data.roll))
+            point_right = self.rotate_point(origin, (self.width/2 + pitch_scale_length, height), -math.radians(self.flight_data.roll))
             self.painter.drawLine(point_left[0], point_left[1], point_right[0], point_right[1])
             
             height = self.height/2 + i * self.pitch_scale_spacing + self.pitch_deg_to_px(self.flight_data.pitch)
-            point_left = self.rotate_point(origin, (self.width/2 - pitch_scale_length, height), math.radians(self.flight_data.roll))
-            point_right = self.rotate_point(origin, (self.width/2 + pitch_scale_length, height), math.radians(self.flight_data.roll))
+            point_left = self.rotate_point(origin, (self.width/2 - pitch_scale_length, height), -math.radians(self.flight_data.roll))
+            point_right = self.rotate_point(origin, (self.width/2 + pitch_scale_length, height), -math.radians(self.flight_data.roll))
             self.painter.drawLine(point_left[0], point_left[1], point_right[0], point_right[1])
 
     def draw_wings(self):
@@ -283,8 +290,8 @@ class PrimaryFlightDisplay:
         # x point is just for margin to ensure it extends beyond canvas
         original_left = (-1000, self.height/2 + self.pitch_deg_to_px(self.flight_data.pitch))
         original_right = (self.width + 1000, self.height/2 + self.pitch_deg_to_px(self.flight_data.pitch))
-        point_left = self.rotate_point(origin, original_left, math.radians(self.flight_data.roll))
-        point_right = self.rotate_point(origin, original_right, math.radians(self.flight_data.roll))
+        point_left = self.rotate_point(origin, original_left, -math.radians(self.flight_data.roll))
+        point_right = self.rotate_point(origin, original_right, -math.radians(self.flight_data.roll))
         
         # Sky
         self.painter.setPen(QPen(QColor("#0079b4"), 1, Qt.SolidLine))

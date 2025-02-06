@@ -126,7 +126,7 @@ class MainWindow(QMainWindow):
         waypoints, rwy_lat, rwy_lon, rwy_hdg = self.waypointEditor.getWaypoints()
 
         # Upload waypoints
-        for i in range(len(self.waypoints)):
+        for i in range(len(waypoints)):
             self.input.append_queue(self.input.generate_waypoint_packet(waypoints[i], i)) 
         
         # Upload landing target
@@ -153,6 +153,6 @@ if __name__ == "__main__":
     app.setPalette(dark_palette)
     app.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid white; }")
     
-    main = MainWindow(True)
+    main = MainWindow(False)
     main.showMaximized()
     app.exec()
