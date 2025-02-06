@@ -5,7 +5,7 @@ from PyQt5.QtGui import *
 from pfd import PrimaryFlightDisplay
 from map import Map
 from altitude_graph import AltitudeGraph
-from datatable import DataTable
+from data_table import DataTable
 from command_buttons import CommandButtons
 from input_random import InputRandom
 from input_bluetooth import InputBluetooth
@@ -86,7 +86,7 @@ class MainWindow(QMainWindow):
         self.timer.start(10)
     
     def setup_filewriter(self):
-        self.csvfile = open('logs/{date:%Y_%m_%d_%H_%M_%S}.csv'.format(date=datetime.datetime.now()), 'w', newline='')
+        self.csvfile = open('Logs/{date:%Y_%m_%d_%H_%M_%S}.csv'.format(date=datetime.datetime.now()), 'w', newline='')
         self.csvwriter = csv.writer(self.csvfile, delimiter=',')
     
     def setup_window(self):

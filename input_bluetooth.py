@@ -2,7 +2,7 @@ import serial
 import time
 import math
 import struct
-from cobs import cobs
+from Lib.cobs import cobs
 from input import Input
 
 class InputBluetooth(Input):

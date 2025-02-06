@@ -1,19 +1,8 @@
+from flight_data import FlightData
+
 class Input():
     def __init__(self):
-        self.roll = 0
-        self.pitch = 0
-        self.heading = 0
-        self.altitude = 0
-        self.speed = 0
-        self.lat = 0
-        self.lon = 0
-        self.mode_id = 2
-        self.wp_idx = 0
-        
-        self.pitch_setpoint = 0
-        self.heading_setpoint = 0
-        self.alt_setpoint = 0
-        self.speed_setpoint = 0
+        self.flight_data = FlightData()
 
         # When command needs to be sent, it gets added here
         # When it recieves acknowledgement, it gets removed
