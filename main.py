@@ -15,17 +15,20 @@ import csv
 import time
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, testing):
         super().__init__()
 
         self.waypointEditor = WaypointEditor()   
         self.pfd = PrimaryFlightDisplay()
-        self.input = InputRandom()
-        # self.input = InputBluetooth()
+        
+        if testing:
+            self.input = InputRandom()
+        else:
+            self.input = InputBluetooth()
 
-        self.waypoints = [[33.0205, -118.595, -80],
-                          [33.022, -118.592, -80]]
-        self.waypointEditor.setDefaultWaypoints(self.waypoints)
+        self.waypointEditor.setDefaultWaypoints([[33.0205, -118.595, -80],
+                                                 [33.022, -118.592, -80]])
+        self.waypoints, self.rwy_lat, self.rwy_lon, self.rwy_hdg = self.waypointEditor.getWaypoints()
 
         self.csvfile = open('logs/{date:%Y_%m_%d_%H_%M_%S}.csv'.format(date=datetime.datetime.now()), 'w', newline='')
         self.csvwriter = csv.writer(self.csvfile, delimiter=',')
@@ -85,8 +88,12 @@ class MainWindow(QMainWindow):
         self.map_layout.addWidget(self.altitude_graph, 1)
     
     def upload_waypoints(self):
+        # Upload waypoints
         for i in range(len(self.waypoints)):
             self.input.append_queue(self.input.generate_waypoint_packet(self.waypoints[i], i)) 
+        
+        # Upload landing target
+        self.input.append_queue(self.input.generate_landing_target_packet(self.rwy_lat, self.rwy_lon, self.rwy_hdg))
     
     def update(self):
         self.input.send()
@@ -100,32 +107,51 @@ class MainWindow(QMainWindow):
                                                      self.input.speed, 
                                                      0, 
                                                      0))
-            self.waypoints, rwy_lat, rwy_lon, rwy_hdg = self.waypointEditor.getWaypoints()
+            self.waypoints, self.rwy_lat, self.rwy_lon, self.rwy_hdg = self.waypointEditor.getWaypoints()
             self.altitude_graph.update(self.waypoints)
             self.map.update(self.input.heading, 
                             self.input.lat, 
                             self.input.lon, 
                             self.input.wp_idx,
                             self.waypoints,
-                            rwy_lat,
-                            rwy_lon,
-                            rwy_hdg)
+                            self.rwy_lat,
+                            self.rwy_lon,
+                            self.rwy_hdg)
             self.datatable.update(self.input.mode_id)
             self.command_buttons.update(len(self.input.command_queue))
 
             self.csvwriter.writerow([time.time(),
-                                    self.input.roll, 
-                                    self.input.pitch, 
-                                    self.input.heading, 
-                                    self.input.altitude, 
-                                    self.input.speed,
-                                    self.input.lat,
-                                    self.input.lon,
-                                    self.input.mode_id,
-                                    self.input.wp_idx])
+                                     self.input.roll, 
+                                     self.input.pitch, 
+                                     self.input.heading, 
+                                     self.input.altitude, 
+                                     self.input.speed,
+                                     self.input.lat,
+                                     self.input.lon,
+                                     self.input.mode_id,
+                                     self.input.wp_idx])
 
 if __name__ == "__main__":
     app = QApplication([])
-    main = MainWindow()
+
+    app.setStyle("Fusion")
+    dark_palette = QPalette()
+    dark_palette.setColor(QPalette.Window, QColor(53, 53, 53))
+    dark_palette.setColor(QPalette.WindowText, Qt.white)
+    dark_palette.setColor(QPalette.Base, QColor(25, 25, 25))
+    dark_palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
+    dark_palette.setColor(QPalette.ToolTipBase, Qt.white)
+    dark_palette.setColor(QPalette.ToolTipText, Qt.white)
+    dark_palette.setColor(QPalette.Text, Qt.white)
+    dark_palette.setColor(QPalette.Button, QColor(53, 53, 53))
+    dark_palette.setColor(QPalette.ButtonText, Qt.white)
+    dark_palette.setColor(QPalette.BrightText, Qt.red)
+    dark_palette.setColor(QPalette.Link, QColor(42, 130, 218))
+    dark_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
+    dark_palette.setColor(QPalette.HighlightedText, Qt.black)
+    app.setPalette(dark_palette)
+    app.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid white; }")
+    
+    main = MainWindow(True)
     main.showMaximized()
     app.exec()
