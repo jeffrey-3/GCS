@@ -50,17 +50,16 @@ class Map(pg.PlotWidget):
     center_lat = 0
     center_lon = 0
 
-    def __init__(self, waypoints):
+    def __init__(self):
         super().__init__()
 
         self.flight_data = FlightData()
 
-        self.waypoints = waypoints
         self.waypoints_numbers = []
 
         self.add_style()
         self.add_runway()
-        self.add_waypoints()
+        self.init_waypoints()
         self.add_arrow()
         
     def add_runway(self):
@@ -78,16 +77,9 @@ class Map(pg.PlotWidget):
         self.arrow = CenteredArrowItem(angle=90, headLen=60, tipAngle=45, baseAngle=30, pen=pg.mkPen('white', width=2), brush=QColor("black"))
         self.addItem(self.arrow)
 
-    def add_waypoints(self):
-        x = []
-        y = []
-        for waypoint in self.waypoints:
-            x_pt, y_pt = self.calculate_displacement_meters(waypoint[0], waypoint[1])
-            x.append(x_pt)
-            y.append(y_pt)
-
-        self.waypoints_line = self.plot(x, 
-                                        y, 
+    def init_waypoints(self):
+        self.waypoints_line = self.plot([], 
+                                        [], 
                                         pen=pg.mkPen('magenta', width=5), 
                                         symbol="o", 
                                         symbolSize=50, 
@@ -97,16 +89,6 @@ class Map(pg.PlotWidget):
         # Create Target waypoint, setData later
         self.target_marker = pg.ScatterPlotItem([], [], size=100, brush=pg.mkBrush(0, 0, 0, 0), pen=pg.mkPen('white', width=2))
         self.addItem(self.target_marker)
-    
-        # Waypoint Numbers
-        font = QFont()
-        font.setPixelSize(40)
-        for i in range(len(self.waypoints)):
-            text = pg.TextItem(text=str(i), color=QColor("white"), anchor=(0.5, 0.5))
-            text.setPos(x[i], y[i])
-            text.setFont(font)
-            self.addItem(text)
-            self.waypoints_numbers.append(text)
 
     def update(self, flight_data, waypoints, rwy_lat, rwy_lon, rwy_hdg):
         self.flight_data = flight_data

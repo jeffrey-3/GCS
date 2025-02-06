@@ -31,7 +31,6 @@ class MainWindow(QMainWindow):
 
         self.waypointEditor.loadWaypoints([[33.019, -118.598, -60],
                                            [33.020, -118.596, -60]])
-        self.waypoints, self.rwy_lat, self.rwy_lon, self.rwy_hdg = self.waypointEditor.getWaypoints()
 
         self.setup_filewriter()
         self.setup_window()
@@ -54,9 +53,9 @@ class MainWindow(QMainWindow):
                 self.map.center_lon = self.flight_data.lon
             
             self.hud_label.setPixmap(self.pfd.update(self.flight_data))
-            self.waypoints, self.rwy_lat, self.rwy_lon, self.rwy_hdg = self.waypointEditor.getWaypoints()
-            self.altitude_graph.update(self.waypoints)
-            self.map.update(self.flight_data, self.waypoints, self.rwy_lat, self.rwy_lon, self.rwy_hdg)
+            waypoints, rwy_lat, rwy_lon, rwy_hdg = self.waypointEditor.getWaypoints()
+            self.altitude_graph.update(waypoints)
+            self.map.update(self.flight_data, waypoints, rwy_lat, rwy_lon, rwy_hdg)
             self.datatable.update(self.flight_data.mode_id)
             self.command_buttons.update(len(self.input.command_queue))
             self.write_log()
@@ -116,19 +115,24 @@ class MainWindow(QMainWindow):
         self.left_layout.addWidget(self.hud_label)
 
     def add_plot(self):
-        self.map = Map(self.waypoints)
+        waypoints, rwy_lat, rwy_lon, rwy_hdg = self.waypointEditor.getWaypoints()
+
+        self.map = Map()
         self.map_layout.addWidget(self.map, 2)
 
-        self.altitude_graph = AltitudeGraph(self.waypoints)
+        self.altitude_graph = AltitudeGraph()
         self.map_layout.addWidget(self.altitude_graph, 1)
     
     def upload_waypoints(self):
+        # Get default waypoints
+        waypoints, rwy_lat, rwy_lon, rwy_hdg = self.waypointEditor.getWaypoints()
+
         # Upload waypoints
         for i in range(len(self.waypoints)):
-            self.input.append_queue(self.input.generate_waypoint_packet(self.waypoints[i], i)) 
+            self.input.append_queue(self.input.generate_waypoint_packet(waypoints[i], i)) 
         
         # Upload landing target
-        self.input.append_queue(self.input.generate_landing_target_packet(self.rwy_lat, self.rwy_lon, self.rwy_hdg))
+        self.input.append_queue(self.input.generate_landing_target_packet(rwy_lat, rwy_lon, rwy_hdg))
 
 if __name__ == "__main__":
     app = QApplication([])
