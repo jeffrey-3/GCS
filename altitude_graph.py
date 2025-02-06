@@ -28,10 +28,14 @@ class AltitudeGraph(pg.PlotWidget):
         # Update line
         x = [math.sqrt((waypoints[0][0])**2 + (waypoints[0][1])**2)]
         for i in range(1, len(waypoints)):
+            # Calculate distance between target and previous waypoints
             wp = waypoints[i]
             prev_wp = waypoints[i - 1]    
             dist = math.sqrt((wp[0] - prev_wp[0])**2 + (wp[1] - prev_wp[1])**2)
+
+            # Add distance to previous distance in array
             x.append(x[i - 1] + dist)
+        # All the altitudes
         y = [wp[2]*-1 for wp in waypoints]
         self.line.setData(x, y)
 
