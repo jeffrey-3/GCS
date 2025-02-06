@@ -6,6 +6,8 @@ import math
 
 class PrimaryFlightDisplay:
     def __init__(self):
+        self.flight_data = FlightData()
+        
         # Canvas setup
         self.width = 1200
         self.height = 600
@@ -13,9 +15,6 @@ class PrimaryFlightDisplay:
         self.painter = QPainter(self.canvas)
         self.font = QFont("Arial", 20)  # Set font family and size
         self.painter.setFont(self.font)
-
-        # Flight data
-        self.flight_data = FlightData()
 
         # Wings
         self.wings_center_square_size = 15
@@ -58,6 +57,8 @@ class PrimaryFlightDisplay:
         self.flight_director_length = 150   
 
         # Heading scale
+        self.hdg_scale_spacing = 200
+        self.hdg_scale_length = 30
 
     def update(self, flight_data):
         self.flight_data = flight_data
@@ -76,13 +77,10 @@ class PrimaryFlightDisplay:
         # Ticks
         self.painter.setPen(QPen(QColor("white"), self.tick_thickness, Qt.SolidLine))
         for i in range(20):
-            spacing = 200
-            length = 30
-
-            x = self.width/2 + i * spacing - self.flight_data.heading * 5
-            self.painter.drawLine(x, self.height, x, self.height - length)
-            x = self.width/2 - i * spacing - self.flight_data.heading * 5
-            self.painter.drawLine(x, self.height, x, self.height - length)
+            x = self.width/2 + i * self.hdg_scale_spacing - self.flight_data.heading * 5
+            self.painter.drawLine(x, self.height, x, self.height - self.hdg_scale_length)
+            x = self.width/2 - i * self.hdg_scale_spacing - self.flight_data.heading * 5
+            self.painter.drawLine(x, self.height, x, self.height - self.hdg_scale_length)
 
         self.painter.setPen(QPen(QColor("#b4b2b4"), self.tick_thickness, Qt.SolidLine))
         self.painter.drawLine(0, self.height - self.tick_thickness/2, self.width, self.height - self.tick_thickness/2) # Scale
@@ -105,13 +103,31 @@ class PrimaryFlightDisplay:
         return altitude * (self.altitude_scale_spacing / self.altitude_scale_intervals)
 
     def draw_flight_director(self):
+        # Calculate deviation from setpoints
+        pitch_error = self.flight_data.pitch_setpoint - self.flight_data.pitch
+        heading_error = self.flight_data.heading_setpoint - self.flight_data.heading
+
         self.painter.setPen(QPen(QColor("magenta"), self.flight_director_thickness, Qt.SolidLine))
         
         # Horizontal
-        self.painter.drawLine(self.width/2 - self.flight_director_length, self.height/2 - self.flight_data.pitch_setpoint, self.width/2 + self.flight_director_length, self.height/2 - self.flight_data.pitch_setpoint)
+        y = self.height/2 - pitch_error
+        y = self.clamp(y, 
+                       self.height/2 - self.flight_director_length, 
+                       self.height/2 + self.flight_director_length)
+        self.painter.drawLine(self.width/2 - self.flight_director_length, 
+                              y,
+                              self.width/2 + self.flight_director_length, 
+                              y)
 
         # Vertical
-        self.painter.drawLine(self.width/2 + self.flight_data.heading_setpoint, self.height/2 - self.flight_director_length - self.flight_data.pitch_setpoint, self.width/2 + self.flight_data.heading_setpoint, self.height/2 + self.flight_director_length - self.flight_data.pitch_setpoint)
+        x = self.width/2 + heading_error
+        x = self.clamp(x, 
+                       self.width/2 - self.flight_director_length, 
+                       self.width/2 + self.flight_director_length)
+        self.painter.drawLine(x, 
+                              self.height/2 - self.flight_director_length - self.flight_data.pitch_setpoint, 
+                              x, 
+                              self.height/2 + self.flight_director_length - self.flight_data.pitch_setpoint)
 
     def draw_speed_scale(self):
         self.painter.setPen(QPen(QColor("black"), 1, Qt.SolidLine))
@@ -270,3 +286,6 @@ class PrimaryFlightDisplay:
         # Horizon
         self.painter.setPen(QPen(QColor("#b4b6b4"), self.horizon_thickness, Qt.SolidLine))
         self.painter.drawLine(point_left[0], point_left[1], point_right[0], point_right[1])
+    
+    def clamp(self, value, minval, maxval):
+        return sorted((minval, value, maxval))[1]
