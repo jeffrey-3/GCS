@@ -56,9 +56,10 @@ class WaypointEditor(QWidget):
         self.table.setItem(rowPosition, 2, QTableWidgetItem(alt))
 
     def removeWaypoint(self):
-        selectedRows = set(index.row() for index in self.table.selectedIndexes())
-        for row in sorted(selectedRows, reverse=True):
-            self.table.removeRow(row)
+        if self.table.rowCount() > 1:
+            selectedRows = set(index.row() for index in self.table.selectedIndexes())
+            for row in sorted(selectedRows, reverse=True):
+                self.table.removeRow(row)
     
     def getWaypoints(self):
         waypoints = []

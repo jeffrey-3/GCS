@@ -19,16 +19,14 @@ class MainWindow(QMainWindow):
     def __init__(self, testing):
         super().__init__()
 
-        self.flight_data = FlightData()
-
-        self.waypointEditor = WaypointEditor()   
-        self.pfd = PrimaryFlightDisplay()
+        self.flight_data = FlightData() 
         
         if testing:
             self.input = InputRandom()
         else:
             self.input = InputBluetooth()
 
+        self.waypointEditor = WaypointEditor()  
         self.waypointEditor.loadWaypoints([[33.019, -118.598, -60],
                                            [33.020, -118.596, -60]])
 
@@ -37,7 +35,7 @@ class MainWindow(QMainWindow):
         self.create_main_layout()
         self.create_left_layout()
         self.create_map_layout()
-        self.add_hud()
+        self.add_pfd()
         self.add_datatable()
         self.add_plot()
         self.start_thread()
@@ -48,15 +46,15 @@ class MainWindow(QMainWindow):
         if self.input.getData():
             self.flight_data = self.input.flight_data
 
-            if self.map.center_lat == 0:
-                self.map.center_lat = self.flight_data.lat
-                self.map.center_lon = self.flight_data.lon
+            if self.flight_data.center_lat == 0:
+                self.flight_data.center_lat = self.flight_data.lat
+                self.flight_data.center_lon = self.flight_data.lon
             
             self.hud_label.setPixmap(self.pfd.update(self.flight_data))
             waypoints, rwy_lat, rwy_lon, rwy_hdg = self.waypointEditor.getWaypoints()
             self.altitude_graph.update(waypoints)
             self.map.update(self.flight_data, waypoints, rwy_lat, rwy_lon, rwy_hdg)
-            self.datatable.update(self.flight_data.mode_id)
+            self.datatable.update(self.flight_data)
             self.command_buttons.update(len(self.input.command_queue))
             self.write_log()
     
@@ -102,14 +100,18 @@ class MainWindow(QMainWindow):
         self.command_buttons.buttons[0].clicked.connect(self.upload_waypoints)
         self.tabs.addTab(self.datatable, "Data")
         self.tabs.addTab(self.command_buttons, "Commands")
-        self.tabs.addTab(self.waypointEditor, "Mission")
+        self.tabs.addTab(self.waypointEditor, "Flight Plan")
         self.left_layout.addWidget(self.tabs)
 
     def create_left_layout(self):
         self.left_layout = QVBoxLayout()
         self.main_layout.addLayout(self.left_layout)
 
-    def add_hud(self):
+    def add_pfd(self):
+        # Init PFD
+        self.pfd = PrimaryFlightDisplay()
+
+        # Add PFD to layout
         self.hud_label = QLabel()
         self.hud_label.setPixmap(self.pfd.update(self.flight_data))
         self.left_layout.addWidget(self.hud_label)
@@ -153,6 +155,6 @@ if __name__ == "__main__":
     app.setPalette(dark_palette)
     app.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid white; }")
     
-    main = MainWindow(False)
+    main = MainWindow(True)
     main.showMaximized()
     app.exec()

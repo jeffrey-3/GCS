@@ -1,6 +1,9 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
+from flight_data import FlightData
+import math
+from utils import calculate_displacement_meters
 import time
 
 # Bar graphs:
@@ -25,21 +28,12 @@ class DataTable(QWidget):
         self.text = ["State", 
                      "Mission Time", 
                      "Battery Remaining", 
-                     "Battery Voltage", 
-                     "Battery Current", 
-                     "Autopilot Current", 
-                     "RSSI", 
+                     "Cell Voltage", 
+                     "Current", 
+                     "Packet Rate", 
+                     "GPS Fix", 
                      "GPS Satellites", 
                      "Distance"]
-        self.values = ["Manual", 
-                       "00:00:00",
-                       "00:00:00",
-                       "11.04",
-                       "30.46",
-                       "30.46",
-                       "123",
-                       "12",
-                       "123"]
         self.value_labels = []
 
         for row in range(3):
@@ -52,7 +46,7 @@ class DataTable(QWidget):
                 label_small.setAlignment(Qt.AlignCenter)
                 label_small.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
-                label_large = QLabel(self.values[3*row + col], self)
+                label_large = QLabel("Value", self)
                 label_large.setStyleSheet("font-size: 60px; font-weight: bold;")
                 label_large.setAlignment(Qt.AlignCenter)
                 # label_large = QProgressBar()
@@ -66,26 +60,26 @@ class DataTable(QWidget):
 
                 self.layout.addLayout(vbox, row, col)
     
-    def update(self, mode_id):
+    def update(self, flight_data):
         state = "???"
-        if mode_id == 0:
+        if flight_data.mode_id == 0:
             state = "BOOT"
             self.start_time = time.time()
-        elif mode_id == 2:
+        elif flight_data.mode_id == 2:
             state = "DIRECT"
-        elif mode_id == 3:
+        elif flight_data.mode_id == 3:
             state = "STABILIZED"
-        elif mode_id == 4:
+        elif flight_data.mode_id == 4:
             state = "READY"
-        elif mode_id == 5:
+        elif flight_data.mode_id == 5:
             state = "TAKEOFF"
-        elif mode_id == 6:
+        elif flight_data.mode_id == 6:
             state = "MISSION"
-        elif mode_id == 7:
+        elif flight_data.mode_id == 7:
             state = "LAND"
-        elif mode_id == 8:
+        elif flight_data.mode_id == 8:
             state = "FLARE"
-        elif mode_id == 9:
+        elif flight_data.mode_id == 9:
             state = "SAFE"
     
         elapsed_time = time.time() - self.start_time
@@ -94,114 +88,17 @@ class DataTable(QWidget):
         elapsed_seconds = int(elapsed_time % 60)
         formatted_time = f"{elapsed_hours:02}:{elapsed_minutes:02}:{elapsed_seconds:02}"
 
-        self.values = [state, 
-                       formatted_time,
-                       formatted_time,
-                       "11.04",
-                       "30.46",
-                       "30.46",
-                       "123",
-                       "12",
-                       "123"]
-            
+        pos = calculate_displacement_meters(flight_data.lat, flight_data.lon, flight_data.center_lat, flight_data.center_lon)
+        dist = math.sqrt(pos[0]**2 + pos[1]**2) # Use total distance instead of displacement
+
+        values = [state, 
+                  formatted_time,
+                  formatted_time,
+                  f"{flight_data.cell_voltage:.2f}",
+                  "30.46",
+                  "30.46",
+                  str(flight_data.gps_fix),
+                  str(flight_data.sats),
+                  f"{dist:.0f}"]
         for i in range(len(self.value_labels)):
-            self.value_labels[i].setText(self.values[i])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# from PyQt5.QtWidgets import *
-# from PyQt5.QtCore import *
-# from PyQt5.QtGui import *
-
-# # Bar graphs:
-# # - Capacity consumed
-# # - Cell voltage
-# # - RSSI
-# # Data:
-# # - Time
-# # - GPS sats
-# # - State
-# # Map has distance
-
-# class DataTable(QWidget):
-#     def __init__(self):
-#         super().__init__()
-
-#         self.layout = QGridLayout()
-#         self.setLayout(self.layout)
-
-#         self.state_label =
-#         self.layout.addWidget(QLabel("Test"), 0, 0)
-
-#         self.layout.addWidget(QLabel("123"), 1, 0)
-
-#         # self.state_label = QLabel("State<h1>Manual</h1>")
-#         # # self.state_label.setAlignment(Qt.AlignCenter)
-#         # self.layout.addWidget(self.state_label, 0, 0)
-
-#         # self.flight_time_label = QLabel("Mission Time<h1>00:00:00</h1>")
-#         # # self.flight_time_label.setAlignment(Qt.AlignCenter)
-#         # self.layout.addWidget(self.flight_time_label, 0, 1)
-
-#         # self.time_remaining_label = QLabel("Battery Remaining<h1>00:00:00</h1>")
-#         # # self.time_remaining_label.setAlignment(Qt.AlignCenter)
-#         # self.layout.addWidget(self.time_remaining_label, 0, 2)
-
-#         # self.voltage_label = QLabel("Battery Voltage (V)<h1>11.04</h1>")
-#         # # self.voltage_label.setAlignment(Qt.AlignCenter)
-#         # self.layout.addWidget(self.voltage_label, 1, 0)
-
-#         # self.current_label = QLabel("Battery Current (A)<h1>30.46</h1>")
-#         # # self.current_label.setAlignment(Qt.AlignCenter)
-#         # self.layout.addWidget(self.current_label, 1, 1)
-
-#         # self.ap_current_label = QLabel("Autopilot Current (mA)<h1>30.46</h1>")
-#         # # self.ap_current_label.setAlignment(Qt.AlignCenter)
-#         # self.layout.addWidget(self.ap_current_label, 1, 2)
-
-#         # self.rssi_label = QLabel("RSSI<h1>123</h1>")
-#         # # self.rssi_label.setAlignment(Qt.AlignCenter)
-#         # self.layout.addWidget(self.rssi_label, 2, 0)
-
-#         # self.sats_label = QLabel("GPS Satellites<h1>12</h1>")
-#         # # self.sats_label.setAlignment(Qt.AlignCenter)
-#         # self.layout.addWidget(self.sats_label, 2, 1)
-
-#         # self.distance_label = QLabel("Distance (m)<h1>123</h1>")
-#         # # self.distance_label.setAlignment(Qt.AlignCenter)
-#         # self.layout.addWidget(self.distance_label, 2, 2)
-    
-#     def update(self, mode_id):
-#         state = "???"
-#         if mode_id == 0:
-#             state = "BOOT"
-#         elif mode_id == 2:
-#             state = "DIRECT"
-#         elif mode_id == 3:
-#             state = "STABILIZED"
-#         elif mode_id == 4:
-#             state = "READY"
-#         elif mode_id == 5:
-#             state = "TAKEOFF"
-#         elif mode_id == 6:
-#             state = "MISSION"
-            
-#         # self.state_label.setText("State<h1>" + state + "</h1>")
+            self.value_labels[i].setText(values[i])

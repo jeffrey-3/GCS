@@ -12,11 +12,18 @@ class FlightData:
     lon = 0
 
     # Status
-    mode_id = 2
+    mode_id = 0
     wp_idx = 0
+    cell_voltage = 0
+    sats = 0
+    gps_fix = False
 
     # Setpoints
     pitch_setpoint = 0
     heading_setpoint = 0
     alt_setpoint = 0
     speed_setpoint = 0
+
+    # Center ref
+    center_lat = 0
+    center_lon = 0
