@@ -11,6 +11,7 @@ class InputBluetooth(Input):
 
         self.bluetooth = serial.Serial('COM9', 115200, timeout=1000)
         self.prev_send_time = time.time()
+        self.prev_recv_time = time.time()
     
     def getData(self):
         if self.bluetooth.in_waiting:
@@ -23,8 +24,8 @@ class InputBluetooth(Input):
             
             # Figure out what type of payload
             if payload_type == 0: # Telemetry payload
-                packet = packet[1:-7] # Remove empty bytes at end of packet and the "payload type" byte at start of packet
-                packet = struct.unpack("<fffffffBB", packet) # Use endian to remove padding
+                packet = packet[1:-5] # Remove empty bytes at end of packet and the "payload type" byte at start of packet
+                packet = struct.unpack("<fffffffBBB?", packet) # Use endian to remove padding
                 self.flight_data.roll = packet[0]
                 self.flight_data.pitch = packet[1]
                 self.flight_data.heading = packet[2]
@@ -34,6 +35,12 @@ class InputBluetooth(Input):
                 self.flight_data.lon = packet[6]
                 self.flight_data.mode_id = packet[7]
                 self.flight_data.wp_idx = packet[8]
+                self.flight_data.sats = packet[9]
+                self.flight_data.gps_fix = packet[10]
+
+                self.flight_data.packet_rate = 1 / (time.time() - self.prev_recv_time)
+                self.prev_recv_time = time.time()
+
                 return True
             elif payload_type == 1 or payload_type == 2 or payload_type == 3: # Command/waypoint/landing target acknowledgement payload
                 if packet_raw in self.command_queue:
@@ -67,7 +74,7 @@ class InputBluetooth(Input):
         return bytes([0x00]) + cobs.encode(landing_target_payload)
     
     def send(self):
-        if len(self.command_queue) > 0 and time.time() - self.prev_send_time > 0.05:
+        if len(self.command_queue) > 0 and time.time() - self.prev_send_time > 0.1:
             self.bluetooth.write(self.command_queue[0])
             self.prev_send_time = time.time()
     

@@ -177,8 +177,6 @@ class PrimaryFlightDisplay:
             margin = 30
             self.painter.drawText(QRect(self.tick_length + margin, y - self.speed_scale_spacing/2, self.scale_width - self.tick_length, self.speed_scale_spacing), Qt.AlignVCenter | Qt.AlignLeft, str(i * self.speed_scale_intervals))
 
-            # If y less than zero, break
-
         self.painter.drawLine(self.tick_thickness/2, 0, self.tick_thickness/2, self.height) # Scale
 
         # Draw black box with speed reading

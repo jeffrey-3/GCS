@@ -1,6 +1,6 @@
 import pyqtgraph as pg
 from PyQt5.QtGui import *
-import numpy as np
+from utils import calculate_displacement_meters
 import math
 
 class AltitudeGraph(pg.PlotWidget):
@@ -24,14 +24,15 @@ class AltitudeGraph(pg.PlotWidget):
         self.getViewBox().setMouseEnabled(x=False, y=False)
         self.setBackground(QColor("#202124"))
     
-    def update(self, waypoints):
+    def update(self, waypoints, flight_data):
         # Update line
-        x = [math.sqrt((waypoints[0][0])**2 + (waypoints[0][1])**2)]
+        wp_pos = calculate_displacement_meters(waypoints[0][0], waypoints[0][1], flight_data.center_lat, flight_data.center_lon)
+        x = [math.sqrt(wp_pos[0]**2 + wp_pos[1]**2)]
         for i in range(1, len(waypoints)):
             # Calculate distance between target and previous waypoints
-            wp = waypoints[i]
-            prev_wp = waypoints[i - 1]    
-            dist = math.sqrt((wp[0] - prev_wp[0])**2 + (wp[1] - prev_wp[1])**2)
+            wp_pos = calculate_displacement_meters(waypoints[i][0], waypoints[i][1], flight_data.center_lat, flight_data.center_lon)
+            prev_wp_pos = calculate_displacement_meters(waypoints[i-1][0], waypoints[i-1][1], flight_data.center_lat, flight_data.center_lon)
+            dist = math.sqrt((wp_pos[0] - prev_wp_pos[0])**2 + (wp_pos[1] - prev_wp_pos[1])**2)
 
             # Add distance to previous distance in array
             x.append(x[i - 1] + dist)

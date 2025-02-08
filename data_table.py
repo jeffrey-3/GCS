@@ -27,13 +27,13 @@ class DataTable(QWidget):
 
         self.text = ["State", 
                      "Mission Time", 
-                     "Battery Remaining", 
+                     "Home Distance",
                      "Cell Voltage", 
                      "Current", 
-                     "Packet Rate", 
+                     "Capacity Consumed", 
                      "GPS Fix", 
-                     "GPS Satellites", 
-                     "Distance"]
+                     "GPS Sats", 
+                     "Packet Rate"]
         self.value_labels = []
 
         for row in range(3):
@@ -81,7 +81,7 @@ class DataTable(QWidget):
             state = "FLARE"
         elif flight_data.mode_id == 9:
             state = "SAFE"
-    
+        
         elapsed_time = time.time() - self.start_time
         elapsed_hours = int(elapsed_time // 3600)
         elapsed_minutes = int((elapsed_time % 3600) // 60)
@@ -93,12 +93,12 @@ class DataTable(QWidget):
 
         values = [state, 
                   formatted_time,
-                  formatted_time,
+                  f"{dist:.0f}",
                   f"{flight_data.cell_voltage:.2f}",
-                  "30.46",
-                  "30.46",
+                  f"{flight_data.current:.1f}",
+                  f"{flight_data.capacity_consumed:.0f}",
                   str(flight_data.gps_fix),
                   str(flight_data.sats),
-                  f"{dist:.0f}"]
+                  f"{flight_data.packet_rate:.1f}"]
         for i in range(len(self.value_labels)):
             self.value_labels[i].setText(values[i])

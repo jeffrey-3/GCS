@@ -11,6 +11,7 @@ from input_random import InputRandom
 from input_bluetooth import InputBluetooth
 from waypoint_editor import WaypointEditor
 from flight_data import FlightData
+from landmark import Landmark
 import datetime
 import csv
 import time
@@ -39,23 +40,30 @@ class MainWindow(QMainWindow):
         self.add_datatable()
         self.add_plot()
         self.start_thread()
+        self.showMaximized()
 
     def update(self):
         self.input.send()
 
         if self.input.getData():
+            # Get flight data
             self.flight_data = self.input.flight_data
 
-            if self.flight_data.center_lat == 0:
+            # Get waypoints from user
+            waypoints, rwy_lat, rwy_lon, rwy_hdg = self.waypointEditor.getWaypoints()
+
+            # If first GPS fix, set center
+            if self.flight_data.center_lat == 0 and self.flight_data.gps_fix:
                 self.flight_data.center_lat = self.flight_data.lat
                 self.flight_data.center_lon = self.flight_data.lon
             
             self.hud_label.setPixmap(self.pfd.update(self.flight_data))
-            waypoints, rwy_lat, rwy_lon, rwy_hdg = self.waypointEditor.getWaypoints()
-            self.altitude_graph.update(waypoints)
-            self.map.update(self.flight_data, waypoints, rwy_lat, rwy_lon, rwy_hdg)
             self.datatable.update(self.flight_data)
             self.command_buttons.update(len(self.input.command_queue))
+
+            self.altitude_graph.update(waypoints, self.flight_data)
+            self.map.update(self.flight_data, waypoints, rwy_lat, rwy_lon, rwy_hdg)
+
             self.write_log()
     
     def write_log(self):
@@ -73,7 +81,7 @@ class MainWindow(QMainWindow):
     def start_thread(self):
         self.timer = QTimer()
         self.timer.timeout.connect(self.update)
-        self.timer.start(10)
+        self.timer.start(20)
     
     def setup_filewriter(self):
         self.csvfile = open('Logs/{date:%Y_%m_%d_%H_%M_%S}.csv'.format(date=datetime.datetime.now()), 'w', newline='')
@@ -117,7 +125,8 @@ class MainWindow(QMainWindow):
         self.left_layout.addWidget(self.hud_label)
 
     def add_plot(self):
-        self.map = Map()
+        landmarks = [Landmark(lat=33.017815, lon=-118.602486, name="Rwy_Begin")]
+        self.map = Map(landmarks)
         self.map_layout.addWidget(self.map, 2)
 
         self.altitude_graph = AltitudeGraph()
@@ -134,9 +143,7 @@ class MainWindow(QMainWindow):
         # Upload landing target
         self.input.append_queue(self.input.generate_landing_target_packet(rwy_lat, rwy_lon, rwy_hdg))
 
-if __name__ == "__main__":
-    app = QApplication([])
-
+def apply_dark_theme(app):
     app.setStyle("Fusion")
     dark_palette = QPalette()
     dark_palette.setColor(QPalette.Window, QColor(53, 53, 53))
@@ -154,7 +161,11 @@ if __name__ == "__main__":
     dark_palette.setColor(QPalette.HighlightedText, Qt.black)
     app.setPalette(dark_palette)
     app.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid white; }")
-    
-    main = MainWindow(True)
-    main.showMaximized()
+
+if __name__ == "__main__":
+    app = QApplication([])
+    apply_dark_theme(app)
+
+    main = MainWindow(False)
+
     app.exec()

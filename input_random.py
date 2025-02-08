@@ -23,5 +23,8 @@ class InputRandom(Input):
         self.flight_data.mode_id = 2
         self.flight_data.cell_voltage = random.uniform(3.5, 3.8)
         self.flight_data.sats = random.randint(10, 11)
+        self.flight_data.gps_fix = True
+        self.flight_data.packet_rate = random.uniform(18, 20)
+        self.flight_data.current = random.uniform(8, 10)
 
         return True

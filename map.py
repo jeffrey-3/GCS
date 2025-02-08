@@ -28,8 +28,28 @@ class CenteredArrowItem(pg.ArrowItem):
             self.setFlags(self.flags() & ~self.ItemIgnoresTransformations)
 
 class Map(pg.PlotWidget):
-    def __init__(self):
+    def __init__(self, landmarks):
         super().__init__()
+
+        # Config
+        self.land_target_len = 400
+
+        self.landmarks = landmarks
+        self.landmark_items = []
+        self.landmark_labels = []
+        for landmark in self.landmarks:
+            landmark_item = pg.ScatterPlotItem([], 
+                                               [], 
+                                               size=30, 
+                                               brush=pg.mkBrush("green"), 
+                                               pen=None)
+            landmark_item.setSymbol("t")
+            self.addItem(landmark_item)
+            self.landmark_items.append(landmark_item)
+
+            landmark_label = pg.TextItem(landmark.name, anchor=(0.5, 0))
+            self.addItem(landmark_label)
+            self.landmark_labels.append(landmark_label)
 
         self.set_style()
         self.init_runway()
@@ -44,8 +64,8 @@ class Map(pg.PlotWidget):
         self.setBackground(QColor("#202124")) 
 
     def init_runway(self):
-        self.rwy_line = self.plot([0], [0], pen=pg.mkPen('white', width=2))
-        self.rwy_marker = self.plot([0], [0], symbol="s", symbolSize=30, symbolBrush='w')
+        self.rwy_line = self.plot([], [], pen=pg.mkPen('white', width=2, style=Qt.DashLine))
+        self.rwy_marker = self.plot([], [], symbol="s", symbolSize=30, symbolBrush='w')
 
     def add_arrow(self):
         self.arrow = CenteredArrowItem(angle=90, headLen=60, tipAngle=45, baseAngle=30, pen=pg.mkPen('white', width=2), brush=QColor("black"))
@@ -73,6 +93,16 @@ class Map(pg.PlotWidget):
         # Update title
         self.setTitle(f"<p style='white-space:pre;'>Lat:{flight_data.lat:.6f}      Lon:{flight_data.lon:.6f}</p>")
 
+        # Landmarks
+        for i in range(len(self.landmarks)):
+            pos_landmark = calculate_displacement_meters(self.landmarks[i].lat, 
+                                                         self.landmarks[i].lon,
+                                                         flight_data.center_lat,
+                                                         flight_data.center_lon)
+            self.landmark_items[i].setData([pos_landmark[0]], [pos_landmark[1]])
+            
+            self.landmark_labels[i].setPos(pos_landmark[0], pos_landmark[1])
+
         # Update position of aircraft
         position = calculate_displacement_meters(flight_data.lat, flight_data.lon, flight_data.center_lat, flight_data.center_lon)
         self.arrow.setStyle(angle=flight_data.heading + 90)
@@ -82,9 +112,9 @@ class Map(pg.PlotWidget):
         x, y = calculate_displacement_meters(waypoints[flight_data.wp_idx][0], waypoints[flight_data.wp_idx][1], flight_data.center_lat, flight_data.center_lon)
         self.target_marker.setData([x], [y])
 
-        # Update runway position
+        # Update landing target
         rwy_e, rwy_n = calculate_displacement_meters(rwy_lat, rwy_lon, flight_data.center_lat, flight_data.center_lon)
-        self.rwy_line.setData([rwy_e, rwy_e - 500*math.sin(math.radians(rwy_hdg))], [rwy_n, rwy_n - 500*math.cos(math.radians(rwy_hdg))])
+        self.rwy_line.setData([rwy_e, rwy_e - self.land_target_len*math.sin(math.radians(rwy_hdg))], [rwy_n, rwy_n - self.land_target_len*math.cos(math.radians(rwy_hdg))])
         self.rwy_marker.setData([rwy_e], [rwy_n])
 
         # Update waypoints
