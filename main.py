@@ -125,7 +125,8 @@ class MainWindow(QMainWindow):
         self.left_layout.addWidget(self.hud_label)
 
     def add_plot(self):
-        landmarks = [Landmark(lat=33.017815, lon=-118.602486, name="Rwy_Begin")]
+        landmarks = [Landmark(lat=33.017815, lon=-118.602486, name="Runway Begin"),
+                     Landmark(lat=33.02, lon=-118.6, name="Test Landmark 2"),]
         self.map = Map(landmarks)
         self.map_layout.addWidget(self.map, 2)
 
@@ -166,6 +167,6 @@ if __name__ == "__main__":
     app = QApplication([])
     apply_dark_theme(app)
 
-    main = MainWindow(False)
+    main = MainWindow(True)
 
     app.exec()
