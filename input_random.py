@@ -19,7 +19,6 @@ class InputRandom(Input):
         self.flight_data.heading = 180 + 180*math.sin(t/5)
         self.flight_data.pitch_setpoint = 30*math.cos(t)
         self.flight_data.heading_setpoint = 10*math.sin(t)
-
         self.flight_data.mode_id = 2
         self.flight_data.cell_voltage = random.uniform(3.5, 3.8)
         self.flight_data.sats = random.randint(10, 11)
