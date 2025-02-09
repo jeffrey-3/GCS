@@ -55,6 +55,11 @@ class WaypointEditor(QWidget):
         self.table.setItem(rowPosition, 1, QTableWidgetItem(lon))
         self.table.setItem(rowPosition, 2, QTableWidgetItem(alt))
 
+        # Set custom row headers starting from 0
+        for row in range(self.table.rowCount()):
+            item = QTableWidgetItem(str(row))
+            self.table.setVerticalHeaderItem(row, item)
+
     def removeWaypoint(self):
         if self.table.rowCount() > 1:
             selectedRows = set(index.row() for index in self.table.selectedIndexes())

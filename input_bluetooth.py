@@ -79,4 +79,5 @@ class InputBluetooth(Input):
             self.prev_send_time = time.time()
     
     def append_queue(self, packet):
-        self.command_queue.append(packet)
+        if not packet in self.command_queue:
+            self.command_queue.append(packet)

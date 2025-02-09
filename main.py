@@ -33,9 +33,7 @@ class MainWindow(QMainWindow):
 
         self.setup_filewriter()
         self.setup_window()
-        self.create_main_layout()
-        self.create_left_layout()
-        self.create_map_layout()
+        self.create_layouts()
         self.add_pfd()
         self.add_datatable()
         self.add_plot()
@@ -56,6 +54,10 @@ class MainWindow(QMainWindow):
             if self.flight_data.center_lat == 0 and self.flight_data.gps_fix:
                 self.flight_data.center_lat = self.flight_data.lat
                 self.flight_data.center_lon = self.flight_data.lon
+
+                # Pan map to center
+                self.map.setXRange(-500, 500)
+                self.map.setYRange(-500, 500)
             
             self.hud_label.setPixmap(self.pfd.update(self.flight_data))
             self.datatable.update(self.flight_data)
@@ -90,14 +92,16 @@ class MainWindow(QMainWindow):
     def setup_window(self):
         self.setWindowTitle("UAV Ground Control")
     
-    def create_main_layout(self):
+    def create_layouts(self):
         self.main_layout = QHBoxLayout()
 
         widget = QWidget()
         widget.setLayout(self.main_layout)
         self.setCentralWidget(widget)
 
-    def create_map_layout(self):
+        self.left_layout = QVBoxLayout()
+        self.main_layout.addLayout(self.left_layout)
+
         self.map_layout = QVBoxLayout()
         self.main_layout.addLayout(self.map_layout, 2)
 
@@ -110,11 +114,7 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.command_buttons, "Commands")
         self.tabs.addTab(self.waypointEditor, "Flight Plan")
         self.left_layout.addWidget(self.tabs)
-
-    def create_left_layout(self):
-        self.left_layout = QVBoxLayout()
-        self.main_layout.addLayout(self.left_layout)
-
+        
     def add_pfd(self):
         # Init PFD
         self.pfd = PrimaryFlightDisplay()
@@ -167,6 +167,6 @@ if __name__ == "__main__":
     app = QApplication([])
     apply_dark_theme(app)
 
-    main = MainWindow(True)
+    main = MainWindow(False)
 
     app.exec()
