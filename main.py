@@ -11,11 +11,13 @@ from input_random import InputRandom
 from input_bluetooth import InputBluetooth
 from waypoint_editor import WaypointEditor
 from flight_data import FlightData
-from landmark import Landmark
 import datetime
 import csv
 import time
-import json
+
+
+# Switch pfd to QLabel
+# Tabs to individual file
 
 class MainWindow(QMainWindow):
     def __init__(self, testing):
@@ -35,7 +37,7 @@ class MainWindow(QMainWindow):
         self.setup_filewriter()
         self.setup_window()
         self.create_layouts()
-        self.add_pfd()
+        self.create_widgets()
         self.add_datatable()
         self.add_plot()
         self.start_thread()
@@ -56,7 +58,7 @@ class MainWindow(QMainWindow):
                 self.flight_data.center_lat = self.flight_data.lat
                 self.flight_data.center_lon = self.flight_data.lon
             
-            self.hud_label.setPixmap(self.pfd.update(self.flight_data))
+            self.pfd.update(self.flight_data)
             self.datatable.update(self.flight_data)
             self.command_buttons.update(len(self.input.command_queue))
 
@@ -64,6 +66,10 @@ class MainWindow(QMainWindow):
             self.map.update(self.flight_data, waypoints, rwy_lat, rwy_lon, rwy_hdg)
 
             self.write_log()
+    
+    def create_widgets(self):
+        self.pfd = PrimaryFlightDisplay()
+        self.left_layout.addWidget(self.pfd)
     
     def write_log(self):
         self.csvwriter.writerow([time.time(),
@@ -111,19 +117,9 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.command_buttons, "Commands")
         self.tabs.addTab(self.waypointEditor, "Flight Plan")
         self.left_layout.addWidget(self.tabs)
-        
-    def add_pfd(self):
-        # Init PFD
-        self.pfd = PrimaryFlightDisplay()
-
-        # Add PFD to layout
-        self.hud_label = QLabel()
-        self.hud_label.setPixmap(self.pfd.update(self.flight_data))
-        self.left_layout.addWidget(self.hud_label)
 
     def add_plot(self):
-        landmarks = [Landmark(lat=landmark['lat'], lon=landmark['lon'], name=landmark['name']) for landmark in json.load(open('landmarks.json', 'r'))]
-        self.map = Map(landmarks)
+        self.map = Map()
         self.map_layout.addWidget(self.map, 2)
 
         self.altitude_graph = AltitudeGraph()

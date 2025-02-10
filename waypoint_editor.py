@@ -16,14 +16,18 @@ class WaypointEditor(QWidget):
         self.layout.addWidget(self.table)
         
         # Buttons for adding and removing rows
-        buttonLayout = QHBoxLayout()
+        buttonLayout = QGridLayout()
         self.addButton = QPushButton("Add Waypoint")
         self.addButton.clicked.connect(self.addWaypoint)
         self.removeButton = QPushButton("Remove Selected")
         self.removeButton.clicked.connect(self.removeWaypoint)
+        self.importButton = QPushButton("Import File")
+        self.exportButton = QPushButton("Export File")
         
-        buttonLayout.addWidget(self.addButton)
-        buttonLayout.addWidget(self.removeButton)
+        buttonLayout.addWidget(self.addButton, 0, 0)
+        buttonLayout.addWidget(self.removeButton, 0, 1)
+        buttonLayout.addWidget(self.importButton, 1, 0)
+        buttonLayout.addWidget(self.exportButton, 1, 1)
         
         self.layout.addLayout(buttonLayout)
         self.setLayout(self.layout)

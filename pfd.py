@@ -4,8 +4,10 @@ from PyQt5.QtGui import *
 from flight_data import FlightData
 import math
 
-class PrimaryFlightDisplay:
+class PrimaryFlightDisplay(QLabel):
     def __init__(self):
+        super().__init__()
+
         self.flight_data = FlightData()
         
         # Canvas setup
@@ -73,7 +75,7 @@ class PrimaryFlightDisplay:
         self.draw_wings()
         # self.draw_flight_director()
 
-        return self.canvas
+        self.setPixmap(self.canvas)
     
     def draw_heading_scale(self):
         scale_width = (360 / self.hdg_tick_interval) * self.hdg_scale_spacing
