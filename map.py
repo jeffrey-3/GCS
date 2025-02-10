@@ -115,8 +115,11 @@ class Map(pg.PlotWidget):
         self.arrow.setPos(position[0], position[1])
 
         # Update target waypoint
-        x, y = calculate_displacement_meters(waypoints[flight_data.wp_idx][0], waypoints[flight_data.wp_idx][1], flight_data.center_lat, flight_data.center_lon)
-        self.target_marker.setData([x], [y])
+        if len(waypoints) > 0:
+            x, y = calculate_displacement_meters(waypoints[flight_data.wp_idx][0], waypoints[flight_data.wp_idx][1], flight_data.center_lat, flight_data.center_lon)
+            self.target_marker.setData([x], [y])
+        else:
+            self.target_marker.setData([], [])
 
         # Update landing target
         rwy_e, rwy_n = calculate_displacement_meters(rwy_lat, rwy_lon, flight_data.center_lat, flight_data.center_lon)

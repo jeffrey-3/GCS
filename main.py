@@ -36,22 +36,23 @@ class MainWindow(QMainWindow):
             # Get flight data
             flight_data = self.input.flight_data
 
-            # Get waypoints from user
-            waypoints, rwy_lat, rwy_lon, rwy_hdg = self.waypointEditor.getWaypoints()
+            self.pfd.update(flight_data)
+            self.datatable.update(flight_data)
+            self.command_buttons.update(len(self.input.command_queue))
 
             # If first GPS fix, set center
             if flight_data.center_lat == 0 and flight_data.gps_fix:
                 flight_data.center_lat = flight_data.lat
                 flight_data.center_lon = flight_data.lon
-            
-            self.pfd.update(flight_data)
-            self.datatable.update(flight_data)
-            self.command_buttons.update(len(self.input.command_queue))
-
-            self.altitude_graph.update(waypoints, flight_data)
-            self.map.update(flight_data, waypoints, rwy_lat, rwy_lon, rwy_hdg)
 
             self.logger.write_log(flight_data)
+
+            # Get waypoints from user
+            waypoints = self.waypointEditor.getWaypoints()
+            self.altitude_graph.update(waypoints, flight_data)
+
+            rwy_lat, rwy_lon, rwy_hdg = self.waypointEditor.get_land_target()
+            self.map.update(flight_data, waypoints, rwy_lat, rwy_lon, rwy_hdg)
     
     def create_widgets(self):
         self.pfd = PrimaryFlightDisplay()
@@ -68,8 +69,6 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.command_buttons, "Commands")
 
         self.waypointEditor = WaypointEditor()  
-        self.waypointEditor.loadWaypoints([[33.019, -118.598, -60],
-                                           [33.020, -118.596, -60]])
         self.tabs.addTab(self.waypointEditor, "Flight Plan")
 
         self.map = Map()

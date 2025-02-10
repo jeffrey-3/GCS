@@ -61,24 +61,40 @@ class WaypointEditor(QWidget):
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getOpenFileName(self, "Open JSON File", "", "JSON Files (*.json);;All Files (*)", options=options)
 
-        f = open(file_name, 'r')
-        print(json.load(f))
+        if file_name:
+            f = open(file_name, 'r')
+
+            json_data = json.load(f)
+            rwy_data = json_data['landing']
+
+            self.rwy_lat.setText(str(rwy_data['lat']))
+            self.rwy_lon.setText(str(rwy_data['lon']))
+            self.rwy_hdg.setText(str(rwy_data['hdg']))
+
+            waypoints_data = json_data['waypoints']
+            print(waypoints_data)
+
+            self.table.setRowCount(0) # Remove all rows
+            for row in range(len(waypoints_data)):
+                self.table.insertRow(row)
+                self.table.setItem(row, 0, QTableWidgetItem(str(waypoints_data[row]['lat'])))
+                self.table.setItem(row, 1, QTableWidgetItem(str(waypoints_data[row]['lon'])))
+                self.table.setItem(row, 2, QTableWidgetItem(str(waypoints_data[row]['alt'])))
     
     def createForm(self):
         formGroupBox = QGroupBox("Landing Target")
         layout = QFormLayout()
-        self.rwy_lat = QLineEdit("33.021984")
-        self.rwy_lon = QLineEdit("-118.590790")
-        self.rwy_hdg = QLineEdit("67")
+
+        self.rwy_lat = QLineEdit()
+        self.rwy_lon = QLineEdit()
+        self.rwy_hdg = QLineEdit()
+
         layout.addRow(QLabel("Latitude"), self.rwy_lat)
         layout.addRow(QLabel("Longitude"), self.rwy_lon)
         layout.addRow(QLabel("Heading"), self.rwy_hdg)
+        
         formGroupBox.setLayout(layout)
         self.layout.addWidget(formGroupBox)
-
-    def loadWaypoints(self, waypoints):
-        for lat, lon, alt in waypoints:
-            self.addWaypoint(str(lat), str(lon), str(alt))
 
     def addWaypoint(self, lat="", lon="", alt=""):
         rowPosition = self.table.rowCount()
@@ -95,21 +111,25 @@ class WaypointEditor(QWidget):
             self.table.setVerticalHeaderItem(row, item)
 
     def removeWaypoint(self):
-        if self.table.rowCount() > 1:
-            selectedRows = set(index.row() for index in self.table.selectedIndexes())
-            for row in sorted(selectedRows, reverse=True):
-                self.table.removeRow(row)
-    
+        selectedRows = set(index.row() for index in self.table.selectedIndexes())
+        for row in sorted(selectedRows, reverse=True):
+            self.table.removeRow(row)
+
     def getWaypoints(self):
         waypoints = []
         for row in range(self.table.rowCount()):
             if not self.is_float(self.table.item(row, 0).text()) or not self.is_float(self.table.item(row, 1).text()) or not self.is_float(self.table.item(row, 2).text()):
-                break
+                return
             lat = self.table.item(row, 0).text()
             lon = self.table.item(row, 1).text()
             alt = self.table.item(row, 2).text()
             waypoints.append([float(lat), float(lon), float(alt)])
-        return waypoints, float(self.rwy_lat.text()), float(self.rwy_lon.text()), float(self.rwy_hdg.text())
+
+        return waypoints
+
+    def get_land_target(self):
+        if self.is_float(self.rwy_lat.text()) and self.is_float(self.rwy_lon.text()) and self.is_float(self.rwy_hdg.text()):
+            return float(self.rwy_lat.text()), float(self.rwy_lon.text()), float(self.rwy_hdg.text())
 
     def is_float(self, element: any) -> bool:
         #If you expect None to be passed:
