@@ -11,13 +11,7 @@ from input_random import InputRandom
 from input_bluetooth import InputBluetooth
 from waypoint_editor import WaypointEditor
 from flight_data import FlightData
-import datetime
-import csv
-import time
-
-
-# Switch pfd to QLabel
-# Tabs to individual file
+from logger import Logger
 
 class MainWindow(QMainWindow):
     def __init__(self, testing):
@@ -30,16 +24,11 @@ class MainWindow(QMainWindow):
         else:
             self.input = InputBluetooth()
 
-        self.waypointEditor = WaypointEditor()  
-        self.waypointEditor.loadWaypoints([[33.019, -118.598, -60],
-                                           [33.020, -118.596, -60]])
+        self.logger = Logger()
 
-        self.setup_filewriter()
         self.setup_window()
         self.create_layouts()
         self.create_widgets()
-        self.add_datatable()
-        self.add_plot()
         self.start_thread()
         self.showMaximized()
 
@@ -65,32 +54,37 @@ class MainWindow(QMainWindow):
             self.altitude_graph.update(waypoints, self.flight_data)
             self.map.update(self.flight_data, waypoints, rwy_lat, rwy_lon, rwy_hdg)
 
-            self.write_log()
+            self.logger.write_log(self.flight_data)
     
     def create_widgets(self):
         self.pfd = PrimaryFlightDisplay()
         self.left_layout.addWidget(self.pfd)
-    
-    def write_log(self):
-        self.csvwriter.writerow([time.time(),
-                                 self.flight_data.roll, 
-                                 self.flight_data.pitch, 
-                                 self.flight_data.heading, 
-                                 self.flight_data.altitude, 
-                                 self.flight_data.speed,
-                                 self.flight_data.lat,
-                                 self.flight_data.lon,
-                                 self.flight_data.mode_id,
-                                 self.flight_data.wp_idx])
+
+        self.tabs = QTabWidget()
+        self.left_layout.addWidget(self.tabs)
+
+        self.datatable = DataTable()
+        self.tabs.addTab(self.datatable, "Data")
+
+        self.command_buttons = CommandButtons()
+        self.command_buttons.buttons[0].clicked.connect(self.upload_waypoints)
+        self.tabs.addTab(self.command_buttons, "Commands")
+
+        self.waypointEditor = WaypointEditor()  
+        self.waypointEditor.loadWaypoints([[33.019, -118.598, -60],
+                                           [33.020, -118.596, -60]])
+        self.tabs.addTab(self.waypointEditor, "Flight Plan")
+
+        self.map = Map()
+        self.map_layout.addWidget(self.map, 2)
+
+        self.altitude_graph = AltitudeGraph()
+        self.map_layout.addWidget(self.altitude_graph, 1)
             
     def start_thread(self):
         self.timer = QTimer()
         self.timer.timeout.connect(self.update)
         self.timer.start(20)
-    
-    def setup_filewriter(self):
-        self.csvfile = open('Logs/{date:%Y_%m_%d_%H_%M_%S}.csv'.format(date=datetime.datetime.now()), 'w', newline='')
-        self.csvwriter = csv.writer(self.csvfile, delimiter=',')
     
     def setup_window(self):
         self.setWindowTitle("UAV Ground Control")
@@ -108,28 +102,11 @@ class MainWindow(QMainWindow):
         self.map_layout = QVBoxLayout()
         self.main_layout.addLayout(self.map_layout, 2)
 
-    def add_datatable(self):
-        self.tabs = QTabWidget()
-        self.datatable = DataTable()
-        self.command_buttons = CommandButtons()
-        self.command_buttons.buttons[0].clicked.connect(self.upload_waypoints)
-        self.tabs.addTab(self.datatable, "Data")
-        self.tabs.addTab(self.command_buttons, "Commands")
-        self.tabs.addTab(self.waypointEditor, "Flight Plan")
-        self.left_layout.addWidget(self.tabs)
-
-    def add_plot(self):
-        self.map = Map()
-        self.map_layout.addWidget(self.map, 2)
-
-        self.altitude_graph = AltitudeGraph()
-        self.map_layout.addWidget(self.altitude_graph, 1)
-    
     def upload_waypoints(self):
         # Get default waypoints
         waypoints, rwy_lat, rwy_lon, rwy_hdg = self.waypointEditor.getWaypoints()
 
-        # Upload waypoints
+        # Upload waypoints through radio
         for i in range(len(waypoints)):
             self.input.append_queue(self.input.generate_waypoint_packet(waypoints[i], i)) 
         
