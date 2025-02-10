@@ -2,7 +2,7 @@ import serial
 import time
 import math
 import struct
-from Lib.cobs import cobs
+from lib.cobs import cobs
 from input import Input
 
 class InputBluetooth(Input):
@@ -24,12 +24,12 @@ class InputBluetooth(Input):
             
             # Figure out what type of payload
             if payload_type == 0: # Telemetry payload
-                packet = packet[1:-5] # Remove empty bytes at end of packet and the "payload type" byte at start of packet
-                packet = struct.unpack("<fffffffBBB?", packet) # Use endian to remove padding
-                self.flight_data.roll = packet[0]
-                self.flight_data.pitch = packet[1]
+                packet = packet[1:-11] # Remove empty bytes at end of packet and the "payload type" byte at start of packet
+                packet = struct.unpack("<hhfhfffBBB?", packet) # Use endian to remove padding
+                self.flight_data.roll = float(packet[0]) / 100
+                self.flight_data.pitch = float(packet[1]) / 100
                 self.flight_data.heading = packet[2]
-                self.flight_data.altitude = packet[3]
+                self.flight_data.altitude = float(packet[3]) / 10
                 self.flight_data.speed = packet[4]
                 self.flight_data.lat = packet[5]
                 self.flight_data.lon = packet[6]

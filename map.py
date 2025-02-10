@@ -34,6 +34,10 @@ class Map(pg.PlotWidget):
         # Config
         self.land_target_len = 400
 
+        # Pan map to center
+        self.setXRange(-500, 500)
+        self.setYRange(-500, 500)
+
         self.landmarks = landmarks
         self.landmark_items = []
         self.landmark_labels = []

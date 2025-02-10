@@ -15,6 +15,7 @@ from landmark import Landmark
 import datetime
 import csv
 import time
+import json
 
 class MainWindow(QMainWindow):
     def __init__(self, testing):
@@ -54,10 +55,6 @@ class MainWindow(QMainWindow):
             if self.flight_data.center_lat == 0 and self.flight_data.gps_fix:
                 self.flight_data.center_lat = self.flight_data.lat
                 self.flight_data.center_lon = self.flight_data.lon
-
-                # Pan map to center
-                self.map.setXRange(-500, 500)
-                self.map.setYRange(-500, 500)
             
             self.hud_label.setPixmap(self.pfd.update(self.flight_data))
             self.datatable.update(self.flight_data)
@@ -125,8 +122,7 @@ class MainWindow(QMainWindow):
         self.left_layout.addWidget(self.hud_label)
 
     def add_plot(self):
-        landmarks = [Landmark(lat=33.017815, lon=-118.602486, name="Runway Begin"),
-                     Landmark(lat=33.02, lon=-118.6, name="Test Landmark 2"),]
+        landmarks = [Landmark(lat=landmark['lat'], lon=landmark['lon'], name=landmark['name']) for landmark in json.load(open('landmarks.json', 'r'))]
         self.map = Map(landmarks)
         self.map_layout.addWidget(self.map, 2)
 
@@ -167,6 +163,6 @@ if __name__ == "__main__":
     app = QApplication([])
     apply_dark_theme(app)
 
-    main = MainWindow(False)
+    main = MainWindow(True)
 
     app.exec()
