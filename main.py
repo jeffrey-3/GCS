@@ -10,14 +10,11 @@ from command_buttons import CommandButtons
 from input_random import InputRandom
 from input_bluetooth import InputBluetooth
 from waypoint_editor import WaypointEditor
-from flight_data import FlightData
 from logger import Logger
 
 class MainWindow(QMainWindow):
     def __init__(self, testing):
         super().__init__()
-
-        self.flight_data = FlightData() 
         
         if testing:
             self.input = InputRandom()
@@ -37,24 +34,24 @@ class MainWindow(QMainWindow):
 
         if self.input.getData():
             # Get flight data
-            self.flight_data = self.input.flight_data
+            flight_data = self.input.flight_data
 
             # Get waypoints from user
             waypoints, rwy_lat, rwy_lon, rwy_hdg = self.waypointEditor.getWaypoints()
 
             # If first GPS fix, set center
-            if self.flight_data.center_lat == 0 and self.flight_data.gps_fix:
-                self.flight_data.center_lat = self.flight_data.lat
-                self.flight_data.center_lon = self.flight_data.lon
+            if flight_data.center_lat == 0 and flight_data.gps_fix:
+                flight_data.center_lat = flight_data.lat
+                flight_data.center_lon = flight_data.lon
             
-            self.pfd.update(self.flight_data)
-            self.datatable.update(self.flight_data)
+            self.pfd.update(flight_data)
+            self.datatable.update(flight_data)
             self.command_buttons.update(len(self.input.command_queue))
 
-            self.altitude_graph.update(waypoints, self.flight_data)
-            self.map.update(self.flight_data, waypoints, rwy_lat, rwy_lon, rwy_hdg)
+            self.altitude_graph.update(waypoints, flight_data)
+            self.map.update(flight_data, waypoints, rwy_lat, rwy_lon, rwy_hdg)
 
-            self.logger.write_log(self.flight_data)
+            self.logger.write_log(flight_data)
     
     def create_widgets(self):
         self.pfd = PrimaryFlightDisplay()
@@ -103,7 +100,7 @@ class MainWindow(QMainWindow):
         self.main_layout.addLayout(self.map_layout, 2)
 
     def upload_waypoints(self):
-        # Get default waypoints
+        # Get waypoints
         waypoints, rwy_lat, rwy_lon, rwy_hdg = self.waypointEditor.getWaypoints()
 
         # Upload waypoints through radio

@@ -1,4 +1,5 @@
-import sys
+import json
+import datetime
 from PyQt5.QtWidgets import *
 
 class WaypointEditor(QWidget):
@@ -22,7 +23,9 @@ class WaypointEditor(QWidget):
         self.removeButton = QPushButton("Remove Selected")
         self.removeButton.clicked.connect(self.removeWaypoint)
         self.importButton = QPushButton("Import File")
+        self.importButton.clicked.connect(self.load_file)
         self.exportButton = QPushButton("Export File")
+        self.exportButton.clicked.connect(self.save_file)
         
         buttonLayout.addWidget(self.addButton, 0, 0)
         buttonLayout.addWidget(self.removeButton, 0, 1)
@@ -33,6 +36,21 @@ class WaypointEditor(QWidget):
         self.setLayout(self.layout)
 
         self.createForm()
+    
+    def save_file(self):
+        waypoints, rwy_lat, rwy_lon, rwy_hdg = self.getWaypoints()
+
+        json_data = json.dumps(waypoints)
+
+        options = QFileDialog.Options()
+        file_path, _ = QFileDialog.getSaveFileName(self, "Save JSON File", 'plan_{date:%Y_%m_%d_%H_%M_%S}.json'.format(date=datetime.datetime.now()), "JSON Files (*.json)", options=options)
+        
+        if file_path:
+            with open(file_path, "w") as json_file:
+                json.dump(json_data, json_file, indent=4)
+
+    def load_file(self):
+        return
     
     def createForm(self):
         formGroupBox = QGroupBox("Landing Target")
