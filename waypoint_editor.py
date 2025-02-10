@@ -39,8 +39,16 @@ class WaypointEditor(QWidget):
     
     def save_file(self):
         waypoints, rwy_lat, rwy_lon, rwy_hdg = self.getWaypoints()
-
-        json_data = json.dumps(waypoints)
+        json_data = {
+            "waypoints": [
+                {"lat": wp[0], "lon": wp[1], "alt": wp[2]} for wp in waypoints
+            ],
+            "landing": {
+                "lat": rwy_lat,
+                "lon": rwy_lon,
+                "hdg": rwy_hdg
+            }
+        }
 
         options = QFileDialog.Options()
         file_path, _ = QFileDialog.getSaveFileName(self, "Save JSON File", 'plan_{date:%Y_%m_%d_%H_%M_%S}.json'.format(date=datetime.datetime.now()), "JSON Files (*.json)", options=options)
@@ -50,7 +58,11 @@ class WaypointEditor(QWidget):
                 json.dump(json_data, json_file, indent=4)
 
     def load_file(self):
-        return
+        options = QFileDialog.Options()
+        file_name, _ = QFileDialog.getOpenFileName(self, "Open JSON File", "", "JSON Files (*.json);;All Files (*)", options=options)
+
+        f = open(file_name, 'r')
+        print(json.load(f))
     
     def createForm(self):
         formGroupBox = QGroupBox("Landing Target")
