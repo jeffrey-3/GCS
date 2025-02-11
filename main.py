@@ -15,6 +15,8 @@ from logger import Logger
 class MainWindow(QMainWindow):
     def __init__(self, testing):
         super().__init__()
+
+        self.setWindowTitle("UAV Ground Control")
         
         if testing:
             self.input = InputRandom()
@@ -23,10 +25,13 @@ class MainWindow(QMainWindow):
 
         self.logger = Logger()
 
-        self.setup_window()
         self.create_layouts()
         self.create_widgets()
-        self.start_thread()
+        
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update)
+        self.timer.start(20)
+
         self.showMaximized()
 
     def update(self):
@@ -51,8 +56,9 @@ class MainWindow(QMainWindow):
             waypoints = self.waypointEditor.getWaypoints()
             self.altitude_graph.update(waypoints, flight_data)
 
-            rwy_lat, rwy_lon, rwy_hdg = self.waypointEditor.get_land_target()
-            self.map.update(flight_data, waypoints, rwy_lat, rwy_lon, rwy_hdg)
+            if self.waypointEditor.get_land_target():
+                rwy_lat, rwy_lon, rwy_hdg = self.waypointEditor.get_land_target()
+                self.map.update(flight_data, waypoints, rwy_lat, rwy_lon, rwy_hdg)
     
     def create_widgets(self):
         self.pfd = PrimaryFlightDisplay()
@@ -76,14 +82,6 @@ class MainWindow(QMainWindow):
 
         self.altitude_graph = AltitudeGraph()
         self.map_layout.addWidget(self.altitude_graph, 1)
-            
-    def start_thread(self):
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.update)
-        self.timer.start(20)
-    
-    def setup_window(self):
-        self.setWindowTitle("UAV Ground Control")
     
     def create_layouts(self):
         self.main_layout = QHBoxLayout()
@@ -100,7 +98,8 @@ class MainWindow(QMainWindow):
 
     def upload_waypoints(self):
         # Get waypoints
-        waypoints, rwy_lat, rwy_lon, rwy_hdg = self.waypointEditor.getWaypoints()
+        waypoints = self.waypointEditor.getWaypoints()
+        rwy_lat, rwy_lon, rwy_hdg = self.waypointEditor.get_land_target()
 
         # Upload waypoints through radio
         for i in range(len(waypoints)):
@@ -132,6 +131,6 @@ if __name__ == "__main__":
     app = QApplication([])
     apply_dark_theme(app)
 
-    main = MainWindow(True)
+    main = MainWindow(False)
 
     app.exec()

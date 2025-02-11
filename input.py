@@ -13,6 +13,8 @@ class Input():
         pass
     def generate_waypoint_packet(self, waypoint, waypoint_index):
         pass
+    def generate_landing_target_packet(self, lat, lon, hdg):
+        pass
     def send(self):
         pass
     def append_queue(self, packet):

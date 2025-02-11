@@ -38,7 +38,8 @@ class WaypointEditor(QWidget):
         self.createForm()
     
     def save_file(self):
-        waypoints, rwy_lat, rwy_lon, rwy_hdg = self.getWaypoints()
+        waypoints = self.getWaypoints()
+        rwy_lat, rwy_lon, rwy_hdg = self.get_land_target()
         json_data = {
             "waypoints": [
                 {"lat": wp[0], "lon": wp[1], "alt": wp[2]} for wp in waypoints

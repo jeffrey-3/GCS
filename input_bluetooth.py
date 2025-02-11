@@ -27,6 +27,7 @@ class InputBluetooth(Input):
                 packet = packet[1:-11] # Remove empty bytes at end of packet and the "payload type" byte at start of packet
                 packet = struct.unpack("<hhfhfffBBB?", packet) # Use endian to remove padding
                 self.flight_data.roll = float(packet[0]) / 100
+                print(self.flight_data.roll)
                 self.flight_data.pitch = float(packet[1]) / 100
                 self.flight_data.heading = packet[2]
                 self.flight_data.altitude = float(packet[3]) / 10
