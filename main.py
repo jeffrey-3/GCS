@@ -54,11 +54,14 @@ class MainWindow(QMainWindow):
 
             # Get waypoints from user
             waypoints = self.waypointEditor.getWaypoints()
-            self.altitude_graph.update(waypoints, flight_data)
 
+            rwy_lat = 0 
+            rwy_lon = 0 
+            rwy_hdg = 0
             if self.waypointEditor.get_land_target():
                 rwy_lat, rwy_lon, rwy_hdg = self.waypointEditor.get_land_target()
-                self.map.update(flight_data, waypoints, rwy_lat, rwy_lon, rwy_hdg)
+            self.map.update(flight_data, waypoints, rwy_lat, rwy_lon, rwy_hdg)
+            self.altitude_graph.update(waypoints, flight_data)
     
     def create_widgets(self):
         self.pfd = PrimaryFlightDisplay()
@@ -131,6 +134,6 @@ if __name__ == "__main__":
     app = QApplication([])
     apply_dark_theme(app)
 
-    main = MainWindow(False)
+    main = MainWindow(True)
 
     app.exec()
