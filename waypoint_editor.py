@@ -39,24 +39,27 @@ class WaypointEditor(QWidget):
     
     def save_file(self):
         waypoints = self.getWaypoints()
-        rwy_lat, rwy_lon, rwy_hdg = self.get_land_target()
-        json_data = {
-            "waypoints": [
-                {"lat": wp[0], "lon": wp[1], "alt": wp[2]} for wp in waypoints
-            ],
-            "landing": {
-                "lat": rwy_lat,
-                "lon": rwy_lon,
-                "hdg": rwy_hdg
+        if len(waypoints) > 0 and self.get_land_target():
+            rwy_lat, rwy_lon, rwy_hdg = self.get_land_target()
+            json_data = {
+                "waypoints": [
+                    {"lat": wp[0], "lon": wp[1], "alt": wp[2]} for wp in waypoints
+                ],
+                "landing": {
+                    "lat": rwy_lat,
+                    "lon": rwy_lon,
+                    "hdg": rwy_hdg
+                }
             }
-        }
 
-        options = QFileDialog.Options()
-        file_path, _ = QFileDialog.getSaveFileName(self, "Save JSON File", 'plan_{date:%Y_%m_%d_%H_%M_%S}.json'.format(date=datetime.datetime.now()), "JSON Files (*.json)", options=options)
-        
-        if file_path:
-            with open(file_path, "w") as json_file:
-                json.dump(json_data, json_file, indent=4)
+            options = QFileDialog.Options()
+            file_path, _ = QFileDialog.getSaveFileName(self, "Save JSON File", 'plan_{date:%Y_%m_%d_%H_%M_%S}.json'.format(date=datetime.datetime.now()), "JSON Files (*.json)", options=options)
+            
+            if file_path:
+                with open(file_path, "w") as json_file:
+                    json.dump(json_data, json_file, indent=4)
+        else:
+            print("Cannot export file. Fields missing.")
 
     def load_file(self):
         options = QFileDialog.Options()
@@ -64,8 +67,10 @@ class WaypointEditor(QWidget):
 
         if file_name:
             f = open(file_name, 'r')
-
             json_data = json.load(f)
+
+            print("Imported File:", json.dumps(json_data, indent=2))
+
             rwy_data = json_data['landing']
 
             self.rwy_lat.setText(str(rwy_data['lat']))
@@ -73,7 +78,6 @@ class WaypointEditor(QWidget):
             self.rwy_hdg.setText(str(rwy_data['hdg']))
 
             waypoints_data = json_data['waypoints']
-            print(waypoints_data)
 
             self.table.setRowCount(0) # Remove all rows
             for row in range(len(waypoints_data)):
