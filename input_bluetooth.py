@@ -24,14 +24,13 @@ class InputBluetooth(Input):
             
             # Figure out what type of payload
             if payload_type == 0: # Telemetry payload
-                packet = packet[1:-11] # Remove empty bytes at end of packet and the "payload type" byte at start of packet
-                packet = struct.unpack("<hhfhfffBBB?", packet) # Use endian to remove padding
+                packet = packet[1:-15] # Remove empty bytes at end of packet and the "payload type" byte at start of packet
+                packet = struct.unpack("<hhHhHffBBB?", packet) # Use endian to remove padding
                 self.flight_data.roll = float(packet[0]) / 100
-                print(self.flight_data.roll)
                 self.flight_data.pitch = float(packet[1]) / 100
-                self.flight_data.heading = packet[2]
+                self.flight_data.heading = float(packet[2]) / 10
                 self.flight_data.altitude = float(packet[3]) / 10
-                self.flight_data.speed = packet[4]
+                self.flight_data.speed = float(packet[4]) / 10
                 self.flight_data.lat = packet[5]
                 self.flight_data.lon = packet[6]
                 self.flight_data.mode_id = packet[7]

@@ -29,7 +29,7 @@ class DataTable(QWidget):
                      "Mission Time", 
                      "Home Distance",
                      "Cell Voltage", 
-                     "Current", 
+                     "Batt Current", 
                      "Capacity Consumed", 
                      "GPS Fix", 
                      "GPS Sats", 
