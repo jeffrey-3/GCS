@@ -1,8 +1,7 @@
-from PyQt5 import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from main_window import MainWindow
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPalette, QColor
+from config import FileLoader
 
 def apply_dark_theme(app):
     app.setStyle("Fusion")
@@ -27,6 +26,6 @@ if __name__ == "__main__":
     app = QApplication([])
     apply_dark_theme(app)
 
-    main = MainWindow(True)
+    main = FileLoader()
 
     app.exec()

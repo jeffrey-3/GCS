@@ -1,7 +1,5 @@
-from PyQt5 import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from PyQt5.QtWidgets import QMainWindow, QTabWidget, QHBoxLayout, QVBoxLayout, QWidget
+from PyQt5.QtCore import QTimer
 from pfd import PrimaryFlightDisplay
 from map import Map
 from altitude_graph import AltitudeGraph
@@ -10,11 +8,14 @@ from input_random import InputRandom
 from input_bluetooth import InputBluetooth
 from logger import Logger
 import json
-import sys
 
 class MainWindow(QMainWindow):
-    def __init__(self, testing):
+    # Add default to example
+    def __init__(self, testing, flight_plan_dir, params_dir):
         super().__init__()
+
+        self.flight_plan_dir = flight_plan_dir
+        self.params_dir = params_dir
 
         self.waypoints = []
 
@@ -22,12 +23,8 @@ class MainWindow(QMainWindow):
 
         self.showMaximized()
 
-        if not self.load_file():
-            print("File not loaded")
-            QApplication.quit()
-            sys.exit()
-            return
-        
+        self.load_file()
+
         if testing:
             self.input = InputRandom()
         else:
@@ -103,26 +100,18 @@ class MainWindow(QMainWindow):
         self.input.append_queue(self.input.generate_landing_target_packet(self.rwy_lat, self.rwy_lon, self.rwy_hdg))
     
     def load_file(self):
-        options = QFileDialog.Options()
-        file_name, _ = QFileDialog.getOpenFileName(self, "Open JSON File", "", "JSON Files (*.json);;All Files (*)", options=options)
+        f = open(self.flight_plan_dir, 'r')
+        json_data = json.load(f)
 
-        if file_name:
-            f = open(file_name, 'r')
-            json_data = json.load(f)
+        print("Imported File:", json.dumps(json_data, indent=2))
 
-            print("Imported File:", json.dumps(json_data, indent=2))
+        rwy_data = json_data['landing']
 
-            rwy_data = json_data['landing']
+        self.rwy_lat = rwy_data['lat']
+        self.rwy_lon = rwy_data['lon']
+        self.rwy_hdg = rwy_data['hdg']
 
-            self.rwy_lat = rwy_data['lat']
-            self.rwy_lon = rwy_data['lon']
-            self.rwy_hdg = rwy_data['hdg']
+        waypoints_data = json_data['waypoints']
 
-            waypoints_data = json_data['waypoints']
-
-            for wp in waypoints_data:
-                self.waypoints.append([float(wp['lat']), float(wp['lon']), float(wp['alt'])])
-
-            return True
-
-        return False
+        for wp in waypoints_data:
+            self.waypoints.append([float(wp['lat']), float(wp['lon']), float(wp['alt'])])

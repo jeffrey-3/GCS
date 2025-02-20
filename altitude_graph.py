@@ -1,5 +1,5 @@
 import pyqtgraph as pg
-from PyQt5.QtGui import *
+from PyQt5.QtGui import QColor, QFont
 from utils import calculate_displacement_meters
 import math
 

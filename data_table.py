@@ -1,6 +1,5 @@
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from PyQt5.QtWidgets import QWidget, QGridLayout, QVBoxLayout, QLabel, QSizePolicy
+from PyQt5.QtCore import Qt
 import math
 from utils import calculate_displacement_meters
 import time

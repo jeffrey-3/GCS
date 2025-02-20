@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from PyQt5.QtWidgets import QLabel
+from PyQt5.QtCore import QRect, Qt, QPoint
+from PyQt5.QtGui import QPixmap, QPainter, QFont, QPen, QColor, QBrush, QPolygon
 from flight_data import FlightData
 import math
 
