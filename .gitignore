@@ -2,3 +2,5 @@ logs/
 __pycache__/
 flight_plans/
 .venv/
+build/
+dist/

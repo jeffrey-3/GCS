@@ -1,9 +1,9 @@
 from PyQt5.QtWidgets import QMainWindow, QTabWidget, QHBoxLayout, QVBoxLayout, QWidget
 from PyQt5.QtCore import QTimer
-from pfd import PrimaryFlightDisplay
+from modules.pfd import PrimaryFlightDisplay
 from map import Map
-from altitude_graph import AltitudeGraph
-from data_table import DataTable
+from modules.altitude_graph import AltitudeGraph
+from modules.data_table import DataTable
 from input_random import InputRandom
 from input_bluetooth import InputBluetooth
 from logger import Logger
