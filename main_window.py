@@ -6,17 +6,27 @@ from pfd import PrimaryFlightDisplay
 from map import Map
 from altitude_graph import AltitudeGraph
 from data_table import DataTable
-from command_buttons import CommandButtons
 from input_random import InputRandom
 from input_bluetooth import InputBluetooth
-from waypoint_editor import WaypointEditor
 from logger import Logger
+import json
+import sys
 
 class MainWindow(QMainWindow):
     def __init__(self, testing):
         super().__init__()
 
+        self.waypoints = []
+
         self.setWindowTitle("UAV Ground Control")
+
+        self.showMaximized()
+
+        if not self.load_file():
+            print("File not loaded")
+            QApplication.quit()
+            sys.exit()
+            return
         
         if testing:
             self.input = InputRandom()
@@ -32,8 +42,6 @@ class MainWindow(QMainWindow):
         self.timer.timeout.connect(self.update)
         self.timer.start(20)
 
-        self.showMaximized()
-
     def update(self):
         self.input.send()
 
@@ -43,7 +51,6 @@ class MainWindow(QMainWindow):
 
             self.pfd.update(flight_data)
             self.datatable.update(flight_data)
-            self.command_buttons.update(len(self.input.command_queue))
 
             # If first GPS fix, set center
             if flight_data.center_lat == 0 and flight_data.gps_fix:
@@ -52,16 +59,8 @@ class MainWindow(QMainWindow):
 
             self.logger.write_log(flight_data)
 
-            # Get waypoints from user
-            waypoints = self.waypointEditor.getWaypoints()
-
-            rwy_lat = 0 
-            rwy_lon = 0 
-            rwy_hdg = 0
-            if self.waypointEditor.get_land_target():
-                rwy_lat, rwy_lon, rwy_hdg = self.waypointEditor.get_land_target()
-            self.map.update(flight_data, waypoints, rwy_lat, rwy_lon, rwy_hdg)
-            self.altitude_graph.update(waypoints, flight_data)
+            self.map.update(flight_data, self.waypoints, self.rwy_lat, self.rwy_lon, self.rwy_hdg)
+            self.altitude_graph.update(self.waypoints, flight_data)
     
     def create_widgets(self):
         self.pfd = PrimaryFlightDisplay()
@@ -71,14 +70,10 @@ class MainWindow(QMainWindow):
         self.left_layout.addWidget(self.tabs)
 
         self.datatable = DataTable()
-        self.tabs.addTab(self.datatable, "Data")
+        self.tabs.addTab(self.datatable, "Quick")
 
-        self.command_buttons = CommandButtons()
-        self.command_buttons.buttons[0].clicked.connect(self.upload_waypoints)
-        self.tabs.addTab(self.command_buttons, "Commands")
-
-        self.waypointEditor = WaypointEditor()  
-        self.tabs.addTab(self.waypointEditor, "Flight Plan")
+        # Raw data, queue len, etc.
+        self.tabs.addTab(QWidget(), "Other")
 
         self.map = Map()
         self.map_layout.addWidget(self.map, 2)
@@ -100,13 +95,34 @@ class MainWindow(QMainWindow):
         self.main_layout.addLayout(self.map_layout, 2)
 
     def upload_waypoints(self):
-        # Get waypoints
-        waypoints = self.waypointEditor.getWaypoints()
-        rwy_lat, rwy_lon, rwy_hdg = self.waypointEditor.get_land_target()
-
         # Upload waypoints through radio
-        for i in range(len(waypoints)):
-            self.input.append_queue(self.input.generate_waypoint_packet(waypoints[i], i)) 
+        for i in range(len(self.waypoints)):
+            self.input.append_queue(self.input.generate_waypoint_packet(self.waypoints[i], i)) 
         
         # Upload landing target
-        self.input.append_queue(self.input.generate_landing_target_packet(rwy_lat, rwy_lon, rwy_hdg))
+        self.input.append_queue(self.input.generate_landing_target_packet(self.rwy_lat, self.rwy_lon, self.rwy_hdg))
+    
+    def load_file(self):
+        options = QFileDialog.Options()
+        file_name, _ = QFileDialog.getOpenFileName(self, "Open JSON File", "", "JSON Files (*.json);;All Files (*)", options=options)
+
+        if file_name:
+            f = open(file_name, 'r')
+            json_data = json.load(f)
+
+            print("Imported File:", json.dumps(json_data, indent=2))
+
+            rwy_data = json_data['landing']
+
+            self.rwy_lat = rwy_data['lat']
+            self.rwy_lon = rwy_data['lon']
+            self.rwy_hdg = rwy_data['hdg']
+
+            waypoints_data = json_data['waypoints']
+
+            for wp in waypoints_data:
+                self.waypoints.append([float(wp['lat']), float(wp['lon']), float(wp['alt'])])
+
+            return True
+
+        return False

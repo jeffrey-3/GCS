@@ -1,0 +1,44 @@
+{
+    "format": "16f14H2?21f",
+    "params": {
+        "aspd_cruise": 15.0,
+        "aspd_land": 10.0,
+        "tecs_min_aspd_mps": 12.0,
+        "tecs_max_aspd_mps": 18.0,
+        "throttle_cruise": 0.6,
+        "ptch_lim_deg": 20.0,
+        "roll_lim_deg": 30.0,
+        "min_dist_wp": 50.0,
+
+        "land_gs_deg": 3.0,
+        "land_flare_alt": 5.0,
+        "flare_sink_rate": 0.5,
+        "flare_trans_sec": 2.0,
+        "touchdown_aspd_thresh": 8.0,
+
+        "takeoff_alt": 30.0,
+        "takeoff_thr": 1.0,
+        "takeoff_ptch": 15.0,
+
+        "max_duty": [2000, 2000, 2000, 2000, 2000, 2000],
+        "min_duty": [1000, 1000, 1000, 1000, 1000, 1000],
+        "rc_in_max": 2000,
+        "rc_in_min": 1000,
+        "rev_elevator": false,
+        "rev_aileron": false,
+
+        "ptch_kp": 0.1,
+        "roll_kp": 0.1,
+        "thr_kp": 0.05,
+
+        "ahrs_beta": 0.1,
+        "mag_decl": 2.5,
+        "ahrs_acc_max": 9.8,
+        "hard_iron": [0.1, 0.2, 0.3],
+        "soft_iron": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
+
+        "baro_r": 1.0,
+        "gnss_r": 2.0,
+        "gnss_alt_r": 3.0
+    }
+}  

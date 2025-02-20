@@ -1,7 +1,6 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from flight_data import FlightData
 import math
 from utils import calculate_displacement_meters
 import time
@@ -28,12 +27,12 @@ class DataTable(QWidget):
         self.text = ["State", 
                      "Mission Time", 
                      "Home Distance",
-                     "Cell Voltage", 
-                     "Batt Current", 
-                     "Capacity Consumed", 
                      "GPS Fix", 
                      "GPS Sats", 
-                     "Packet Rate"]
+                     "Packet Rate",
+                     "Cell Voltage", 
+                     "Batt Current", 
+                     "Capacity Consumed"]
         self.value_labels = []
 
         for row in range(3):
@@ -94,11 +93,11 @@ class DataTable(QWidget):
         values = [state, 
                   formatted_time,
                   f"{dist:.0f}",
-                  f"{flight_data.cell_voltage:.2f}",
-                  f"{flight_data.current:.1f}",
-                  f"{flight_data.capacity_consumed:.0f}",
                   str(flight_data.gps_fix),
                   str(flight_data.sats),
-                  f"{flight_data.packet_rate:.1f}"]
+                  f"{flight_data.packet_rate:.1f}",
+                  f"{flight_data.cell_voltage:.2f}",
+                  f"{flight_data.current:.1f}",
+                  f"{flight_data.capacity_consumed:.0f}"]
         for i in range(len(self.value_labels)):
             self.value_labels[i].setText(values[i])

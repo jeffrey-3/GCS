@@ -27,6 +27,6 @@ if __name__ == "__main__":
     app = QApplication([])
     apply_dark_theme(app)
 
-    main = MainWindow(False)
+    main = MainWindow(True)
 
     app.exec()
