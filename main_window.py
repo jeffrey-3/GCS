@@ -8,39 +8,34 @@ from input_random import InputRandom
 from input_bluetooth import InputBluetooth
 from logger import Logger
 import json
+from utils import flatten_array
+from generate_packet import *
+from modules.raw_data import RawData
 
 class MainWindow(QMainWindow):
     # Add default to example
-    def __init__(self, testing, flight_plan_dir, params_dir):
+    def __init__(self, flight_plan_dir, params_dir):
         super().__init__()
 
         self.flight_plan_dir = flight_plan_dir
         self.params_dir = params_dir
-
         self.waypoints = []
-
-        self.setWindowTitle("UAV Ground Control")
-
-        self.showMaximized()
-
-        self.load_file()
-
-        if testing:
-            self.input = InputRandom()
-        else:
-            self.input = InputBluetooth()
-
         self.logger = Logger()
 
+        self.setup_window()
+        self.setup_input(testing=False)
+        self.load_flight_plan()
+        self.load_params()
+        self.upload_params()
+        self.upload_flight_plan()
         self.create_layouts()
         self.create_widgets()
-        
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.update)
-        self.timer.start(20)
+        self.start_thread()
 
     def update(self):
         self.input.send()
+
+        self.raw_data.update(len(self.input.command_queue))
 
         if self.input.getData():
             # Get flight data
@@ -59,6 +54,21 @@ class MainWindow(QMainWindow):
             self.map.update(flight_data, self.waypoints, self.rwy_lat, self.rwy_lon, self.rwy_hdg)
             self.altitude_graph.update(self.waypoints, flight_data)
     
+    def setup_window(self):
+        self.setWindowTitle("UAV Ground Control")
+        self.showMaximized()
+
+    def setup_input(self, testing):
+        if testing:
+            self.input = InputRandom()
+        else:
+            self.input = InputBluetooth()
+    
+    def start_thread(self):
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update)
+        self.timer.start(20)
+    
     def create_widgets(self):
         self.pfd = PrimaryFlightDisplay()
         self.left_layout.addWidget(self.pfd)
@@ -70,7 +80,8 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.datatable, "Quick")
 
         # Raw data, queue len, etc.
-        self.tabs.addTab(QWidget(), "Other")
+        self.raw_data = RawData()
+        self.tabs.addTab(self.raw_data, "Raw")
 
         self.map = Map()
         self.map_layout.addWidget(self.map, 2)
@@ -90,16 +101,8 @@ class MainWindow(QMainWindow):
 
         self.map_layout = QVBoxLayout()
         self.main_layout.addLayout(self.map_layout, 2)
-
-    def upload_waypoints(self):
-        # Upload waypoints through radio
-        for i in range(len(self.waypoints)):
-            self.input.append_queue(self.input.generate_waypoint_packet(self.waypoints[i], i)) 
-        
-        # Upload landing target
-        self.input.append_queue(self.input.generate_landing_target_packet(self.rwy_lat, self.rwy_lon, self.rwy_hdg))
     
-    def load_file(self):
+    def load_flight_plan(self):
         f = open(self.flight_plan_dir, 'r')
         json_data = json.load(f)
 
@@ -115,3 +118,26 @@ class MainWindow(QMainWindow):
 
         for wp in waypoints_data:
             self.waypoints.append([float(wp['lat']), float(wp['lon']), float(wp['alt'])])
+
+    def upload_flight_plan(self):
+        # Upload waypoints through radio
+        for i in range(len(self.waypoints)):
+            self.input.append_queue(get_wpt_payload(self.waypoints[i], i)) 
+        
+        # Upload landing target
+        self.input.append_queue(get_land_tgt_payload(self.rwy_lat, self.rwy_lon, self.rwy_hdg))
+
+    def load_params(self):
+        file = open(self.params_dir, "r")
+        data = json.load(file)
+        self.params_format = data['format']
+        params = data['params']
+
+        self.params_values = []
+        for key in params:
+            self.params_values.extend(flatten_array(params[key]))
+
+        print(self.params_values)
+
+    def upload_params(self):
+        self.input.append_queue(get_params_payload(self.params_values, self.params_format))

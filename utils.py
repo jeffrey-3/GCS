@@ -19,3 +19,16 @@ def calculate_displacement_meters(lat, lon, center_lat, center_lon):
     north = R * delta_lat
     
     return east, north
+
+def flatten_array(arr):
+    flattened = []
+    
+    def recursive_flatten(element):
+        if isinstance(element, list):
+            for item in element:
+                recursive_flatten(item)
+        else:
+            flattened.append(element)
+    
+    recursive_flatten(arr)
+    return flattened

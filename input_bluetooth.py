@@ -3,6 +3,7 @@ import time
 import struct
 from lib.cobs import cobs
 from input import Input
+from generate_packet import *
 
 class InputBluetooth(Input):
     def __init__(self):
@@ -12,21 +13,21 @@ class InputBluetooth(Input):
         self.prev_send_time = time.time()
         self.prev_recv_time = time.time()
     
+    # Move this to main
     def getData(self):
         while self.bluetooth.in_waiting:
             # Find start byte
             start_byte = self.bluetooth.read(1)
             if start_byte == b'\x00':
-                # Construct packet
-                packet_raw = start_byte + self.bluetooth.read(39)
-
-                packet = packet_raw[1:] # Remove start byte
-                packet = cobs.decode(packet) # Decode COBS
+                # Get length byte
+                payload_length = struct.decode("B", self.bluetooth.read(1))
                 
-                # Figure out what type of payload
-                payload_type = packet[0]
+                # Get payload
+                payload = cobs.decode(self.bluetooth.read(payload_length + 1))
+                
+                # Figure out what type of payload from message ID byte
+                payload_type = payload[0]
                 if payload_type == 0: # Telemetry payload
-                    packet = packet[1:-15] # Remove empty bytes at end of packet and the "payload type" byte at start of packet
                     packet = struct.unpack("<hhHhHffBBB?", packet) # Use endian to remove padding
                     self.flight_data.roll = float(packet[0]) / 100
                     self.flight_data.pitch = float(packet[1]) / 100
@@ -45,40 +46,15 @@ class InputBluetooth(Input):
 
                     return True
                 elif payload_type == 1 or payload_type == 2 or payload_type == 3: # Command/waypoint/landing target acknowledgement payload
-                    if packet_raw in self.command_queue:
-                        self.command_queue.remove(packet_raw)
+                    if payload in self.command_queue:
+                        self.command_queue.remove(payload)
         return False
-
-    def generate_command_packet(self, command):
-        # Interface layer
-        command_payload = bytearray([0x00] * 38)
-        command_payload[0] = 1 # Payload type
-        command_payload[1] = command # Command
-
-        # Transport protocol layer
-        return bytes([0x00]) + cobs.encode(command_payload)
-    
-    def generate_waypoint_packet(self, waypoint, waypoint_index):
-        # Interface layer
-        waypoint_payload = bytearray([0x00] * 38)
-        waypoint_payload[0] = 2 # Payload type
-        waypoint_payload[1] = waypoint_index # Waypoint index
-        waypoint_payload[2:14] = struct.pack("3f", waypoint[0], waypoint[1], waypoint[2])
-
-        # T ransport protocol layer
-        return bytes([0x00]) + cobs.encode(waypoint_payload)
-
-    def generate_landing_target_packet(self, lat, lon, hdg):
-        landing_target_payload = bytearray([0x00] * 38)
-        landing_target_payload[0] = 3
-        landing_target_payload[1:13] = struct.pack("3f", lat, lon, hdg)
-        return bytes([0x00]) + cobs.encode(landing_target_payload)
     
     def send(self):
         if len(self.command_queue) > 0 and time.time() - self.prev_send_time > 0.1:
-            self.bluetooth.write(self.command_queue[0])
+            self.bluetooth.write(get_pkt(self.command_queue[0]))
             self.prev_send_time = time.time()
     
-    def append_queue(self, packet):
-        if not packet in self.command_queue:
-            self.command_queue.append(packet)
+    def append_queue(self, payload):
+        if not payload in self.command_queue:
+            self.command_queue.append(payload)

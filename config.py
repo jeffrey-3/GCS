@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QMainWindow, QGridLayout, QLabel, QSizePolicy, QLine
 from PyQt5.QtCore import Qt
 from main_window import MainWindow
 
-class FileLoader(QMainWindow):
+class ConfigWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
@@ -13,7 +13,7 @@ class FileLoader(QMainWindow):
         self.show()
 
     def initUI(self):
-        self.setWindowTitle("File Loader")
+        self.setWindowTitle("UAV Ground Control")
         
         self.layout = QGridLayout()
 
@@ -26,8 +26,10 @@ class FileLoader(QMainWindow):
         self.parameters_label = QLabel("Parameters:")
         self.layout.addWidget(self.parameters_label, 2, 0)
 
-        self.label1 = QLineEdit()
-        self.label2 = QLineEdit()
+        # Set previous directories as default
+        f = open("last_dir.txt", "r")
+        self.label1 = QLineEdit(f.readline())
+        self.label2 = QLineEdit(f.readline())
         self.layout.addWidget(self.label1, 1, 1)
         self.layout.addWidget(self.label2, 2, 1)
 
@@ -66,9 +68,15 @@ class FileLoader(QMainWindow):
             self.label2.setText(file_name)
 
     def continue_process(self):
-        self.flight_plan_dir = self.label1.text()
-        self.params_dir = self.label2.text()
+        # Strip to remove newline character
+        self.flight_plan_dir = self.label1.text().strip()
+        self.params_dir = self.label2.text().strip()
 
         if self.flight_plan_dir and self.params_dir:
-            self.main = MainWindow(True, self.flight_plan_dir, self.params_dir)
+            # Save to memory
+            f = open("last_dir.txt", "w")
+            f.write(self.flight_plan_dir + "\n")
+            f.write(self.params_dir)
+
+            self.main = MainWindow(self.flight_plan_dir, self.params_dir)
             self.close()

@@ -14,6 +14,7 @@ class PrimaryFlightDisplay(QLabel):
         self.width = 1200
         self.height = 600
         self.canvas = QPixmap(self.width, self.height)
+        self.setPixmap(self.canvas)
         self.painter = QPainter(self.canvas)
         self.font = QFont("Arial", 20)  # Set font family and size
         self.painter.setFont(self.font)
