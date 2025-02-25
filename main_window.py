@@ -37,22 +37,21 @@ class MainWindow(QMainWindow):
 
         self.raw_data.update(len(self.input.command_queue))
 
-        if self.input.getData():
-            # Get flight data
-            flight_data = self.input.flight_data
+        # Get flight data
+        flight_data = self.input.flight_data
 
-            self.pfd.update(flight_data)
-            self.datatable.update(flight_data)
+        self.pfd.update(flight_data)
+        self.datatable.update(flight_data)
 
-            # If first GPS fix, set center
-            if flight_data.center_lat == 0 and flight_data.gps_fix:
-                flight_data.center_lat = flight_data.lat
-                flight_data.center_lon = flight_data.lon
+        # If first GPS fix, set center
+        if flight_data.center_lat == 0 and flight_data.gps_fix:
+            flight_data.center_lat = flight_data.lat
+            flight_data.center_lon = flight_data.lon
 
-            self.logger.write_log(flight_data)
+        self.logger.write_log(flight_data)
 
-            self.map.update(flight_data, self.waypoints, self.rwy_lat, self.rwy_lon, self.rwy_hdg)
-            self.altitude_graph.update(self.waypoints, flight_data)
+        self.map.update(flight_data, self.waypoints, self.rwy_lat, self.rwy_lon, self.rwy_hdg)
+        self.altitude_graph.update(self.waypoints, flight_data)
     
     def setup_window(self):
         self.setWindowTitle("UAV Ground Control")

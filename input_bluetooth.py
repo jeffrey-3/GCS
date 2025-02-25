@@ -1,6 +1,7 @@
 import serial
 import time
 import struct
+import threading
 from lib.cobs import cobs
 from input import Input
 from generate_packet import *
@@ -12,43 +13,43 @@ class InputBluetooth(Input):
         self.bluetooth = serial.Serial('COM9', 115200, timeout=1000)
         self.prev_send_time = time.time()
         self.prev_recv_time = time.time()
+
+        thread = threading.Thread(target=self.serial_thread)
+        thread.setDaemon(True)
+        thread.start()
     
-    # Move this to main
-    def getData(self):
-        while self.bluetooth.in_waiting:
+    def serial_thread(self):
+        while True:
             # Find start byte
             start_byte = self.bluetooth.read(1)
             if start_byte == b'\x00':
                 # Get length byte
-                payload_length = struct.decode("B", self.bluetooth.read(1))
+                payload_length = struct.unpack("B", self.bluetooth.read(1))[0]
                 
                 # Get payload
                 payload = cobs.decode(self.bluetooth.read(payload_length + 1))
                 
                 # Figure out what type of payload from message ID byte
-                payload_type = payload[0]
+                payload_type = payload[0] # Incorrect, need to unpack?
+                # print(f"Payload type: {payload_type}")
                 if payload_type == 0: # Telemetry payload
-                    packet = struct.unpack("<hhHhHffBBB?", packet) # Use endian to remove padding
-                    self.flight_data.roll = float(packet[0]) / 100
-                    self.flight_data.pitch = float(packet[1]) / 100
-                    self.flight_data.heading = float(packet[2]) / 10
-                    self.flight_data.altitude = float(packet[3]) / 10
-                    self.flight_data.speed = float(packet[4]) / 10
-                    self.flight_data.lat = packet[5]
-                    self.flight_data.lon = packet[6]
-                    self.flight_data.mode_id = packet[7]
-                    self.flight_data.wp_idx = packet[8]
-                    self.flight_data.sats = packet[9]
-                    self.flight_data.gps_fix = packet[10]
+                    data = struct.unpack("<BhhHhHffBBB?", payload) # Use endian to remove padding
+                    self.flight_data.roll = float(data[1]) / 100
+                    self.flight_data.pitch = float(data[2]) / 100
+                    self.flight_data.heading = float(data[3]) / 10
+                    self.flight_data.altitude = float(data[4]) / 10
+                    self.flight_data.speed = float(data[5]) / 10
+                    self.flight_data.lat = data[6]
+                    self.flight_data.lon = data[7]
+                    self.flight_data.mode_id = data[8]
+                    self.flight_data.wp_idx = data[0]
+                    self.flight_data.sats = data[10]
+                    self.flight_data.gps_fix = data[11]
 
                     self.flight_data.packet_rate = 1 / (time.time() - self.prev_recv_time)
-                    self.prev_recv_time = time.time()
-
-                    return True
-                elif payload_type == 1 or payload_type == 2 or payload_type == 3: # Command/waypoint/landing target acknowledgement payload
+                elif payload_type == 1 or payload_type == 2 or payload_type == 3 or payload_type == 4: # Command/waypoint/landing target acknowledgement payload
                     if payload in self.command_queue:
                         self.command_queue.remove(payload)
-        return False
     
     def send(self):
         if len(self.command_queue) > 0 and time.time() - self.prev_send_time > 0.1:
