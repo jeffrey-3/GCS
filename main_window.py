@@ -23,7 +23,7 @@ class MainWindow(QMainWindow):
         self.logger = Logger()
 
         self.setup_window()
-        self.setup_input(testing=False)
+        self.setup_input(testing=True)
         self.load_flight_plan()
         self.load_params()
         self.upload_params()
