@@ -17,5 +17,7 @@ def get_params_payload(values, format):
     return bytes([4]) + struct.pack(format, *values)
 
 def get_pkt(payload):
+    print("len payload", len(payload))
+    
     # Start byte, length byte, COBS byte, then payload
     return bytes([0x00]) + bytes([len(payload)]) + cobs.encode(payload)

@@ -23,7 +23,7 @@ class MainWindow(QMainWindow):
         self.logger = Logger()
 
         self.setup_window()
-        self.setup_input(testing=True)
+        self.setup_input(testing=False)
         self.load_flight_plan()
         self.load_params()
         self.upload_params()
@@ -35,7 +35,7 @@ class MainWindow(QMainWindow):
     def update(self):
         self.input.send()
 
-        self.raw_data.update(len(self.input.command_queue))
+        self.raw_data.update(len(self.input.command_queue.queue))
 
         # Get flight data
         flight_data = self.input.flight_data
@@ -137,6 +137,8 @@ class MainWindow(QMainWindow):
             self.params_values.extend(flatten_array(params[key]))
 
         print(self.params_values)
+        print(len(self.params_values))
+        print(struct.calcsize(self.params_format))
 
     def upload_params(self):
         self.input.append_queue(get_params_payload(self.params_values, self.params_format))
