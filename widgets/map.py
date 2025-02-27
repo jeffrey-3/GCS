@@ -4,7 +4,7 @@ from PyQt5.QtGui import QTransform, QColor, QFont
 from pyqtgraph import functions as fn
 from utils import calculate_displacement_meters
 import math
-from landmark import Landmark
+from data_structures.landmark_struct import Landmark
 import json
 
 class CenteredArrowItem(pg.ArrowItem):
@@ -39,7 +39,11 @@ class Map(pg.PlotWidget):
         self.setXRange(-500, 500)
         self.setYRange(-500, 500)
 
-        self.landmarks = [Landmark(lat=landmark['lat'], lon=landmark['lon'], name=landmark['name']) for landmark in json.load(open('landmarks.json', 'r'))]
+        with open('resources/landmarks.json', 'r') as file:
+            self.landmarks = [
+                Landmark(lat=landmark['lat'], lon=landmark['lon'], name=landmark['name']) 
+                for landmark in json.load(file)
+            ]
         self.landmark_items = []
         self.landmark_labels = []
         for landmark in self.landmarks:

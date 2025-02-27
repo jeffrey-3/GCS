@@ -27,7 +27,7 @@ class ConfigWindow(QMainWindow):
         self.layout.addWidget(self.parameters_label, 2, 0)
 
         # Set previous directories as default
-        f = open("last_dir.txt", "r")
+        f = open("resources/last_dir.txt", "r")
         self.label1 = QLineEdit(f.readline())
         self.label2 = QLineEdit(f.readline())
         self.layout.addWidget(self.label1, 1, 1)

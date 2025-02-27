@@ -1,7 +1,7 @@
 import math
 import time
 import random
-from input import Input
+from communications.input import Input
 import threading
 
 class InputRandom(Input):
@@ -16,7 +16,7 @@ class InputRandom(Input):
         while True:
             t = time.time()
 
-            self.flight_data.roll = 5 * math.cos(t)
+            self.flight_data.roll = 30 * math.cos(t)
             self.flight_data.pitch = 10 * math.sin(t)
             self.flight_data.altitude = 50 - 30 * math.sin(t)
             self.flight_data.speed = 10 - 5 * math.cos(t)

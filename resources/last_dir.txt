@@ -1,0 +1,2 @@
+C:/Users/jeffr/OneDrive/Desktop/UAV/GCS/examples/flight_plan/plan_2025_02_10_14_28_48.json
+C:/Users/jeffr/OneDrive/Desktop/UAV/GCS/examples/parameters/flightgear_yardstik.json

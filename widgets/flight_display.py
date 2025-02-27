@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtCore import QRectF, Qt, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QFont, QPen, QColor, QBrush, QPolygonF
-from flight_data import FlightData
+from data_structures.flight_data_struct import FlightData
 import math
 
 class PrimaryFlightDisplay(QLabel):
@@ -34,7 +34,7 @@ class PrimaryFlightDisplay(QLabel):
         self.pitch_scale_spacing = 70
         self.pitch_scale_length_big = 100
         self.pitch_scale_length_small = 70
-        self.pitch_scale_num = 20
+        self.pitch_scale_num = 10
         self.pitch_scale_thickness = 2
         self.pitch_scale_intervals = 5
 
@@ -47,7 +47,7 @@ class PrimaryFlightDisplay(QLabel):
 
         # Speed scale
         self.speed_scale_spacing = 100
-        self.speed_scale_n_ticks = 6
+        self.speed_scale_n_ticks = 20
         self.speed_scale_intervals = 5
 
         # Altitude scale
@@ -67,6 +67,8 @@ class PrimaryFlightDisplay(QLabel):
 
     def update(self, flight_data):
         self.flight_data = flight_data
+
+        self.painter.fillRect(0, 0, self.width, self.height, Qt.white)
 
         self.draw_background()
         self.draw_pitch_scale()
@@ -285,27 +287,38 @@ class PrimaryFlightDisplay(QLabel):
     def draw_background(self):
         origin = (self.width/2, self.height/2)
         
-        # x point is just for margin to ensure it extends beyond canvas
-        original_left = (-1000, self.height/2 + self.pitch_deg_to_px(self.flight_data.pitch))
-        original_right = (self.width + 1000, self.height/2 + self.pitch_deg_to_px(self.flight_data.pitch))
+        # Points of left and right of horizon at 0 pitch and roll
+        buffer = 5000
+        original_left = (-buffer, self.height/2 + self.pitch_deg_to_px(self.flight_data.pitch))
+        original_right = (self.width + buffer, self.height/2 + self.pitch_deg_to_px(self.flight_data.pitch))
+        sky_top_left = (original_left[0], original_left[1] - buffer)
+        sky_top_right = (original_right[0], original_right[1] - buffer)
+        ground_bottom_left = (original_left[0], original_left[1] + buffer)
+        ground_bottom_right = (original_right[0], original_right[1] + buffer)
+        
+        # Rotate the points for roll
         point_left = self.rotate_point(origin, original_left, -math.radians(self.flight_data.roll))
         point_right = self.rotate_point(origin, original_right, -math.radians(self.flight_data.roll))
-        
+        sky_top_left = self.rotate_point(origin, sky_top_left, -math.radians(self.flight_data.roll))
+        sky_top_right = self.rotate_point(origin, sky_top_right, -math.radians(self.flight_data.roll))
+        ground_bottom_left = self.rotate_point(origin, ground_bottom_left, -math.radians(self.flight_data.roll))
+        ground_bottom_right = self.rotate_point(origin, ground_bottom_right, -math.radians(self.flight_data.roll))
+
         # Sky
         self.painter.setPen(QPen(QColor("#0079b4"), 1, Qt.SolidLine))
         self.painter.setBrush(QBrush(QColor("#0079b4"), Qt.SolidPattern))
-        self.painter.drawPolygon(QPolygonF([QPointF(0, 0),
-                                           QPointF(self.width, 0),
-                                           QPointF(point_right[0], point_right[1]),
-                                           QPointF(point_left[0], point_left[1])]))
+        self.painter.drawPolygon(QPolygonF([QPointF(sky_top_left[0], sky_top_left[1]),
+                                            QPointF(sky_top_right[0], sky_top_right[1]),
+                                            QPointF(point_right[0], point_right[1]),
+                                            QPointF(point_left[0], point_left[1])]))
 
         # Ground
         self.painter.setPen(QPen(QColor("#624408"), 1, Qt.SolidLine))
         self.painter.setBrush(QBrush(QColor("#624408"), Qt.SolidPattern))
-        self.painter.drawPolygon(QPolygonF([QPointF(0, self.height),
-                                           QPointF(self.width, self.height),
-                                           QPointF(point_right[0], point_right[1]),
-                                           QPointF(point_left[0], point_left[1])]))
+        self.painter.drawPolygon(QPolygonF([QPointF(ground_bottom_left[0], ground_bottom_left[1]),
+                                            QPointF(ground_bottom_right[0], ground_bottom_right[1]),
+                                            QPointF(point_right[0], point_right[1]),
+                                            QPointF(point_left[0], point_left[1])]))
         
         # Horizon
         self.painter.setPen(QPen(QColor("#b4b6b4"), self.horizon_thickness, Qt.SolidLine))

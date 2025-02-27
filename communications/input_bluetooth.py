@@ -3,8 +3,8 @@ import time
 import struct
 import threading
 from lib.cobs import cobs
-from input import Input
-from generate_packet import *
+from communications.input import Input
+from communications.generate_packet import *
 
 class InputBluetooth(Input):
     def __init__(self):
@@ -14,9 +14,7 @@ class InputBluetooth(Input):
         self.prev_send_time = time.time()
         self.prev_recv_time = time.time()
 
-        thread = threading.Thread(target=self.serial_thread)
-        thread.setDaemon(True)
-        thread.start()
+        thread = threading.Thread(target=self.serial_thread, daemon=True).start()
     
     def serial_thread(self):
         while True:

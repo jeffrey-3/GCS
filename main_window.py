@@ -1,19 +1,18 @@
 from PyQt5.QtWidgets import QMainWindow, QTabWidget, QHBoxLayout, QVBoxLayout, QWidget
 from PyQt5.QtCore import QTimer
-from modules.pfd import PrimaryFlightDisplay
-from map import Map
-from modules.altitude_graph import AltitudeGraph
-from modules.data_table import DataTable
-from input_random import InputRandom
-from input_bluetooth import InputBluetooth
+from widgets.flight_display import PrimaryFlightDisplay
+from widgets.map import Map
+from widgets.height_profile import AltitudeGraph
+from widgets.data_table import DataTable
+from communications.input_random import InputRandom
+from communications.input_bluetooth import InputBluetooth
 from logger import Logger
 import json
 from utils import flatten_array
-from generate_packet import *
-from modules.raw_data import RawData
+from communications.generate_packet import *
+from widgets.raw_data import RawData
 
 class MainWindow(QMainWindow):
-    # Add default to example
     def __init__(self, flight_plan_dir, params_dir):
         super().__init__()
 
@@ -23,7 +22,7 @@ class MainWindow(QMainWindow):
         self.logger = Logger()
 
         self.setup_window()
-        self.setup_input(testing=False)
+        self.setup_input(testing=True)
         self.load_flight_plan()
         self.load_params()
         self.upload_params()
@@ -40,13 +39,13 @@ class MainWindow(QMainWindow):
         # Get flight data
         flight_data = self.input.flight_data
 
-        self.pfd.update(flight_data)
-        self.datatable.update(flight_data)
-
-        # If first GPS fix, set center
+        # Set center position to first GPS fix
         if flight_data.center_lat == 0 and flight_data.gps_fix:
             flight_data.center_lat = flight_data.lat
             flight_data.center_lon = flight_data.lon
+
+        self.pfd.update(flight_data)
+        self.datatable.update(flight_data)
 
         self.logger.write_log(flight_data)
 

@@ -4,7 +4,7 @@ import datetime
 
 class Logger():
     def __init__(self):
-        self.csvfile = open('Logs/{date:%Y_%m_%d_%H_%M_%S}.csv'.format(date=datetime.datetime.now()), 'w', newline='')
+        self.csvfile = open('logs/{date:%Y_%m_%d_%H_%M_%S}.csv'.format(date=datetime.datetime.now()), 'w', newline='')
         self.csvwriter = csv.writer(self.csvfile, delimiter=',')
         self.csvwriter.writerow(["time", "roll", "pitch", "heading"])
     

@@ -27,6 +27,6 @@ class FlightData:
     alt_setpoint = 0
     speed_setpoint = 0
 
-    # Center ref
+    # Home position
     center_lat = 0
     center_lon = 0

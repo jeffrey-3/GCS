@@ -1,4 +1,4 @@
-from flight_data import FlightData
+from data_structures.flight_data_struct import FlightData
 import time
 import threading
 

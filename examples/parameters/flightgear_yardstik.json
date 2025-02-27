@@ -16,13 +16,13 @@
         "flare_trans_sec": 1,
         "touchdown_aspd_thresh": 1,
         "takeoff_alt": 5,
-        "takeoff_thr": 1,
+        "takeoff_thr": 0.5,
         "takeoff_ptch": 15,
         "max_duty": [2000, 2000, 2000, 2000, 2000, 2000],
         "min_duty": [1000, 1000, 1000, 1000, 1000, 1000],
         "rc_in_max": 1900,
         "rc_in_min": 1100,
-        "rev_channels": [false, false, false, false, false, false],
+        "rev_channels": [false, true, false, false, false, false],
         "aileron_ch": 0,
         "elevator_ch": 1,
         "throttle_ch": 2,
@@ -31,7 +31,7 @@
         "ptch_kp": 0.04,
         "roll_kp": 0.04,
         "thr_kp": 0.01,
-        "ahrs_beta": 0,
+        "ahrs_beta": 0.01,
         "mag_decl": -10.2,
         "ahrs_acc_max": 2,
         "hard_iron": [0, 0, 0],
@@ -40,8 +40,8 @@
             [0, 1, 0], 
             [0, 0, 1]
         ],
-        "baro_r": 10000,
-        "gnss_r": 1000000,
-        "gnss_alt_r": 10000000
+        "baro_r": 1000,
+        "gnss_r": 1000,
+        "gnss_alt_r": 1000
     }
 }  
