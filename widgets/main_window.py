@@ -54,7 +54,6 @@ class MainWindow(QMainWindow):
     
     def setup_window(self):
         self.setWindowTitle("UAV Ground Control")
-        self.showMaximized()
 
     def setup_input(self, testing):
         if testing:
