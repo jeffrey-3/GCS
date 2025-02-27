@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QMainWindow, QGridLayout, QLabel, QSizePolicy, QLineEdit, QPushButton, QWidget, QFileDialog
 from PyQt5.QtCore import Qt
-from main_window import MainWindow
+from widgets.main_window import MainWindow
 
 class ConfigWindow(QMainWindow):
     def __init__(self):
@@ -74,7 +74,7 @@ class ConfigWindow(QMainWindow):
 
         if self.flight_plan_dir and self.params_dir:
             # Save to memory
-            f = open("last_dir.txt", "w")
+            f = open("resources/last_dir.txt", "w")
             f.write(self.flight_plan_dir + "\n")
             f.write(self.params_dir)
 

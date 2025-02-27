@@ -6,9 +6,9 @@ from widgets.height_profile import AltitudeGraph
 from widgets.data_table import DataTable
 from communications.input_random import InputRandom
 from communications.input_bluetooth import InputBluetooth
-from logger import Logger
+from lib.logger.logger import Logger
 import json
-from utils import flatten_array
+from lib.utils.utils import flatten_array
 from communications.generate_packet import *
 from widgets.raw_data import RawData
 

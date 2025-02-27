@@ -2,7 +2,7 @@ import pyqtgraph as pg
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QTransform, QColor, QFont
 from pyqtgraph import functions as fn
-from utils import calculate_displacement_meters
+from lib.utils.utils import calculate_displacement_meters
 import math
 from data_structures.landmark_struct import Landmark
 import json
