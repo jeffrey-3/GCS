@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QMainWindow, QGridLayout, QLabel, QSizePolicy, QLineEdit, QPushButton, QWidget, QFileDialog
 from PyQt5.QtCore import Qt
-from widgets.main_window import MainWindow
+from windows.main_window import MainWindow
 
 class ConfigWindow(QMainWindow):
     def __init__(self):
