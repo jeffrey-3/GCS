@@ -8,9 +8,7 @@ class InputRandom(Input):
     def __init__(self):
         super().__init__()
 
-        thread = threading.Thread(target=self.serial_thread)
-        thread.setDaemon(True)
-        thread.start()
+        threading.Thread(target=self.serial_thread, daemon=True).start()
     
     def serial_thread(self):
         while True:

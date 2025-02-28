@@ -1,22 +1,33 @@
-from PyQt5.QtWidgets import QMainWindow, QGridLayout, QLabel, QSizePolicy, QLineEdit, QPushButton, QWidget, QFileDialog
+from PyQt5.QtWidgets import QMainWindow, QGridLayout, QLabel, QSizePolicy, QLineEdit, QPushButton, QWidget, QFileDialog, QTabWidget, QHBoxLayout, QVBoxLayout
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPalette, QColor
-from widgets.main_window import MainWindow
+from widgets.flight_display import PrimaryFlightDisplay
+from widgets.map import Map
+from widgets.height_profile import AltitudeGraph
+from widgets.data_table import DataTable
+from lib.logger.logger import Logger
+import json
+from lib.utils.utils import flatten_array
+from widgets.raw_data import RawData
 
-class View(QMainWindow):
+class StartupView(QMainWindow):
     def __init__(self, app):
         super().__init__()
         self.app = app
+        self.controller = None
         self.flight_plan_dir = ""
         self.params_dir = ""
         self.init_ui()
-        self.apply_dark_theme()
+    
+    def set_controller(self, controller):
+        self.controller = controller
     
     def init_ui(self):
         """Initialize the UI components"""
         self.setWindowTitle("UAV Ground Control")
         self.setup_layout()
         self.setup_connections()
+        self.apply_dark_theme()
 
     def setup_layout(self):
         """Set up the layout and widgets"""
@@ -82,18 +93,12 @@ class View(QMainWindow):
 
         if self.flight_plan_dir and self.params_dir:
             self.save_last_directories()
-            self.open_main_window()
+            self.controller.open_main_window() 
     
     def save_last_directories(self):
         """Save the last used directories to a file"""
         f = open("resources/last_dir.txt", "w")
         f.write(f"{self.flight_plan_dir}\n{self.params_dir}")
-    
-    def open_main_window(self):
-        """Open the main application window"""
-        self.main = MainWindow(self.flight_plan_dir, self.params_dir)
-        self.main.showMaximized()
-        self.close()
 
     def apply_dark_theme(self):
         self.app.setStyle("Fusion")
@@ -113,3 +118,77 @@ class View(QMainWindow):
         dark_palette.setColor(QPalette.HighlightedText, Qt.black)
         self.app.setPalette(dark_palette)
         self.app.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid white; }")
+
+class MainView(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.waypoints = []
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle("UAV Ground Control")
+        self.create_layouts()
+        self.create_widgets()
+
+    def load_files(self):
+        f = open("resources/last_dir.txt", "r")
+        self.flight_plan_dir = f.readline().strip()
+        self.params_dir = f.readline().strip()
+        self.load_flight_plan()
+        self.load_params()
+        return self.params_values, self.params_format, self.rwy_lat, self.rwy_lon, self.rwy_hdg, self.waypoints
+
+    def update(self, flight_data):
+        self.raw_data.update(flight_data.queue_len)
+        # Set center position to first GPS fix
+        if flight_data.center_lat == 0 and flight_data.gps_fix:
+            flight_data.center_lat = flight_data.lat
+            flight_data.center_lon = flight_data.lon
+        self.pfd.update(flight_data)
+        self.datatable.update(flight_data)
+        self.map.update(flight_data, self.waypoints, self.rwy_lat, self.rwy_lon, self.rwy_hdg)
+        self.altitude_graph.update(self.waypoints, flight_data)
+    
+    def create_layouts(self):
+        self.main_layout = QHBoxLayout()
+        self.left_layout = QVBoxLayout()
+        self.map_layout = QVBoxLayout()
+        self.main_layout.addLayout(self.left_layout)
+        self.main_layout.addLayout(self.map_layout, 2)
+        container = QWidget()
+        container.setLayout(self.main_layout)
+        self.setCentralWidget(container)
+
+    def create_widgets(self):
+        self.pfd = PrimaryFlightDisplay()
+        self.left_layout.addWidget(self.pfd)
+        self.tabs = QTabWidget()
+        self.left_layout.addWidget(self.tabs)
+        self.datatable = DataTable()
+        self.tabs.addTab(self.datatable, "Quick")
+        self.raw_data = RawData()
+        self.tabs.addTab(self.raw_data, "Raw")
+        self.map = Map()
+        self.map_layout.addWidget(self.map, 2)
+        self.altitude_graph = AltitudeGraph()
+        self.map_layout.addWidget(self.altitude_graph, 1)
+    
+    def load_flight_plan(self):
+        f = open(self.flight_plan_dir, 'r')
+        json_data = json.load(f)
+        rwy_data = json_data['landing']
+        self.rwy_lat = rwy_data['lat']
+        self.rwy_lon = rwy_data['lon']
+        self.rwy_hdg = rwy_data['hdg']
+        waypoints_data = json_data['waypoints']
+        for wp in waypoints_data:
+            self.waypoints.append([float(wp['lat']), float(wp['lon']), float(wp['alt'])])
+
+    def load_params(self):
+        file = open(self.params_dir, "r")
+        data = json.load(file)
+        self.params_format = data['format']
+        params = data['params']
+        self.params_values = []
+        for key in params:
+            self.params_values.extend(flatten_array(params[key]))

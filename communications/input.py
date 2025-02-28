@@ -52,7 +52,7 @@ class Input():
         # When it recieves acknowledgement, it gets removed
         self.command_queue = PayloadQueue()
         self.command_queue.run_cleanup()
-    def send(self):
-        pass
+    def update(self):
+        return self.flight_data
     def append_queue(self, payload):
         self.command_queue.add_payload(payload)

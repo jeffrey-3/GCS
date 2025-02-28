@@ -14,7 +14,7 @@ class InputBluetooth(Input):
         self.prev_send_time = time.time()
         self.prev_recv_time = time.time()
 
-        thread = threading.Thread(target=self.serial_thread, daemon=True).start()
+        threading.Thread(target=self.serial_thread, daemon=True).start()
     
     def serial_thread(self):
         while True:
@@ -50,7 +50,11 @@ class InputBluetooth(Input):
                 except:
                     print("Payload unpacking exception occurred")
     
-    def send(self):
+    def update(self):
         if len(self.command_queue.queue) > 0 and time.time() - self.prev_send_time > 0.5:
             self.bluetooth.write(get_pkt(self.command_queue.get_payload()))
             self.prev_send_time = time.time()
+        
+        self.flight_data.queue_len = len(self.input.command_queue.queue)
+
+        return self.flight_data

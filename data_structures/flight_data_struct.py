@@ -20,6 +20,7 @@ class FlightData:
     gps_fix = False
     packet_rate = 0
     current = 0
+    queue_len = 0
 
     # Setpoints
     pitch_setpoint = 0
