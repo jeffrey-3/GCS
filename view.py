@@ -1,14 +1,13 @@
 from PyQt5.QtWidgets import QMainWindow, QGridLayout, QLabel, QSizePolicy, QLineEdit, QPushButton, QWidget, QFileDialog, QTabWidget, QHBoxLayout, QVBoxLayout
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPalette, QColor
+import json
 from widgets.flight_display import PrimaryFlightDisplay
 from widgets.map import Map
 from widgets.height_profile import AltitudeGraph
 from widgets.data_table import DataTable
-from lib.logger.logger import Logger
-import json
-from lib.utils.utils import flatten_array
 from widgets.raw_data import RawData
+from lib.utils.utils import flatten_array
 
 class StartupView(QMainWindow):
     def __init__(self, app):
@@ -81,7 +80,7 @@ class StartupView(QMainWindow):
         """Open a file dialog and set the selected file path to the target input"""
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getOpenFileName(
-            self, "Load File", "", "All Files (*);;Text Files (*.txt)", options=options
+            self, "Load File", "", "All Files (*)", options=options
         )
         if file_name:
             target_input.setText(file_name)
@@ -90,7 +89,6 @@ class StartupView(QMainWindow):
         """Handle the OK button click"""
         self.flight_plan_dir = self.flightplan_input.text().strip()
         self.params_dir = self.params_input.text().strip()
-
         if self.flight_plan_dir and self.params_dir:
             self.save_last_directories()
             self.controller.open_main_window() 
@@ -130,25 +128,6 @@ class MainView(QMainWindow):
         self.create_layouts()
         self.create_widgets()
 
-    def load_files(self):
-        f = open("resources/last_dir.txt", "r")
-        self.flight_plan_dir = f.readline().strip()
-        self.params_dir = f.readline().strip()
-        self.load_flight_plan()
-        self.load_params()
-        return self.params_values, self.params_format, self.rwy_lat, self.rwy_lon, self.rwy_hdg, self.waypoints
-
-    def update(self, flight_data):
-        self.raw_data.update(flight_data.queue_len)
-        # Set center position to first GPS fix
-        if flight_data.center_lat == 0 and flight_data.gps_fix:
-            flight_data.center_lat = flight_data.lat
-            flight_data.center_lon = flight_data.lon
-        self.pfd.update(flight_data)
-        self.datatable.update(flight_data)
-        self.map.update(flight_data, self.waypoints, self.rwy_lat, self.rwy_lon, self.rwy_hdg)
-        self.altitude_graph.update(self.waypoints, flight_data)
-    
     def create_layouts(self):
         self.main_layout = QHBoxLayout()
         self.left_layout = QVBoxLayout()
@@ -172,9 +151,28 @@ class MainView(QMainWindow):
         self.map_layout.addWidget(self.map, 2)
         self.altitude_graph = AltitudeGraph()
         self.map_layout.addWidget(self.altitude_graph, 1)
+
+    def update(self, flight_data):
+        self.raw_data.update(flight_data.queue_len)
+        # Set center position to first GPS fix
+        if flight_data.center_lat == 0 and flight_data.gps_fix:
+            flight_data.center_lat = flight_data.lat
+            flight_data.center_lon = flight_data.lon
+        self.pfd.update(flight_data)
+        self.datatable.update(flight_data)
+        self.map.update(flight_data, self.waypoints, self.rwy_lat, self.rwy_lon, self.rwy_hdg)
+        self.altitude_graph.update(self.waypoints, flight_data)
+
+    def load_files(self):
+        f = open("resources/last_dir.txt", "r")
+        flight_plan_dir = f.readline().strip()
+        params_dir = f.readline().strip()
+        self.load_flight_plan(flight_plan_dir)
+        self.load_params(params_dir)
+        return self.params_values, self.params_format, self.rwy_lat, self.rwy_lon, self.rwy_hdg, self.waypoints
     
-    def load_flight_plan(self):
-        f = open(self.flight_plan_dir, 'r')
+    def load_flight_plan(self, dir):
+        f = open(dir, 'r')
         json_data = json.load(f)
         rwy_data = json_data['landing']
         self.rwy_lat = rwy_data['lat']
@@ -184,8 +182,8 @@ class MainView(QMainWindow):
         for wp in waypoints_data:
             self.waypoints.append([float(wp['lat']), float(wp['lon']), float(wp['alt'])])
 
-    def load_params(self):
-        file = open(self.params_dir, "r")
+    def load_params(self, dir):
+        file = open(dir, "r")
         data = json.load(file)
         self.params_format = data['format']
         params = data['params']

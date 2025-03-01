@@ -5,7 +5,6 @@ class Controller:
         self.model = model
         self.startup_view = startup_view
         self.main_view = main_view
-
         self.timer = QTimer()
         self.timer.timeout.connect(self.update)
     

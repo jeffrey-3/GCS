@@ -7,11 +7,12 @@ def get_cmd_payload(cmd):
 
 def get_wpt_payload(wp, wp_idx):
     # Payload: Message ID + Waypoint Index + Waypoint
-    return bytes([2]) + struct.pack("B3f", wp_idx, wp[0], wp[1], wp[2])
+    # Equals sign to remove padding
+    return struct.pack("=BB3f", 2, wp_idx, wp[0], wp[1], wp[2])
 
 def get_land_tgt_payload(lat, lon, hdg):
     # Payload: Message ID + Data
-    return bytes([3]) + struct.pack("3f", lat, lon, hdg)
+    return bytes([3]) + struct.pack("=3f", lat, lon, hdg)
 
 def get_params_payload(values, format):
     return bytes([4]) + struct.pack(format, *values)

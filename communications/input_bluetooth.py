@@ -55,6 +55,6 @@ class InputBluetooth(Input):
             self.bluetooth.write(get_pkt(self.command_queue.get_payload()))
             self.prev_send_time = time.time()
         
-        self.flight_data.queue_len = len(self.input.command_queue.queue)
+        self.flight_data.queue_len = len(self.command_queue.queue)
 
         return self.flight_data

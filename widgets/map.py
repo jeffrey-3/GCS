@@ -1,11 +1,12 @@
 import pyqtgraph as pg
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QTransform, QColor, QFont
+from PyQt5.QtGui import QTransform, QColor, QFont, QPixmap
 from pyqtgraph import functions as fn
 from lib.utils.utils import calculate_displacement_meters
 import math
 from data_structures.landmark_struct import Landmark
 import json
+import os
 
 class CenteredArrowItem(pg.ArrowItem):
     def setStyle(self, **opts):
@@ -39,26 +40,28 @@ class Map(pg.PlotWidget):
         self.setXRange(-500, 500)
         self.setYRange(-500, 500)
 
-        with open('resources/landmarks.json', 'r') as file:
-            self.landmarks = [
-                Landmark(lat=landmark['lat'], lon=landmark['lon'], name=landmark['name']) 
-                for landmark in json.load(file)
-            ]
-        self.landmark_items = []
-        self.landmark_labels = []
-        for landmark in self.landmarks:
-            landmark_item = pg.ScatterPlotItem([], 
-                                               [], 
-                                               size=30, 
-                                               brush=pg.mkBrush("green"), 
-                                               pen=None)
-            landmark_item.setSymbol("t")
-            self.addItem(landmark_item)
-            self.landmark_items.append(landmark_item)
+        self.images_added = False
 
-            landmark_label = pg.TextItem(landmark.name, anchor=(0.5, 0))
-            self.addItem(landmark_label)
-            self.landmark_labels.append(landmark_label)
+        # with open('resources/landmarks.json', 'r') as file:
+        #     self.landmarks = [
+        #         Landmark(lat=landmark['lat'], lon=landmark['lon'], name=landmark['name']) 
+        #         for landmark in json.load(file)
+        #     ]
+        # self.landmark_items = []
+        # self.landmark_labels = []
+        # for landmark in self.landmarks:
+        #     landmark_item = pg.ScatterPlotItem([], 
+        #                                        [], 
+        #                                        size=30, 
+        #                                        brush=pg.mkBrush("green"), 
+        #                                        pen=None)
+        #     landmark_item.setSymbol("t")
+        #     self.addItem(landmark_item)
+        #     self.landmark_items.append(landmark_item)
+
+        #     landmark_label = pg.TextItem(landmark.name, anchor=(0.5, 0))
+        #     self.addItem(landmark_label)
+        #     self.landmark_labels.append(landmark_label)
 
         self.set_style()
         self.init_runway()
@@ -103,14 +106,14 @@ class Map(pg.PlotWidget):
         self.setTitle(f"<p style='white-space:pre;'>Lat:{flight_data.lat:.6f}      Lon:{flight_data.lon:.6f}</p>")
 
         # Landmarks
-        for i in range(len(self.landmarks)):
-            pos_landmark = calculate_displacement_meters(self.landmarks[i].lat, 
-                                                         self.landmarks[i].lon,
-                                                         flight_data.center_lat,
-                                                         flight_data.center_lon)
-            self.landmark_items[i].setData([pos_landmark[0]], [pos_landmark[1]])
+        # for i in range(len(self.landmarks)):
+        #     pos_landmark = calculate_displacement_meters(self.landmarks[i].lat, 
+        #                                                  self.landmarks[i].lon,
+        #                                                  flight_data.center_lat,
+        #                                                  flight_data.center_lon)
+        #     self.landmark_items[i].setData([pos_landmark[0]], [pos_landmark[1]])
             
-            self.landmark_labels[i].setPos(pos_landmark[0], pos_landmark[1])
+        #     self.landmark_labels[i].setPos(pos_landmark[0], pos_landmark[1])
 
         # Update position of aircraft
         position = calculate_displacement_meters(flight_data.lat, flight_data.lon, flight_data.center_lat, flight_data.center_lon)
@@ -137,6 +140,26 @@ class Map(pg.PlotWidget):
             x.append(x_pt)
             y.append(y_pt)
         self.waypoints_line.setData(x, y)
+        
+        if not self.images_added:
+            # Find directory
+            for filename in os.listdir("map"):
+                e, n = calculate_displacement_meters(float(filename.split('_')[1]) / 1e7, float(filename.split('_')[2]) / 1e7, flight_data.center_lat, flight_data.center_lon)
+                
+                # Add image
+                pixmap = QPixmap(f"map/{filename}")
+                image_width = pixmap.width()
+                image_height = pixmap.height()
+                m_per_px = (float(filename.split('_')[-2]) / 1000) / image_width
+                pixmap = pixmap.scaled(image_width * m_per_px, image_height * m_per_px, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                pixmap = pixmap.transformed(QTransform().scale(1, -1))
+                pixmap_item = pg.QtGui.QGraphicsPixmapItem(pixmap)
+                image_width = pixmap.width()
+                image_height = pixmap.height()
+                pixmap_item.setPos(e - image_width / 2, n - image_height / 2)
+                pixmap_item.setZValue(-1)
+                self.addItem(pixmap_item)
+            self.images_added = True
 
         # Update waypoint number labels
         for i in range(min(len(waypoints), len(self.waypoints_numbers))):
