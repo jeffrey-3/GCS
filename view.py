@@ -156,11 +156,12 @@ class MainView(QMainWindow):
         self.raw_data.update(flight_data.queue_len)
         # Set center position to first GPS fix
         if flight_data.center_lat == 0 and flight_data.gps_fix:
+            self.map.setup() # Have to setup after the entire layout setup or there will be offset from drawing (0, 0) will not be (0, 0)
             flight_data.center_lat = flight_data.lat
             flight_data.center_lon = flight_data.lon
         self.pfd.update(flight_data)
         self.datatable.update(flight_data)
-        self.map.update(flight_data, self.waypoints, self.rwy_lat, self.rwy_lon, self.rwy_hdg)
+        self.map.update_data(flight_data, self.waypoints, self.rwy_lat, self.rwy_lon, self.rwy_hdg)
         self.altitude_graph.update(self.waypoints, flight_data)
 
     def load_files(self):
