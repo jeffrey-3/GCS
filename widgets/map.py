@@ -21,8 +21,8 @@ class Map(QGraphicsView):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-        self.lat = 43.878807
-        self.lon = -79.413905
+        self.lat = 0
+        self.lon = 0
         self.zoom = 16
 
         self.tile_size = 500
@@ -40,15 +40,23 @@ class Map(QGraphicsView):
 
     # Still need to keep this to pan to see full flight path and for editing waypoints!!!!
     def keyPressEvent(self, event):
-        increment = 0.01 / self.zoom
+        movement_pixels = 50  # Move by 50 pixels regardless of zoom
+
+        # Convert movement in pixels to movement in meters
+        movement_meters = self.pixels_to_meters(movement_pixels, self.lat)
+
+        # Convert movement in meters to movement in degrees (latitude/longitude)
+        lat_increment = movement_meters / 111320  # 1° latitude ≈ 111.32 km
+        lon_increment = movement_meters / (111320 * math.cos(math.radians(self.lat)))  # Adjust for longitude
+
         if event.key() == Qt.Key_Left:
-            self.lon = self.lon - increment
+            self.lon = self.lon - lon_increment
         elif event.key() == Qt.Key_Right:
-            self.lon = self.lon + increment
+            self.lon = self.lon + lon_increment
         elif event.key() == Qt.Key_Up:
-            self.lat = self.lat + increment
+            self.lat = self.lat + lat_increment
         elif event.key() == Qt.Key_Down:
-            self.lat = self.lat - increment
+            self.lat = self.lat - lat_increment
         elif event.key() == Qt.Key_Equal:
             if (self.zoom < self.max_zoom):
                 self.zoom = self.zoom + 1
@@ -150,7 +158,7 @@ class Map(QGraphicsView):
         arrow_pixmap = QPixmap(f"resources/arrow.png")
         arrow_pixmap = arrow_pixmap.scaled(50, 50)
         arrow = self.scene.addPixmap(arrow_pixmap)
-        arrow.setPos(x, y)
+        arrow.setPos(x - 25, y - 25)
         arrow.setTransformOriginPoint(arrow_pixmap.width() / 2, arrow_pixmap.height() / 2)
         arrow.setRotation(self.flight_data.heading + 180)  
 
@@ -181,7 +189,7 @@ class Map(QGraphicsView):
         self.flight_data = flight_data
         self.lat = flight_data.lat
         self.lon = flight_data.lon
-    
+
     def lat_lon_to_tile(self, lat, lon, zoom):
         """Convert latitude, longitude, and zoom level to tile coordinates."""
         lat_rad = math.radians(lat)
@@ -208,3 +216,15 @@ class Map(QGraphicsView):
         pixels = meters / scale
 
         return pixels
+
+    def pixels_to_meters(self, pixels, lat):
+        """
+        Convert pixels to meters based on the current zoom level and latitude.
+
+        :param pixels: Distance in pixels.
+        :param lat: Latitude at which the distance is measured.
+        :return: Distance in meters.
+        """
+        earth_circumference = 40075000  # Earth's circumference in meters
+        scale = earth_circumference * math.cos(math.radians(lat)) / (2 ** self.zoom * self.tile_size)
+        return pixels * scale

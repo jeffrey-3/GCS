@@ -9,14 +9,12 @@ from widgets.data_table import DataTable
 from widgets.raw_data import RawData
 from widgets.waypoint_editor import WaypointEditor
 from widgets.tiles import *
+from lib.data_structures.data_structures import *
 
 class View(QMainWindow):
     def __init__(self, app):
         super().__init__()
         self.app = app
-        self.rwy_lat = 0
-        self.rwy_lon = 0
-        self.rwy_hdg = 0
         self.init_ui()
 
     def init_ui(self):
@@ -74,11 +72,21 @@ class View(QMainWindow):
 
     def load_flightplan(self, waypoints):
         self.map.waypoints = waypoints
+        self.map.lat = waypoints[0].lat
+        self.map.lon = waypoints[0].lon
+
+        flight_data = FlightData()
+        flight_data.center_lat = waypoints[0].lat
+        flight_data.center_lon = waypoints[0].lon
+        self.altitude_graph.update(waypoints, flight_data)
         self.waypoint_editor.load_flightplan(waypoints)
     
     def show_file_dialog(self):
         file_name, _ = QFileDialog.getOpenFileName(self, "Open File", "", "All Files (*)")
         return file_name
+    
+    def alert(self, title, msg):
+        QMessageBox.information(self, title, msg)
 
     def apply_dark_theme(self):
         self.app.setStyle("Fusion")

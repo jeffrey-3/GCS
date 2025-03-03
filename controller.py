@@ -1,4 +1,5 @@
 from PyQt5.QtCore import QTimer
+from PyQt5.QtWidgets import *
 
 class Controller:
     def __init__(self, model, view):
@@ -12,20 +13,25 @@ class Controller:
 
         self.view.waypoint_editor.continue_btn.clicked.connect(self.start)
 
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.update)
-        self.timer.start(20)
+    def start(self):
+        waypoints = self.view.waypoint_editor.getWaypoints()
+        if waypoints:
+            selected_port = self.view.waypoint_editor.com_port_dropdown.currentText()
+            if selected_port:
+                self.model.connect(selected_port)
+                self.model.send_params()
+                self.view.start()
+
+                self.timer = QTimer()
+                self.timer.timeout.connect(self.update)
+                self.timer.start(20)
+        else:
+            self.view.alert("Error", "Missing waypoints or parameters")
 
     def update(self):
         waypoints = self.view.waypoint_editor.getWaypoints()
         flight_data = self.model.update()
         self.view.update(flight_data, waypoints)
-
-    def start(self):
-        selected_port = self.view.waypoint_editor.com_port_dropdown.currentText()
-        if selected_port:
-            self.model.connect(selected_port)
-            self.view.start()
         
     def open_flightplan(self):
         file_path = self.view.show_file_dialog()
