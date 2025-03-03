@@ -2,19 +2,18 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 import math
-from data_structures.flight_data_struct import FlightData
+from lib.data_structures.data_structures import *
 import time
 import os
 
 class Map(QGraphicsView):
     def __init__(self):
         super().__init__()
-
         tile_zooms = os.listdir("tiles")
-        self.min_zoom = int(tile_zooms[0])
-        self.max_zoom = int(tile_zooms[-1])
-    
-    def setup(self):
+        if len(tile_zooms) > 1:
+            self.min_zoom = int(tile_zooms[0])
+            self.max_zoom = int(tile_zooms[-1])
+
         self.scene = QGraphicsScene()
         self.setScene(self.scene)
 
@@ -26,7 +25,7 @@ class Map(QGraphicsView):
         self.lon = -79.413905
         self.zoom = 16
 
-        self.tile_size = 256
+        self.tile_size = 500
 
         self.flight_data = FlightData()
         self.waypoints = []
@@ -39,6 +38,7 @@ class Map(QGraphicsView):
         # Ignore the wheel event to disable scrolling
         event.ignore()
 
+    # Still need to keep this to pan to see full flight path and for editing waypoints!!!!
     def keyPressEvent(self, event):
         increment = 0.01 / self.zoom
         if event.key() == Qt.Key_Left:
@@ -60,8 +60,27 @@ class Map(QGraphicsView):
         self.scene.clear()
 
         self.draw_tiles()
+        self.draw_home()
         self.draw_waypoints()
         self.draw_arrow()
+    
+    def draw_home(self):
+        x, y = self.lat_lon_to_map_coords(self.flight_data.center_lat, self.flight_data.center_lon)
+        point = QPointF(x, y)
+
+        radius = 20
+        circle = QGraphicsEllipseItem(QRectF(-radius, -radius, 2 * radius, 2 * radius))
+        circle.setBrush(QBrush(Qt.black))
+        circle.setPen(QPen(Qt.magenta, 5))
+        circle.setPos(point)
+        self.scene.addItem(circle)
+
+        text = QGraphicsTextItem("H")  # Text content (e.g., index + 1)
+        text.setFont(QFont("Arial", 10))  # Set font and size
+        text.setDefaultTextColor(Qt.white)  # Set text color
+        text.setPos(point.x() - text.boundingRect().width() / 2,  # Center the text horizontally
+                    point.y() - text.boundingRect().height() / 2)  # Center the text vertically
+        self.scene.addItem(text)
 
     def draw_tiles(self):
         viewport_width = self.size().width()
@@ -81,8 +100,9 @@ class Map(QGraphicsView):
                 tile_x = int(center_x) + dx
                 tile_y = int(center_y) + dy
 
-                try:
-                    pixmap = QPixmap(f"tiles/{self.zoom}/{tile_x}/{tile_y}.png")
+                pixmap = QPixmap(f"tiles/{self.zoom}/{tile_x}/{tile_y}.png")
+                
+                if not pixmap.isNull():
                     pixmap = pixmap.scaled(self.tile_size, self.tile_size)
                     pixmap_item = self.scene.addPixmap(pixmap)
                     pixmap_item.setZValue(-1)
@@ -91,21 +111,39 @@ class Map(QGraphicsView):
                     offset_x = (dx - frac_x) * self.tile_size + viewport_width // 2
                     offset_y = (dy - frac_y) * self.tile_size + viewport_height // 2
                     pixmap_item.setPos(offset_x, offset_y)
-                except:
-                    print(f"tiles/{self.zoom}/{tile_x}/{tile_y}.png not found")
-
+                    
     def draw_waypoints(self):
-        points = []
-        for waypoint in self.waypoints:
-            x, y = self.lat_lon_to_map_coords(waypoint[0], waypoint[1])
-            points.append(QPointF(x, y))
-        path = QPainterPath()
-        path.moveTo(points[0])
-        for point in points[1:]:
-            path.lineTo(point)
-        polyline_item = QGraphicsPathItem(path)
-        polyline_item.setPen(QPen(Qt.magenta, 5))
-        self.scene.addItem(polyline_item)
+        if len(self.waypoints) > 0:
+            points = []
+            for waypoint in self.waypoints:
+                x, y = self.lat_lon_to_map_coords(waypoint.lat, waypoint.lon)
+                points.append(QPointF(x, y))
+            path = QPainterPath()
+            path.moveTo(points[0])
+            for point in points[1:]:
+                path.lineTo(point)
+            polyline_item = QGraphicsPathItem(path)
+            polyline_item.setPen(QPen(Qt.magenta, 5))
+            self.scene.addItem(polyline_item)
+
+            for i, point in enumerate(points):
+                s = str(i + 1)
+                if self.waypoints[i].type == WaypointType.LAND:
+                    s = "L"
+
+                radius = 20
+                circle = QGraphicsEllipseItem(QRectF(-radius, -radius, 2 * radius, 2 * radius))
+                circle.setBrush(QBrush(Qt.black))
+                circle.setPen(QPen(Qt.magenta, 5))
+                circle.setPos(point)
+                self.scene.addItem(circle)
+
+                text = QGraphicsTextItem(s)  # Text content (e.g., index + 1)
+                text.setFont(QFont("Arial", 10))  # Set font and size
+                text.setDefaultTextColor(Qt.white)  # Set text color
+                text.setPos(point.x() - text.boundingRect().width() / 2,  # Center the text horizontally
+                            point.y() - text.boundingRect().height() / 2)  # Center the text vertically
+                self.scene.addItem(text)
 
     def draw_arrow(self):
         x, y = self.lat_lon_to_map_coords(self.flight_data.lat, self.flight_data.lon)
@@ -139,8 +177,7 @@ class Map(QGraphicsView):
         
         return offset_x, offset_y
     
-    def update_data(self, flight_data, waypoints, rwy_lat, rwy_lon, rwy_hdg):
-        self.waypoints = waypoints
+    def update_data(self, flight_data):
         self.flight_data = flight_data
         self.lat = flight_data.lat
         self.lon = flight_data.lon
@@ -152,3 +189,22 @@ class Map(QGraphicsView):
         tile_x = n * (lon + 180) / 360
         tile_y = n * (1 - (math.log(math.tan(lat_rad) + (1 / math.cos(lat_rad))) / math.pi)) / 2
         return tile_x, tile_y
+
+    def meters_to_pixels(self, meters, lat):
+        """
+        Convert meters to pixels on the map at the current zoom level and latitude.
+        
+        :param meters: Distance in meters.
+        :param lat: Latitude at which the distance is measured.
+        :return: Distance in pixels.
+        """
+        # Earth's circumference in meters
+        earth_circumference = 40075000  # meters
+
+        # Calculate the scale in meters per pixel
+        scale = earth_circumference * math.cos(math.radians(lat)) / (2 ** self.zoom * self.tile_size)
+
+        # Convert meters to pixels
+        pixels = meters / scale
+
+        return pixels

@@ -7,6 +7,8 @@ class AltitudeGraph(pg.PlotWidget):
     def __init__(self):
         super().__init__()
 
+        self.setFixedHeight(300)
+
         self.waypoint_labels = []
 
         self.line = self.plot([], 
@@ -27,18 +29,18 @@ class AltitudeGraph(pg.PlotWidget):
     def update(self, waypoints, flight_data):
         if len(waypoints) > 0:
             # Update line
-            wp_pos = calculate_displacement_meters(waypoints[0][0], waypoints[0][1], flight_data.center_lat, flight_data.center_lon)
+            wp_pos = calculate_displacement_meters(waypoints[0].lat, waypoints[0].lon, flight_data.center_lat, flight_data.center_lon)
             x = [math.sqrt(wp_pos[0]**2 + wp_pos[1]**2)]
             for i in range(1, len(waypoints)):
                 # Calculate distance between target and previous waypoints
-                wp_pos = calculate_displacement_meters(waypoints[i][0], waypoints[i][1], flight_data.center_lat, flight_data.center_lon)
-                prev_wp_pos = calculate_displacement_meters(waypoints[i-1][0], waypoints[i-1][1], flight_data.center_lat, flight_data.center_lon)
+                wp_pos = calculate_displacement_meters(waypoints[i].lat, waypoints[i].lon, flight_data.center_lat, flight_data.center_lon)
+                prev_wp_pos = calculate_displacement_meters(waypoints[i-1].lat, waypoints[i-1].lon, flight_data.center_lat, flight_data.center_lon)
                 dist = math.sqrt((wp_pos[0] - prev_wp_pos[0])**2 + (wp_pos[1] - prev_wp_pos[1])**2)
 
                 # Add distance to previous distance in array
                 x.append(x[i - 1] + dist)
             # All the altitudes
-            y = [wp[2]*-1 for wp in waypoints]
+            y = [-wp.alt for wp in waypoints]
             self.line.setData(x, y)
 
             # Update waypoint number labels

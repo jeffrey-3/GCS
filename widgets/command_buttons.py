@@ -21,7 +21,7 @@ class CommandButtons(QWidget):
         self.queue_label = QLabel("Transmit Queue: 0")
         self.layout.addWidget(self.queue_label, 0, 0)
 
-        button_names = ["Upload Waypoints", "Calibrate Gyroscopes", "Calibrate Accelerometers", "Next Waypoint"]
+        button_names = ["Upload Config", "Arm", "Calibrate Accelerometers", "Next Waypoint"]
         for row in range(2):
             for col in range(2):
                 button = QPushButton(button_names[row*2+col])

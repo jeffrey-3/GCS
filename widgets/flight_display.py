@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtCore import QRectF, Qt, QPointF
 from PyQt5.QtGui import QPixmap, QPainter, QFont, QPen, QColor, QBrush, QPolygonF
-from data_structures.flight_data_struct import FlightData
+from lib.data_structures.data_structures import *
 import math
 
 class PrimaryFlightDisplay(QLabel):
