@@ -17,7 +17,6 @@ class Map(QGraphicsView):
         self.scene = QGraphicsScene()
         self.setScene(self.scene)
 
-        # Scroll causing alignment
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
@@ -119,6 +118,9 @@ class Map(QGraphicsView):
                     offset_x = (dx - frac_x) * self.tile_size + viewport_width // 2
                     offset_y = (dy - frac_y) * self.tile_size + viewport_height // 2
                     pixmap_item.setPos(offset_x, offset_y)
+        
+        # Make sure no misalignment when resizing
+        self.setSceneRect(0, 0, self.size().width(), self.size().height())
                     
     def draw_waypoints(self):
         if len(self.waypoints) > 0:

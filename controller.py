@@ -8,10 +8,9 @@ class Controller:
 
         self.view.waypoint_editor.importButton.clicked.connect(self.open_flightplan)
         self.view.waypoint_editor.params_btn.clicked.connect(self.open_params)
+        self.view.waypoint_editor.continue_btn.clicked.connect(self.start)
 
         self.model.flightplan_processed.connect(self.view.load_flightplan)
-
-        self.view.waypoint_editor.continue_btn.clicked.connect(self.start)
 
     def start(self):
         waypoints = self.view.waypoint_editor.getWaypoints()

@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPalette, QColor
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 from widgets.command_buttons import CommandButtons
 from widgets.flight_display import PrimaryFlightDisplay
 from widgets.map import Map
@@ -59,7 +59,7 @@ class View(QMainWindow):
 
     def update(self, flight_data, waypoints):
         self.map.waypoints = waypoints
-        
+
         self.raw_data.update(flight_data.queue_len)
         # Set center position to first GPS fix
         if flight_data.center_lat == 0 and flight_data.gps_fix:

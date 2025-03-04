@@ -59,6 +59,7 @@ class Input():
         self.port = None
         self.prev_send_time = time.time()
         self.prev_recv_time = time.time()
+        self.transmit_dt = 0.5
     
     def connect(self, port):
         self.port = port
@@ -135,7 +136,7 @@ class Input():
     
     def update(self):
         if not self.port == "Testing":
-            if len(self.command_queue.queue) > 0 and time.time() - self.prev_send_time > 0.5:
+            if len(self.command_queue.queue) > 0 and time.time() - self.prev_send_time > self.transmit_dt:
                 self.ser.write(get_pkt(self.command_queue.get_payload()))
                 self.prev_send_time = time.time()
             

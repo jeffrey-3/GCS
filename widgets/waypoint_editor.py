@@ -10,10 +10,14 @@ import serial.tools.list_ports
 from PyQt5.QtCore import *
 import serial
 
+# Move each class (tiles, download, etc.) out of this into view.py
+
 class WaypointEditor(QWidget):
+    updated_waypoints = pyqtSignal(list)
+    
     def __init__(self):
         super().__init__()
-        
+
         self.container = QWidget()
         self.layout = QVBoxLayout(self.container)
 
@@ -77,7 +81,7 @@ class WaypointEditor(QWidget):
         # Table setup
         self.table = QTableWidget()
         self.table.setMinimumHeight(600)
-        self.table.setMinimumWidth(1000)
+        self.table.setMinimumWidth(800)
         self.table.setColumnCount(4)
         self.table.setHorizontalHeaderLabels(["Waypoint Type", "Latitude", "Longitude", "Altitude (m)"])
         for col in range(self.table.columnCount()):
