@@ -10,6 +10,7 @@ class Controller:
         self.view.waypoint_editor.params_btn.clicked.connect(self.open_params)
         self.view.waypoint_editor.continue_btn.clicked.connect(self.start)
 
+        self.view.waypoint_editor.updated_waypoints.connect(self.update_waypoints)
         self.model.flightplan_processed.connect(self.view.load_flightplan)
 
     def start(self):
@@ -42,3 +43,6 @@ class Controller:
         if file_path:
             self.model.process_params_file(file_path)
             self.view.waypoint_editor.params_file_label.setText(file_path)
+    
+    def update_waypoints(self, waypoints):
+        self.view.map.waypoints = waypoints

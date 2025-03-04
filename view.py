@@ -58,8 +58,6 @@ class View(QMainWindow):
         self.left_layout.addWidget(self.tabs)
 
     def update(self, flight_data, waypoints):
-        self.map.waypoints = waypoints
-
         self.raw_data.update(flight_data.queue_len)
         # Set center position to first GPS fix
         if flight_data.center_lat == 0 and flight_data.gps_fix:

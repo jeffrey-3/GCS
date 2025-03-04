@@ -131,6 +131,8 @@ class WaypointEditor(QWidget):
                 land_hdg = calculate_bearing((waypoints[-1].lat, waypoints[-1].lon), (waypoints[-2].lat, waypoints[-2].lon))
 
                 self.landing_label.setText(f"Glideslope Angle: {gs_angle:.1f}\nLanding Heading: {land_hdg:.1f}")
+            
+            self.updated_waypoints.emit(waypoints)
         else:
             self.landing_label.setText("Glideslope Angle:\nLanding Heading:")
     
@@ -171,10 +173,13 @@ class WaypointEditor(QWidget):
         rowPosition = self.table.rowCount()
         self.table.insertRow(rowPosition)
         
-        # Making cells editable
-        self.table.setItem(rowPosition, 0, QTableWidgetItem(lat))
-        self.table.setItem(rowPosition, 1, QTableWidgetItem(lon))
-        self.table.setItem(rowPosition, 2, QTableWidgetItem(alt))
+        combo = QComboBox()
+        combo.addItems(["WAYPOINT", "LANDING"])
+        combo.setCurrentIndex(0)
+        self.table.setCellWidget(rowPosition, 0, combo)
+        self.table.setItem(rowPosition, 1, QTableWidgetItem(lat))
+        self.table.setItem(rowPosition, 2, QTableWidgetItem(lon))
+        self.table.setItem(rowPosition, 3, QTableWidgetItem(alt))
 
         # Set custom row headers starting from 0
         for row in range(self.table.rowCount()):
@@ -185,6 +190,8 @@ class WaypointEditor(QWidget):
         selectedRows = set(index.row() for index in self.table.selectedIndexes())
         for row in sorted(selectedRows, reverse=True):
             self.table.removeRow(row)
+        
+        self.updated_waypoints.emit(self.getWaypoints())
 
     def getWaypoints(self):
         waypoints = []
