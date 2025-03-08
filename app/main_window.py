@@ -2,18 +2,28 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from app.views.pfd_view import PrimaryFlightDisplay
-from app.views.map_view import MapView
-from app.views.altitude_view import AltitudeGraph
 from app.views.data_view import DataTable
 from app.views.raw_data import RawData
-from app.views.config_view import ConfigView
-from app.views.tiles_view import *
 from app.views.realtime_alt_view import RealtimeAltPlot
-from app.controllers.map_controller import MapController
+from app.views.tiles_view import TilesView
+from app.views.map_view import MapView
+from app.views.altitude_view import AltitudeGraph
+from app.views.connect_view import ConnectView
+from app.views.params_view import ParamsView
+from app.views.plan_view import PlanView
+from app.models.tiles_model import TilesModel
+from app.models.plan_model import PlanModel
+from app.models.params_model import ParamsModel
+from app.controllers.params_controller import ParamsController
+from app.controllers.plan_controller import PlanController
+from app.controllers.tiles_controller import TilesController
+from app.controllers.connect_controller import ConnectController
 from app.controllers.altitude_controller import AltController
+from app.controllers.map_controller import MapController
 from app.utils.data_structures import *
+from app.utils.utils import *
 
-class View(QMainWindow):
+class MainWindow(QMainWindow):
     def __init__(self, app):
         super().__init__()
         self.app = app
@@ -28,35 +38,63 @@ class View(QMainWindow):
     def create_layouts(self):
         self.main_layout = QHBoxLayout()
         self.left_layout = QVBoxLayout()
-        self.map_layout = QGridLayout()
+        self.right_layout = QGridLayout()
+        self.scroll_layout = QVBoxLayout()
+
         self.main_layout.addLayout(self.left_layout)
-        self.main_layout.addLayout(self.map_layout, 2)
+        self.main_layout.addLayout(self.right_layout, 2)
+
         container = QWidget()
         container.setLayout(self.main_layout)
         self.setCentralWidget(container)
 
     def create_widgets(self):
+        self.plan_model = PlanModel()
+
+        self.scroll_area = QScrollArea()
         self.tabs = QTabWidget()
         self.datatable = DataTable()
         self.raw_data = RawData()
         self.pfd = PrimaryFlightDisplay()
-        self.config_view = ConfigView()
         self.map_view = MapView()
-        self.map_controller = MapController(self.map_view, )
+        self.map_controller = MapController(self.map_view, self.plan_model)
         self.altitude_graph = AltitudeGraph()
         self.realtime_alt_plot = RealtimeAltPlot()
 
         self.tabs.addTab(self.datatable, "Quick")
         self.tabs.addTab(self.raw_data, "Raw")
-        self.map_layout.addWidget(self.map)
-        self.map_layout.addWidget(self.altitude_graph)
-        self.left_layout.addWidget(self.waypoint_editor)
-        self.map_layout.addWidget(self.realtime_alt_plot, 0, 0, Qt.AlignBottom | Qt.AlignRight)
+        
+        self.right_layout.addWidget(self.map_view)
+        self.right_layout.addWidget(self.altitude_graph)
+        self.right_layout.addWidget(self.realtime_alt_plot, 0, 0, Qt.AlignBottom | Qt.AlignRight)
 
-    def start(self):
-        self.waypoint_editor.table.clearSelection()
+        self.tiles_model = TilesModel()
+        self.tiles_view = TilesView()
+        self.tiles_controller = TilesController(self.tiles_view, self.tiles_model)
+        self.scroll_layout.addWidget(self.tiles_view)
+
+        self.params_view = ParamsView()
+        self.params_model = ParamsModel()
+        self.params_controller = ParamsController(self.params_view, self.params_model)
+        self.scroll_layout.addWidget(self.params_view)
+
+        self.plan_view = PlanView()
+        self.plan_controller = PlanController(self.plan_view, self.plan_model)
+        self.scroll_layout.addWidget(self.plan_view)
+
+        self.connect_view = ConnectView()
+        self.connect_controller = ConnectController(self.connect_view)
+        self.scroll_layout.addWidget(self.connect_view)
+
+        container = QWidget()
+        container.setLayout(self.scroll_layout)
+        self.scroll_area.setWidget(container)
+        self.scroll_area.setMinimumWidth(container.width() + 50)
+        self.left_layout.addWidget(self.scroll_area)
+
+        self.pfd.hide()
+        self.tabs.hide()
         self.left_layout.addWidget(self.pfd)
-        self.waypoint_editor.setParent(None)
         self.left_layout.addWidget(self.tabs)
 
     def update(self, flight_data, waypoints):
@@ -67,14 +105,14 @@ class View(QMainWindow):
             flight_data.center_lon = flight_data.lon
         self.pfd.update(flight_data)
         self.datatable.update(flight_data)
-        self.map.update_data(flight_data)
+        self.map_view.update_data(flight_data)
         self.altitude_graph.update(waypoints, flight_data.center_lat, flight_data.center_lon)
         self.realtime_alt_plot.update(flight_data.altitude, flight_data.alt_setpoint)
 
     def load_flightplan(self, waypoints):
-        self.map.waypoints = waypoints
-        self.map.lat = waypoints[0].lat
-        self.map.lon = waypoints[0].lon
+        self.map_view.waypoints = waypoints
+        self.map_view.lat = waypoints[0].lat
+        self.map_view.lon = waypoints[0].lon
         self.altitude_graph.update(waypoints, waypoints[0].lat, waypoints[0].lon)
         self.waypoint_editor.load_flightplan(waypoints)
     

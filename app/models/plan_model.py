@@ -9,10 +9,9 @@ class PlanModel(QObject):
     waypoints_updated = pyqtSignal(list)
 
     def __init__(self):
-        return
+        super().__init__()
 
-    def save_file(self):
-        waypoints = self.view.getWaypoints()
+    def save_file(self, waypoints, file_path):
         if waypoints:
             json_data = [
                 {"type": wp.type.value, "lat": wp.lat, "lon": wp.lon, "alt": wp.alt} 
@@ -20,8 +19,6 @@ class PlanModel(QObject):
             ]
             print(json_data)
             
-            options = QFileDialog.Options()
-            file_path, _ = QFileDialog.getSaveFileName(self, "Save JSON File", 'plan_{date:%Y_%m_%d_%H_%M_%S}.json'.format(date=datetime.datetime.now()), "JSON Files (*.json)", options=options)
             if file_path:
                 with open(file_path, "w") as json_file:
                     json.dump(json_data, json_file, indent=4)

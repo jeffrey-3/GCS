@@ -21,3 +21,7 @@ class ConnectView(QWidget):
         self.layout.addWidget(self.refresh_button)
 
         self.setLayout(self.layout)
+
+        self.continue_btn = QPushButton("Continue")
+        self.continue_btn.setStyleSheet("font-size: 18pt;")
+        self.layout.addWidget(self.continue_btn)

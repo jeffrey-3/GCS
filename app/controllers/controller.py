@@ -16,8 +16,8 @@ class Controller:
         self.model = model
         self.view = view
 
-        self.view.waypoint_editor.continue_btn.clicked.connect(self.start)
-        self.view.map.clicked.connect(self.view.waypoint_editor.clicked)
+        self.view.config_view.continue_btn.clicked.connect(self.start)
+        self.view.map_view.clicked.connect(self.view.config_view.plan_view.clicked)
         self.model.flightplan_processed.connect(self.view.load_flightplan)
         
         self.timer = QTimer()
