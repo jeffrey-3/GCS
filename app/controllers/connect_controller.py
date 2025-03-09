@@ -1,10 +1,22 @@
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
 import serial.tools.list_ports
 
-class ConnectController:
-    def __init__(self, view):
+class ConnectController(QObject):
+    start_signal = pyqtSignal()
+
+    def __init__(self, view, model, plan_model):
+        super().__init__()
+
         self.view = view
+        self.model = model
+        self.plan_model = plan_model
+        self.waypoints = None
 
         self.view.refresh_button.clicked.connect(self.refresh_com_ports)
+        self.view.continue_btn.clicked.connect(self.connect)
+
+        self.plan_model.waypoints_updated.connect(self.update_waypoints)
 
         self.refresh_com_ports()
 
@@ -15,3 +27,17 @@ class ConnectController:
         for port in ports:
             self.view.com_port_dropdown.addItem(port.device)
         self.view.com_port_dropdown.addItem("Testing")
+    
+    def connect(self):
+        if self.waypoints:
+            port = self.view.com_port_dropdown.currentText()
+            if self.model.connect(port):
+                # self.model.send_params()
+                self.start_signal.emit()
+            else:
+                QMessageBox.information(self.view, "Error", "COM port incorrect")
+        else:
+            QMessageBox.information(self.view, "Error", "No waypoints set")
+
+    def update_waypoints(self, waypoints):
+        self.waypoints = waypoints

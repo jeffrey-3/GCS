@@ -13,8 +13,10 @@ from app.views.params_view import ParamsView
 from app.views.plan_view import PlanView
 from app.models.tiles_model import TilesModel
 from app.models.plan_model import PlanModel
+from app.models.telemetry_model import TelemetryModel
 from app.models.params_model import ParamsModel
 from app.controllers.params_controller import ParamsController
+from app.controllers.connect_controller import ConnectController
 from app.controllers.plan_controller import PlanController
 from app.controllers.tiles_controller import TilesController
 from app.controllers.connect_controller import ConnectController
@@ -28,6 +30,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.app = app
         self.init_ui()
+        self.connect_controller.start_signal.connect(self.start)
 
     def init_ui(self):
         self.apply_dark_theme()
@@ -49,25 +52,11 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(container)
 
     def create_widgets(self):
-        self.plan_model = PlanModel()
-
+        """
+        Config
+        """
         self.scroll_area = QScrollArea()
-        self.tabs = QTabWidget()
-        self.datatable = DataTable()
-        self.raw_data = RawData()
-        self.pfd = PrimaryFlightDisplay()
-        self.map_view = MapView()
-        self.map_controller = MapController(self.map_view, self.plan_model)
-        self.altitude_graph = AltitudeGraph()
-        self.realtime_alt_plot = RealtimeAltPlot()
-
-        self.tabs.addTab(self.datatable, "Quick")
-        self.tabs.addTab(self.raw_data, "Raw")
         
-        self.right_layout.addWidget(self.map_view)
-        self.right_layout.addWidget(self.altitude_graph)
-        self.right_layout.addWidget(self.realtime_alt_plot, 0, 0, Qt.AlignBottom | Qt.AlignRight)
-
         self.tiles_model = TilesModel()
         self.tiles_view = TilesView()
         self.tiles_controller = TilesController(self.tiles_view, self.tiles_model)
@@ -79,11 +68,13 @@ class MainWindow(QMainWindow):
         self.scroll_layout.addWidget(self.params_view)
 
         self.plan_view = PlanView()
+        self.plan_model = PlanModel()
         self.plan_controller = PlanController(self.plan_view, self.plan_model)
         self.scroll_layout.addWidget(self.plan_view)
 
         self.connect_view = ConnectView()
-        self.connect_controller = ConnectController(self.connect_view)
+        self.telemetry_model = TelemetryModel()
+        self.connect_controller = ConnectController(self.connect_view, self.telemetry_model, self.plan_model)
         self.scroll_layout.addWidget(self.connect_view)
 
         container = QWidget()
@@ -92,32 +83,58 @@ class MainWindow(QMainWindow):
         self.scroll_area.setMinimumWidth(container.width() + 50)
         self.left_layout.addWidget(self.scroll_area)
 
+        """
+        PFD
+        """
+        self.pfd = PrimaryFlightDisplay()
         self.pfd.hide()
-        self.tabs.hide()
         self.left_layout.addWidget(self.pfd)
+
+        """
+        Tabs
+        """
+        self.tabs = QTabWidget()
+        self.tabs.hide()
         self.left_layout.addWidget(self.tabs)
 
-    def update(self, flight_data, waypoints):
-        self.raw_data.update(flight_data.queue_len)
-        # Set center position to first GPS fix
-        if flight_data.center_lat == 0 and flight_data.gps_fix:
-            flight_data.center_lat = flight_data.lat
-            flight_data.center_lon = flight_data.lon
-        self.pfd.update(flight_data)
-        self.datatable.update(flight_data)
-        self.map_view.update_data(flight_data)
-        self.altitude_graph.update(waypoints, flight_data.center_lat, flight_data.center_lon)
-        self.realtime_alt_plot.update(flight_data.altitude, flight_data.alt_setpoint)
+        self.datatable = DataTable()
+        self.tabs.addTab(self.datatable, "Quick")
+        
+        self.raw_data = RawData()
+        self.tabs.addTab(self.raw_data, "Raw")
 
-    def load_flightplan(self, waypoints):
-        self.map_view.waypoints = waypoints
-        self.map_view.lat = waypoints[0].lat
-        self.map_view.lon = waypoints[0].lon
-        self.altitude_graph.update(waypoints, waypoints[0].lat, waypoints[0].lon)
-        self.waypoint_editor.load_flightplan(waypoints)
+        """
+        Map
+        """
+        self.map_view = MapView()
+        self.map_controller = MapController(self.map_view, self.plan_model, self.telemetry_model)
+        self.right_layout.addWidget(self.map_view)
+
+        self.altitude_graph = AltitudeGraph()
+        self.alt_controller = AltController(self.altitude_graph, self.plan_model)
+        self.right_layout.addWidget(self.altitude_graph)
+
+        self.realtime_alt_plot = RealtimeAltPlot()
+        self.realtime_alt_plot.hide()
+        self.right_layout.addWidget(self.realtime_alt_plot, 0, 0, Qt.AlignBottom | Qt.AlignRight)
     
-    def alert(self, title, msg):
-        QMessageBox.information(self, title, msg)
+    def start(self):
+        self.scroll_area.hide()
+        self.pfd.show()
+        self.tabs.show()
+        self.realtime_alt_plot.show()
+
+    # def update(self, flight_data, waypoints):
+    #     self.raw_data.update(flight_data.queue_len)
+    #     # Set center position to first GPS fix
+    #     if flight_data.center_lat == 0 and flight_data.gps_fix:
+    #         flight_data.center_lat = flight_data.lat
+    #         flight_data.center_lon = flight_data.lon
+    #     self.pfd.update(flight_data)
+    #     self.datatable.update(flight_data)
+    #     self.map_view.update_data(flight_data)
+    #     self.altitude_graph.update(waypoints, flight_data.center_lat, flight_data.center_lon)
+    #     self.realtime_alt_plot.update(flight_data.altitude, flight_data.alt_setpoint)
 
     def apply_dark_theme(self):
         self.app.setStyle("Fusion")

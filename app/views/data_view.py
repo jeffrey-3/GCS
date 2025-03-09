@@ -44,7 +44,7 @@ class DataTable(QWidget):
                 label_small.setAlignment(Qt.AlignCenter)
                 label_small.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
-                label_large = QLabel("Value", self)
+                label_large = QLabel("NOT SET", self)
                 label_large.setStyleSheet("font-size: 60px; font-weight: bold;")
                 label_large.setAlignment(Qt.AlignCenter)
                 # label_large = QProgressBar()
@@ -78,7 +78,7 @@ class DataTable(QWidget):
         elif flight_data.mode_id == 8:
             state = "STAB"
         else:
-            state = "UNKNOWN"
+            state = f"UNKNOWN: {flight_data.mode_id}"
         
         elapsed_time = time.time() - self.start_time
         elapsed_hours = int(elapsed_time // 3600)

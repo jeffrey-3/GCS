@@ -178,7 +178,7 @@ class MapView(QGraphicsView):
 
     def draw_arrow(self):
         x, y = self.lat_lon_to_map_coords(self.flight_data.lat, self.flight_data.lon)
-        arrow_pixmap = QPixmap(f"resources/arrow.png")
+        arrow_pixmap = QPixmap(f"app/resources/arrow.png")
         arrow_pixmap = arrow_pixmap.scaled(50, 50)
         arrow = self.scene.addPixmap(arrow_pixmap)
         arrow.setPos(x - 25, y - 25)

@@ -7,6 +7,7 @@ import random
 from lib.cobs import cobs
 import math
 from communication.generate_packet import *
+from PyQt5.QtCore import *
 
 class PayloadQueue:
     def __init__(self, timeout=5):
@@ -50,8 +51,11 @@ class PayloadQueue:
         thread = threading.Thread(target=_loop, daemon=True)
         thread.start()
 
-class Input():
+class Input(QObject):
+    flight_data_updated = pyqtSignal(FlightData)
+
     def __init__(self):
+        super().__init__()
         self.flight_data = FlightData()
         self.command_queue = PayloadQueue()
         self.command_queue.run_cleanup()
@@ -64,18 +68,17 @@ class Input():
         self.rate_calc_dt = 1
         self.transmit_dt = 0.5
     
-    def connect(self, port):
+    def connect_and_start_thread(self, port):
         self.port = port
         if not port == 'Testing':
             try:
                 self.ser = serial.Serial(port, 115200, timeout=1000)
             except:
                 return False
+            
         threading.Thread(target=self.serial_thread, daemon=True).start()
-        return True
         
-    def update(self):
-        return self.flight_data
+        return True
     
     def append_queue(self, payload):
         self.command_queue.add_payload(payload)
@@ -121,6 +124,8 @@ class Input():
                         self.flight_data.packet_rate = self.bytes_read / self.rate_calc_dt
                         self.bytes_read = 0
                         self.prev_rate_calc_time = time.time()
+                    
+                    self.flight_data_updated.emit(self.flight_data)
                 elif payload_type == 1 or payload_type == 2 or payload_type == 3 or payload_type == 4: # Command/waypoint/landing target acknowledgement payload
                     self.command_queue.remove_payload(payload)
             except:
@@ -146,7 +151,9 @@ class Input():
             self.flight_data.current = random.uniform(8, 10)
             self.flight_data.wp_idx = 2
 
-            time.sleep(0.01)
+            self.flight_data_updated.emit(self.flight_data)
+
+            time.sleep(0.03)
     
     def update(self):
         if not self.port == "Testing":
