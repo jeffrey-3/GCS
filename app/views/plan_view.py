@@ -15,6 +15,7 @@ class PlanView(QWidget):
         self.layout.addWidget(QLabel("<h1>Flight Plan</h1>"))
 
         self.landing_label = QLabel("Glideslope Angle:\nLanding Heading:")
+        self.landing_label.setStyleSheet("font-size: 12pt;")
         self.layout.addWidget(self.landing_label)
         
         # Table setup
@@ -30,9 +31,13 @@ class PlanView(QWidget):
         # Buttons for adding and removing rows
         buttonLayout = QGridLayout()
         self.addButton = QPushButton("Add Waypoint")
+        self.addButton.setStyleSheet("font-size: 12pt;")
         self.removeButton = QPushButton("Remove Selected")
+        self.removeButton.setStyleSheet("font-size: 12pt;")
         self.importButton = QPushButton("Import File")
+        self.importButton.setStyleSheet("font-size: 12pt;")
         self.exportButton = QPushButton("Export File")
+        self.exportButton.setStyleSheet("font-size: 12pt;")
 
         self.removeButton.clicked.connect(self.removeWaypoint)
         self.addButton.clicked.connect(self.addWaypoint)
