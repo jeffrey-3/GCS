@@ -4,17 +4,7 @@ import math
 from app.utils.utils import calculate_displacement_meters
 import time
 
-# Bar graphs:
-# - Capacity consumed
-# - Cell voltage
-# - RSSI
-# Data:
-# - Time
-# - GPS sats
-# - State
-# Map has distance
-
-class DataTable(QWidget):
+class DataView(QWidget):
     def __init__(self):
         super().__init__()
 

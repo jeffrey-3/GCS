@@ -4,7 +4,7 @@ from PyQt5.QtGui import QPixmap, QPainter, QFont, QPen, QColor, QBrush, QPolygon
 from app.utils.data_structures import *
 import math
 
-class PrimaryFlightDisplay(QLabel):
+class PFDView(QLabel):
     def __init__(self):
         super().__init__()
 

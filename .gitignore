@@ -1,2 +1,3 @@
 logs/
 tiles/
+**/__pycache__/

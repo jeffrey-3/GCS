@@ -1,10 +1,10 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from app.views.pfd_view import PrimaryFlightDisplay
-from app.views.data_view import DataTable
+from app.views.pfd_view import PFDView
+from app.views.data_view import DataView
 from app.views.raw_view import RawView
-from app.views.realtime_alt_view import RealtimeAltPlot
+from app.views.live_alt_view import RealtimeAltPlot
 from app.views.tiles_view import TilesView
 from app.views.map_view import MapView
 from app.views.altitude_view import AltitudeGraph
@@ -21,8 +21,11 @@ from app.controllers.plan_controller import PlanController
 from app.controllers.tiles_controller import TilesController
 from app.controllers.raw_controller import RawController
 from app.controllers.connect_controller import ConnectController
+from app.controllers.live_alt_controller import LiveAltController
+from app.controllers.pfd_controller import PFDController
 from app.controllers.altitude_controller import AltController
 from app.controllers.map_controller import MapController
+from app.controllers.data_controller import DataController
 from app.utils.data_structures import *
 from app.utils.utils import *
 
@@ -87,9 +90,10 @@ class MainWindow(QMainWindow):
         """
         PFD
         """
-        self.pfd = PrimaryFlightDisplay()
-        self.pfd.hide()
-        self.left_layout.addWidget(self.pfd)
+        self.pfd_view = PFDView()
+        self.pfd_controller = PFDController(self.pfd_view, self.telemetry_model)
+        self.pfd_view.hide()
+        self.left_layout.addWidget(self.pfd_view)
 
         """
         Tabs
@@ -98,8 +102,9 @@ class MainWindow(QMainWindow):
         self.tabs.hide()
         self.left_layout.addWidget(self.tabs)
 
-        self.datatable = DataTable()
-        self.tabs.addTab(self.datatable, "Quick")
+        self.data_view = DataView()
+        self.data_controller = DataController(self.data_view, self.telemetry_model)
+        self.tabs.addTab(self.data_view, "Quick")
         
         self.raw_view = RawView()
         self.raw_controller = RawController(self.raw_view, self.telemetry_model)
@@ -116,27 +121,16 @@ class MainWindow(QMainWindow):
         self.alt_controller = AltController(self.altitude_graph, self.plan_model)
         self.right_layout.addWidget(self.altitude_graph)
 
-        self.realtime_alt_plot = RealtimeAltPlot()
-        self.realtime_alt_plot.hide()
-        self.right_layout.addWidget(self.realtime_alt_plot, 0, 0, Qt.AlignBottom | Qt.AlignRight)
+        self.live_alt_view = RealtimeAltPlot()
+        self.live_alt_controller = LiveAltController(self.live_alt_view, self.telemetry_model)
+        self.live_alt_view.hide()
+        self.right_layout.addWidget(self.live_alt_view, 0, 0, Qt.AlignBottom | Qt.AlignRight)
     
     def start(self):
         self.scroll_area.hide()
-        self.pfd.show()
+        self.pfd_view.show()
         self.tabs.show()
-        self.realtime_alt_plot.show()
-
-    # def update(self, flight_data, waypoints):
-    #     self.raw_data.update(flight_data.queue_len)
-    #     # Set center position to first GPS fix
-    #     if flight_data.center_lat == 0 and flight_data.gps_fix:
-    #         flight_data.center_lat = flight_data.lat
-    #         flight_data.center_lon = flight_data.lon
-    #     self.pfd.update(flight_data)
-    #     self.datatable.update(flight_data)
-    #     self.map_view.update_data(flight_data)
-    #     self.altitude_graph.update(waypoints, flight_data.center_lat, flight_data.center_lon)
-    #     self.realtime_alt_plot.update(flight_data.altitude, flight_data.alt_setpoint)
+        self.live_alt_view.show()
 
     def apply_dark_theme(self):
         self.app.setStyle("Fusion")
