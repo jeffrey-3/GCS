@@ -4,7 +4,8 @@ import json
 
 class ParamsModel:
     def __init__(self):
-        return
+        self.params_values = None
+        self.params_format = None
 
     def process_params_file(self, path):
         file = open(path, "r")

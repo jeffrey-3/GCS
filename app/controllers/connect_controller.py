@@ -5,12 +5,14 @@ import serial.tools.list_ports
 class ConnectController(QObject):
     start_signal = pyqtSignal()
 
-    def __init__(self, view, model, plan_model):
+    def __init__(self, view, model, plan_model, params_model):
         super().__init__()
 
         self.view = view
         self.model = model
         self.plan_model = plan_model
+        self.params_model = params_model
+
         self.waypoints = None
 
         self.view.refresh_button.clicked.connect(self.refresh_com_ports)
@@ -29,15 +31,15 @@ class ConnectController(QObject):
         self.view.com_port_dropdown.addItem("Testing")
     
     def connect(self):
-        if self.waypoints:
+        if self.waypoints and self.params_model.params_values:
             port = self.view.com_port_dropdown.currentText()
             if self.model.connect(port):
-                # self.model.send_params()
+                self.model.send_params(self.waypoints, self.params_model.params_values, self.params_model.params_format)
                 self.start_signal.emit()
             else:
                 QMessageBox.information(self.view, "Error", "COM port incorrect")
         else:
-            QMessageBox.information(self.view, "Error", "No waypoints set")
+            QMessageBox.information(self.view, "Error", "Waypoints or parameters missing")
 
     def update_waypoints(self, waypoints):
         self.waypoints = waypoints

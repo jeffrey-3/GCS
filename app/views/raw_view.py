@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QGridLayout, QVBoxLayout, QLabel, QSizePolicy
 from PyQt5.QtCore import Qt
 
-class RawData(QWidget):
+class RawView(QWidget):
     def __init__(self):
         super().__init__()
 

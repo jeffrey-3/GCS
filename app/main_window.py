@@ -3,7 +3,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from app.views.pfd_view import PrimaryFlightDisplay
 from app.views.data_view import DataTable
-from app.views.raw_data import RawData
+from app.views.raw_view import RawView
 from app.views.realtime_alt_view import RealtimeAltPlot
 from app.views.tiles_view import TilesView
 from app.views.map_view import MapView
@@ -19,6 +19,7 @@ from app.controllers.params_controller import ParamsController
 from app.controllers.connect_controller import ConnectController
 from app.controllers.plan_controller import PlanController
 from app.controllers.tiles_controller import TilesController
+from app.controllers.raw_controller import RawController
 from app.controllers.connect_controller import ConnectController
 from app.controllers.altitude_controller import AltController
 from app.controllers.map_controller import MapController
@@ -74,7 +75,7 @@ class MainWindow(QMainWindow):
 
         self.connect_view = ConnectView()
         self.telemetry_model = TelemetryModel()
-        self.connect_controller = ConnectController(self.connect_view, self.telemetry_model, self.plan_model)
+        self.connect_controller = ConnectController(self.connect_view, self.telemetry_model, self.plan_model, self.params_model)
         self.scroll_layout.addWidget(self.connect_view)
 
         container = QWidget()
@@ -100,8 +101,9 @@ class MainWindow(QMainWindow):
         self.datatable = DataTable()
         self.tabs.addTab(self.datatable, "Quick")
         
-        self.raw_data = RawData()
-        self.tabs.addTab(self.raw_data, "Raw")
+        self.raw_view = RawView()
+        self.raw_controller = RawController(self.raw_view, self.telemetry_model)
+        self.tabs.addTab(self.raw_view, "Raw")
 
         """
         Map

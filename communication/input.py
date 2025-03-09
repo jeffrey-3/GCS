@@ -76,14 +76,16 @@ class Input(QObject):
             except:
                 return False
             
-        threading.Thread(target=self.serial_thread, daemon=True).start()
+        threading.Thread(target=self.recv_thread, daemon=True).start()
+        threading.Thread(target=self.transmit_thread, daemon=True).start()
         
         return True
     
     def append_queue(self, payload):
+        print("Input append queue")
         self.command_queue.add_payload(payload)
     
-    def serial_thread(self):
+    def recv_thread(self):
         while True:
             if self.port == "Testing":
                 self.execute_testing()
@@ -155,12 +157,13 @@ class Input(QObject):
 
             time.sleep(0.03)
     
-    def update(self):
-        if not self.port == "Testing":
-            if len(self.command_queue.queue) > 0 and time.time() - self.prev_send_time > self.transmit_dt:
-                self.ser.write(get_pkt(self.command_queue.get_payload()))
-                self.prev_send_time = time.time()
-            
-        self.flight_data.queue_len = len(self.command_queue.queue)
+    def transmit_thread(self):
+        while True:
+            if not self.port == "Testing":
+                if len(self.command_queue.queue) > 0 and time.time() - self.prev_send_time > self.transmit_dt:
+                    self.ser.write(get_pkt(self.command_queue.get_payload()))
+                    self.prev_send_time = time.time()
+                
+            self.flight_data.queue_len = len(self.command_queue.queue)
 
-        return self.flight_data
+            time.sleep(0.01)
