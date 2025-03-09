@@ -116,8 +116,7 @@ class PlanView(QWidget):
         print(pos[0], pos[1])
 
     def on_cell_changed(self):
-        print("Changed")
-
+        print("Plan View: on_cell_changed")
         waypoints = self.getWaypoints()
         if waypoints:
             land_wp_exists = False

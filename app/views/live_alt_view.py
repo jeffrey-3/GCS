@@ -40,4 +40,4 @@ class RealtimeAltPlot(pg.PlotWidget):
         self.setpoint_data.append(setpoint)
         self.alt_line.setData(self.x_data, self.alt_data)
         self.setpoint_line.setData(self.x_data, self.setpoint_data)
-        self.setYRange(min=0, max=max((max(self.alt_data), max(self.setpoint_data))))
+        # self.setYRange(min=0, max=max((max(self.alt_data), max(self.setpoint_data))))
