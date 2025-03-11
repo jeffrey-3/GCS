@@ -6,4 +6,4 @@ class RawController:
         self.model.flight_data_updated.connect(self.update)
     
     def update(self, flight_data):
-        self.view.update(flight_data.queue_len)
+        self.view.update(flight_data)

@@ -8,13 +8,13 @@ class TilesView(QWidget):
 
         layout.addRow(QLabel("<h1>Download Map Tiles</h1>"))
 
-        self.top_left_lat_input = QLineEdit("43.879731")
+        self.top_left_lat_input = QLineEdit("43.884043")
         self.top_left_lat_input.setStyleSheet("font-size: 12pt;")
-        self.top_left_lon_input = QLineEdit("-79.414462")
+        self.top_left_lon_input = QLineEdit("-79.424526")
         self.top_left_lon_input.setStyleSheet("font-size: 12pt;")
-        self.bottom_right_lat_input = QLineEdit("43.878084")
+        self.bottom_right_lat_input = QLineEdit("43.874797")
         self.bottom_right_lat_input.setStyleSheet("font-size: 12pt;")
-        self.bottom_right_lon_input = QLineEdit("-79.411608")
+        self.bottom_right_lon_input = QLineEdit("-79.404941")
         self.bottom_right_lon_input.setStyleSheet("font-size: 12pt;")
         self.min_zoom_input = QLineEdit("1")
         self.min_zoom_input.setStyleSheet("font-size: 12pt;")

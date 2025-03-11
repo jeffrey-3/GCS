@@ -50,18 +50,23 @@ class PlanView(QWidget):
         self.layout.addLayout(buttonLayout)
 
         self.setLayout(self.layout)
+
+        self.table.cellChanged.connect(self.on_cell_changed)
     
     def getWaypoints(self):
         waypoints = []
         for row in range(self.table.rowCount()):
             for col in range(self.table.columnCount()):
                 if not self.table.item(row, col) and not self.table.cellWidget(row, col):
-                    return
+                    return []
             type = self.table.cellWidget(row, 0).currentIndex()
             lat = self.table.item(row, 1).text()
             lon = self.table.item(row, 2).text()
             alt = self.table.item(row, 3).text()
-            waypoints.append(Waypoint(WaypointType(type), float(lat), float(lon), float(alt)))
+            if is_float(lat) and is_float(lon) and is_float(alt):
+                waypoints.append(Waypoint(WaypointType(type), float(lat), float(lon), float(alt)))
+            else:
+                return []
         return waypoints
 
     def addWaypoint(self, lat="", lon="", alt=""):
@@ -76,17 +81,12 @@ class PlanView(QWidget):
         self.table.setItem(rowPosition, 2, QTableWidgetItem(lon))
         self.table.setItem(rowPosition, 3, QTableWidgetItem(alt))
 
-        # Set custom row headers starting from 0
-        for row in range(self.table.rowCount()):
-            item = QTableWidgetItem(str(row))
-            self.table.setVerticalHeaderItem(row, item)
-
     def removeWaypoint(self):
         selectedRows = set(index.row() for index in self.table.selectedIndexes())
         for row in sorted(selectedRows, reverse=True):
             self.table.removeRow(row)
         
-        self.updated_waypoints.emit(self.getWaypoints())
+        self.on_cell_changed()
     
     def load_waypoints(self, waypoints):
         self.table.setRowCount(0) # Remove all rows
@@ -105,7 +105,6 @@ class PlanView(QWidget):
             self.table.setItem(row, 2, QTableWidgetItem(str(waypoints[row].lon)))
             self.table.setItem(row, 3, QTableWidgetItem(str(waypoints[row].alt)))
     
-    # pos: (lat, lon)
     def clicked(self, pos):
         selectedRows = set(index.row() for index in self.table.selectedIndexes())
         for row in sorted(selectedRows, reverse=True):
@@ -113,10 +112,7 @@ class PlanView(QWidget):
             self.table.setItem(row, 2, QTableWidgetItem(str(round(pos[1], 7))))
         self.table.clearSelection()
 
-        print(pos[0], pos[1])
-
     def on_cell_changed(self):
-        print("Plan View: on_cell_changed")
         waypoints = self.getWaypoints()
         if waypoints:
             land_wp_exists = False
@@ -132,7 +128,7 @@ class PlanView(QWidget):
                 land_hdg = calculate_bearing((waypoints[-2].lat, waypoints[-2].lon), (waypoints[-1].lat, waypoints[-1].lon))
 
                 self.landing_label.setText(f"Glideslope Angle: {gs_angle:.1f}\nLanding Heading: {land_hdg:.1f}")
-            
-            self.updated_waypoints.emit(waypoints)
         else:
             self.landing_label.setText("Glideslope Angle:\nLanding Heading:")
+        
+        self.updated_waypoints.emit(waypoints)

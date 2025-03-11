@@ -8,9 +8,8 @@ class PlanController:
 
         self.view.exportButton.clicked.connect(self.save_file)
         self.view.importButton.clicked.connect(self.open_flightplan)
-        self.view.table.cellChanged.connect(self.view.on_cell_changed)
-
-        self.model.waypoints_updated.connect(self.update_waypoints)
+        self.view.updated_waypoints.connect(self.waypoints_updated)
+        self.model.map_clicked_signal.connect(self.view.clicked)
     
     def save_file(self):
         options = QFileDialog.Options()
@@ -21,9 +20,10 @@ class PlanController:
         file_path, _ = QFileDialog.getOpenFileName(self.view, "Open File", "", "All Files (*)")
         if file_path:
             waypoints = self.model.process_flightplan_file(file_path)
-            self.update_waypoints(waypoints)
-
-    def update_waypoints(self, waypoints):
-        if waypoints:
-            self.view.load_waypoints(waypoints)
-            self.view.table.clearSelection()
+            if waypoints:
+                self.view.load_waypoints(waypoints)
+                self.view.table.clearSelection()
+    
+    def waypoints_updated(self, waypoints):
+        print("Plan Controller: Waypoints Updated")
+        self.model.update_waypoints(waypoints)

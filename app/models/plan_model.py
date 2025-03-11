@@ -7,6 +7,7 @@ import datetime
 
 class PlanModel(QObject):
     waypoints_updated = pyqtSignal(list)
+    map_clicked_signal = pyqtSignal(tuple)
 
     def __init__(self):
         super().__init__()
@@ -33,3 +34,10 @@ class PlanModel(QObject):
             for wp in json_data
         ]    
         self.waypoints_updated.emit(waypoints)
+        return waypoints
+    
+    def update_waypoints(self, waypoints):
+        self.waypoints_updated.emit(waypoints)
+    
+    def map_clicked(self, pos):
+        self.map_clicked_signal.emit(pos)
