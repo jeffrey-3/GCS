@@ -11,4 +11,4 @@ class ParamsController:
         file_path, _ = QFileDialog.getOpenFileName(self.view, "Open File", "", "All Files (*)")
         if file_path:
             self.model.process_params_file(file_path)
-            self.view.params_file_label.setText(file_path)
+            self.view.params_file_input.setPlainText(file_path)

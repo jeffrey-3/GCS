@@ -20,8 +20,9 @@ class PlanView(QWidget):
         
         # Table setup
         self.table = QTableWidget()
+        self.table.setStyleSheet("font-size: 10pt;")
         self.table.setMinimumHeight(600)
-        self.table.setMinimumWidth(500)
+        self.table.setMinimumWidth(800)
         self.table.setColumnCount(4)
         self.table.setHorizontalHeaderLabels(["Waypoint Type", "Latitude", "Longitude", "Altitude (m)"])
         for col in range(self.table.columnCount()):

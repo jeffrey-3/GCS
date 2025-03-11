@@ -3,7 +3,7 @@ import time
 import datetime
 
 class Logger():
-    def __init__(self):
+    def create_file(self):
         self.csvfile = open('logs/{date:%Y_%m_%d_%H_%M_%S}.csv'.format(date=datetime.datetime.now()), 'w', newline='')
         self.csvwriter = csv.writer(self.csvfile, delimiter=',')
         self.csvwriter.writerow(["time", "roll", "pitch", "heading"])

@@ -16,7 +16,10 @@ class TelemetryModel(QObject):
         self.input.flight_data_updated.connect(self.update)
 
     def connect(self, port):
-        return self.input.connect_and_start_thread(port)
+        if self.input.connect_and_start_thread(port):
+            self.logger.start()
+            return True
+        return False
 
     def update(self, flight_data):
         if flight_data.center_lat == 0 and flight_data.gps_fix:
@@ -28,5 +31,5 @@ class TelemetryModel(QObject):
     def send_params(self, waypoints, params_values, params_format):
         self.input.append_queue(get_params_payload(params_values, params_format))
         for i, waypoint in enumerate(waypoints):
-            self.input.append_queue(get_wpt_payload(waypoint, i)) 
+            self.input.append_queue(get_wpt_payload(waypoint, i, len(waypoints))) 
         print("Telemetry Model: Sent")

@@ -36,9 +36,15 @@ class PayloadQueue:
         return None
     
     def cleanup(self):
-        """Removes expired payloads from the queue."""
+        """Removes expired payloads from the queue and prints when a packet expires."""
         current_time = time.time()
         with self.lock:
+            # Filter out expired payloads and print a message for each expired payload
+            expired_payloads = [p for p, t in self.queue if t <= current_time]
+            for payload in expired_payloads:
+                print(f"Payload expired. Length: {len(payload)}")
+            
+            # Update the queue to only include non-expired payloads
             self.queue = [(p, t) for p, t in self.queue if t > current_time]
     
     def run_cleanup(self, interval=1):
@@ -82,7 +88,6 @@ class Input(QObject):
         return True
     
     def append_queue(self, payload):
-        print("Input append queue")
         self.command_queue.add_payload(payload)
     
     def recv_thread(self):
@@ -105,8 +110,7 @@ class Input(QObject):
                 
                 # Figure out what type of payload from message ID byte
                 payload_type = payload[0] # Incorrect, need to unpack?
-                # print(f"Payload type: {payload_type}")
-                if payload_type == 0: # Telemetry payload
+                if payload_type == TELEM_MSG_ID: # Telemetry payload
                     data = struct.unpack("<BhhHhHffBBB?h", payload) # Use endian to remove padding
                     self.flight_data.roll = float(data[1]) / 100
                     self.flight_data.pitch = float(data[2]) / 100
@@ -122,13 +126,14 @@ class Input(QObject):
                     self.flight_data.alt_setpoint = float(data[12]) / 10
 
                     self.bytes_read += payload_length + 3 # Add 3 because header
-                    if time.time() - self.prev_rate_calc_time >= self.rate_calc_dt:
-                        self.flight_data.packet_rate = self.bytes_read / self.rate_calc_dt
+                    elapsed = time.time() - self.prev_rate_calc_time
+                    if elapsed >= self.rate_calc_dt:
+                        self.flight_data.packet_rate = self.bytes_read / elapsed
                         self.bytes_read = 0
                         self.prev_rate_calc_time = time.time()
                     
                     self.flight_data_updated.emit(self.flight_data)
-                elif payload_type == 1 or payload_type == 2 or payload_type == 3 or payload_type == 4: # Command/waypoint/landing target acknowledgement payload
+                else: # Acknowledgement
                     self.command_queue.remove_payload(payload)
             except:
                 print("Payload unpacking exception occurred")

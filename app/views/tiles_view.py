@@ -33,12 +33,18 @@ class TilesView(QWidget):
         self.bottom_right_lon_label = QLabel("Bottom Right Lon")
         self.bottom_right_lon_label.setStyleSheet("font-size: 12pt;")
 
+        self.min_zoom_label = QLabel("Min Zoom")
+        self.min_zoom_label.setStyleSheet("font-size: 12pt;")
+
+        self.max_zoom_label = QLabel("Max Zoom")
+        self.max_zoom_label.setStyleSheet("font-size: 12pt;")
+
         layout.addRow(self.top_left_lat_label, self.top_left_lat_input)
         layout.addRow(self.top_left_lon_label, self.top_left_lon_input)
         layout.addRow(self.bottom_right_lat_label, self.bottom_right_lat_input)
         layout.addRow(self.bottom_right_lon_label, self.bottom_right_lon_input)
-        layout.addRow(QLabel("Min Zoom"), self.min_zoom_input)
-        layout.addRow(QLabel("Max Zoom"), self.max_zoom_input)
+        layout.addRow(self.min_zoom_label, self.min_zoom_input)
+        layout.addRow(self.max_zoom_label, self.max_zoom_input)
 
         self.download_btn = QPushButton("Download Tiles")
         layout.addRow(self.download_btn)

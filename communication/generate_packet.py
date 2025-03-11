@@ -1,17 +1,17 @@
 from lib.cobs import cobs
 import struct
 
-def get_cmd_payload(cmd):
-    # Payload: Message ID + Command Byte
-    return bytes([1]) + cmd
+TELEM_MSG_ID = 0
+WPT_MSG_ID = 1
+PARAMS_MSG_ID = 2
 
-def get_wpt_payload(wp, wp_idx):
+def get_wpt_payload(wp, wp_idx, num_waypoints):
     # Payload: Message ID + Waypoint Index + Waypoint
     # Equals sign to remove padding
-    return struct.pack("=BBB3f", 2, wp_idx, wp.type.value, wp.lat, wp.lon, wp.alt)
+    return struct.pack("=BBBB3f", WPT_MSG_ID, wp_idx, num_waypoints, wp.type.value, wp.lat, wp.lon, wp.alt)
 
 def get_params_payload(values, format):
-    return bytes([4]) + struct.pack(format, *values)
+    return bytes([PARAMS_MSG_ID]) + struct.pack(format, *values)
 
 def get_pkt(payload):
     # Start byte, length byte, COBS byte, then payload

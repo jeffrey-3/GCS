@@ -5,7 +5,7 @@ import math
 from app.utils.data_structures import *
 import time
 
-class RealtimeAltPlot(pg.PlotWidget):
+class LiveAltView(pg.PlotWidget):
     def __init__(self):
         super().__init__()
 
