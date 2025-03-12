@@ -14,15 +14,17 @@ class PlanController:
     def save_file(self):
         options = QFileDialog.Options()
         file_path, _ = QFileDialog.getSaveFileName(self.view, "Save JSON File", 'plan_{date:%Y_%m_%d_%H_%M_%S}.json'.format(date=datetime.datetime.now()), "JSON Files (*.json)", options=options)
-        self.model.save_file(self.view.getWaypoints(), file_path)
+        if not self.model.save_file(self.view.getWaypoints(), file_path):
+            QMessageBox.information(self.view, "Error", "Cannot export file. Fields missing.")
     
     def open_flightplan(self):
         file_path, _ = QFileDialog.getOpenFileName(self.view, "Open File", "", "All Files (*)")
         if file_path:
-            waypoints = self.model.process_flightplan_file(file_path)
-            if waypoints:
-                self.view.load_waypoints(waypoints)
+            if self.model.process_flightplan_file(file_path):
+                self.view.load_waypoints(self.model.get_waypoints())
                 self.view.table.clearSelection()
+            else:
+                QMessageBox.information(self.view, "Error", "File format incorrect")
     
     def waypoints_updated(self, waypoints):
         print("Plan Controller: Waypoints Updated")

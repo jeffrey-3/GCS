@@ -20,7 +20,7 @@ class PayloadQueue:
         with self.lock:
             if any(p == payload for p, _ in self.queue):
                 return
-            expiry_time = time.time() + self.timeout
+            expiry_time = time.time() + self.timeout + self.timeout * len(self.queue)
             self.queue.append((payload, expiry_time))
     
     def remove_payload(self, payload):

@@ -5,6 +5,7 @@ class ParamsView(QWidget):
     def __init__(self):
         super().__init__()
         self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
 
         self.layout.addWidget(QLabel("<h1>Parameters</h1>"))
 
@@ -17,4 +18,4 @@ class ParamsView(QWidget):
         self.layout.addWidget(self.params_file_input)
         self.layout.addWidget(self.params_btn)
 
-        self.setLayout(self.layout)
+        self.layout.addStretch()

@@ -5,7 +5,8 @@ class ConnectView(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.layout = QGridLayout()
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
 
         self.layout.addWidget(QLabel("<h1>Connection</h1>"))
 
@@ -23,8 +24,4 @@ class ConnectView(QWidget):
         self.refresh_button.setStyleSheet("font-size: 12pt;")
         self.layout.addWidget(self.refresh_button)
 
-        self.setLayout(self.layout)
-
-        self.continue_btn = QPushButton("START MISSION")
-        self.continue_btn.setStyleSheet("font-size: 24pt;")
-        self.layout.addWidget(self.continue_btn)
+        self.layout.addStretch()

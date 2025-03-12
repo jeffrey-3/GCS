@@ -47,6 +47,7 @@ class TilesView(QWidget):
         layout.addRow(self.max_zoom_label, self.max_zoom_input)
 
         self.download_btn = QPushButton("Download Tiles")
+        self.download_btn.setStyleSheet("font-size: 12pt;")
         layout.addRow(self.download_btn)
 
         self.setLayout(layout)

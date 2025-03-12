@@ -48,12 +48,12 @@ class PFDView(QLabel):
         # Speed scale
         self.speed_scale_spacing = 100
         self.speed_scale_n_ticks = 20
-        self.speed_scale_intervals = 5
+        self.speed_scale_intervals = 2
 
         # Altitude scale
         self.altitude_scale_spacing = 100
         self.altitude_scale_n_ticks = 20
-        self.altitude_scale_intervals = 5
+        self.altitude_scale_intervals = 2
 
         # Flight director
         self.flight_director_thickness = 5

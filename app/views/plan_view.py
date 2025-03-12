@@ -11,6 +11,7 @@ class PlanView(QWidget):
         super().__init__()
 
         self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
 
         self.layout.addWidget(QLabel("<h1>Flight Plan</h1>"))
 
@@ -31,6 +32,7 @@ class PlanView(QWidget):
         
         # Buttons for adding and removing rows
         buttonLayout = QGridLayout()
+        self.layout.addLayout(buttonLayout)
         self.addButton = QPushButton("Add Waypoint")
         self.addButton.setStyleSheet("font-size: 12pt;")
         self.removeButton = QPushButton("Remove Selected")
@@ -47,10 +49,8 @@ class PlanView(QWidget):
         buttonLayout.addWidget(self.removeButton, 0, 1)
         buttonLayout.addWidget(self.importButton, 1, 0)
         buttonLayout.addWidget(self.exportButton, 1, 1)
-        
-        self.layout.addLayout(buttonLayout)
 
-        self.setLayout(self.layout)
+        self.layout.addStretch()
 
         self.table.cellChanged.connect(self.on_cell_changed)
     
@@ -129,7 +129,7 @@ class PlanView(QWidget):
                 land_hdg = calculate_bearing((waypoints[-2].lat, waypoints[-2].lon), (waypoints[-1].lat, waypoints[-1].lon))
 
                 self.landing_label.setText(f"Glideslope Angle: {gs_angle:.1f}\nLanding Heading: {land_hdg:.1f}")
+            
+            self.updated_waypoints.emit(waypoints)
         else:
             self.landing_label.setText("Glideslope Angle:\nLanding Heading:")
-        
-        self.updated_waypoints.emit(waypoints)
