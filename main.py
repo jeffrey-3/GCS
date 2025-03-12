@@ -6,9 +6,4 @@ if __name__ == "__main__":
     app = QApplication([])
     main_window = MainWindow(app)
     main_window.showFullScreen()
-    app.exec()
-
-
-# Does not deselect when testing started and you have selected
-
-# Deleting last waypoint doesn't work
+    app.exec() 

@@ -27,16 +27,16 @@ class TilesView(QWidget):
         self.top_left_lon_label = QLabel("Top Left Lon:")
         self.top_left_lon_label.setStyleSheet("font-size: 12pt;")
 
-        self.bottom_right_lat_label = QLabel("Bottom Right Lat")
+        self.bottom_right_lat_label = QLabel("Bottom Right Lat:")
         self.bottom_right_lat_label.setStyleSheet("font-size: 12pt;")
 
-        self.bottom_right_lon_label = QLabel("Bottom Right Lon")
+        self.bottom_right_lon_label = QLabel("Bottom Right Lon:")
         self.bottom_right_lon_label.setStyleSheet("font-size: 12pt;")
 
-        self.min_zoom_label = QLabel("Min Zoom")
+        self.min_zoom_label = QLabel("Min Zoom:")
         self.min_zoom_label.setStyleSheet("font-size: 12pt;")
 
-        self.max_zoom_label = QLabel("Max Zoom")
+        self.max_zoom_label = QLabel("Max Zoom:")
         self.max_zoom_label.setStyleSheet("font-size: 12pt;")
 
         layout.addRow(self.top_left_lat_label, self.top_left_lat_input)

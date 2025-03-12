@@ -1,3 +1,7 @@
+from app.utils.tile_downloader import TileDownloader
+from app.utils.data_structures import *
+from app.utils.utils import *
+import json
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from app.utils.data_structures import *
@@ -5,15 +9,49 @@ from app.utils.utils import *
 import json
 import datetime
 
-class PlanModel(QObject):
+class ConfigModel(QObject):
     waypoints_updated = pyqtSignal(list)
     map_clicked_signal = pyqtSignal(tuple)
 
     def __init__(self):
         super().__init__()
-
+        self.params_values = None
+        self.params_format = None
         self.waypoints = None
+    
+    def process_params_file(self, path):
+        try:
+            with open(path, "r") as file:
+                data = json.load(file)
+            
+            self.params_format = data['format']
+            params = data['params']
+            self.params_values = []
+            
+            for key in params:
+                self.params_values.extend(flatten_array(params[key]))
+            
+            return True  # Success
+        except Exception as e:
+            print(f"Error processing params file: {e}")
+            return False  # Failure
+    
+    def get_params_values(self):
+        return self.params_values
 
+    def get_params_format(self):
+        return self.params_format
+    
+    # Tiles
+    def download(self, top_left_lat, top_left_lon, bottom_right_lat, bottom_right_lon, min_zoom, max_zoom):
+        downloader = TileDownloader(threads=10)
+        downloader.download_all_tiles((top_left_lat, top_left_lon), 
+                                      (bottom_right_lat, bottom_right_lon), 
+                                      min_zoom, 
+                                      max_zoom)
+
+        # QMessageBox.information(self, "Status", "Completed download")
+    
     def save_file(self, waypoints, file_path):
         if waypoints:
             json_data = [

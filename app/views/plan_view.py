@@ -54,12 +54,12 @@ class PlanView(QWidget):
 
         self.table.cellChanged.connect(self.on_cell_changed)
     
-    def getWaypoints(self):
+    def get_waypoints(self):
         waypoints = []
         for row in range(self.table.rowCount()):
             for col in range(self.table.columnCount()):
                 if not self.table.item(row, col) and not self.table.cellWidget(row, col):
-                    return []
+                    return [], False
             type = self.table.cellWidget(row, 0).currentIndex()
             lat = self.table.item(row, 1).text()
             lon = self.table.item(row, 2).text()
@@ -67,8 +67,8 @@ class PlanView(QWidget):
             if is_float(lat) and is_float(lon) and is_float(alt):
                 waypoints.append(Waypoint(WaypointType(type), float(lat), float(lon), float(alt)))
             else:
-                return []
-        return waypoints
+                return [], False
+        return waypoints, True
 
     def addWaypoint(self, lat="", lon="", alt=""):
         rowPosition = self.table.rowCount()
@@ -114,22 +114,23 @@ class PlanView(QWidget):
         self.table.clearSelection()
 
     def on_cell_changed(self):
-        waypoints = self.getWaypoints()
-        if waypoints:
-            land_wp_exists = False
-            for waypoint in waypoints:
-                if waypoint.type == WaypointType.LAND:
-                    land_wp_exists = True
-
-            if land_wp_exists:
-                position_diff = geodesic((waypoints[-1].lat, waypoints[-1].lon), (waypoints[-2].lat, waypoints[-2].lon)).meters
-                alt_diff = waypoints[-1].alt - waypoints[-2].alt
-                gs_angle = math.atan(alt_diff / position_diff) * 180 / math.pi
-                
-                land_hdg = calculate_bearing((waypoints[-2].lat, waypoints[-2].lon), (waypoints[-1].lat, waypoints[-1].lon))
-
-                self.landing_label.setText(f"Glideslope Angle: {gs_angle:.1f}\nLanding Heading: {land_hdg:.1f}")
-            
+        waypoints, success = self.get_waypoints()
+        if success:
             self.updated_waypoints.emit(waypoints)
-        else:
-            self.landing_label.setText("Glideslope Angle:\nLanding Heading:")
+
+            if len(waypoints) > 0:
+                land_wp_exists = False
+                for waypoint in waypoints:
+                    if waypoint.type == WaypointType.LAND:
+                        land_wp_exists = True
+
+                if land_wp_exists:
+                    position_diff = geodesic((waypoints[-1].lat, waypoints[-1].lon), (waypoints[-2].lat, waypoints[-2].lon)).meters
+                    alt_diff = waypoints[-1].alt - waypoints[-2].alt
+                    gs_angle = math.atan(alt_diff / position_diff) * 180 / math.pi
+                    
+                    land_hdg = calculate_bearing((waypoints[-2].lat, waypoints[-2].lon), (waypoints[-1].lat, waypoints[-1].lon))
+
+                    self.landing_label.setText(f"Glideslope Angle: {gs_angle:.1f}\nLanding Heading: {land_hdg:.1f}")
+            else:
+                self.landing_label.setText("Glideslope Angle:\nLanding Heading:")

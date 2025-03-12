@@ -5,24 +5,20 @@ from app.views.pfd_view import PFDView
 from app.views.data_view import DataView
 from app.views.raw_view import RawView
 from app.views.live_alt_view import LiveAltView
-from app.views.tiles_view import TilesView
 from app.views.map_view import MapView
 from app.views.altitude_view import AltitudeGraph
-from app.views.connect_view import ConnectView
-from app.views.params_view import ParamsView
-from app.views.plan_view import PlanView
-from app.models.tiles_model import TilesModel
-from app.models.plan_model import PlanModel
+from app.views.params_page_view import ParamsPageView
+from app.views.plan_page_view import PlanPageView
 from app.models.telemetry_model import TelemetryModel
-from app.models.params_model import ParamsModel
-from app.controllers.params_controller import ParamsController
-from app.controllers.connect_controller import ConnectController
-from app.controllers.plan_controller import PlanController
-from app.controllers.tiles_controller import TilesController
+from app.models.config_model import ConfigModel
+from app.views.connect_page_view import ConnectPageView
 from app.controllers.raw_controller import RawController
 from app.controllers.live_alt_controller import LiveAltController
 from app.controllers.pfd_controller import PFDController
 from app.controllers.altitude_controller import AltController
+from app.controllers.plan_page_controller import PlanPageController
+from app.controllers.connect_page_controller import ConnectPageController
+from app.controllers.params_page_controller import ParamsPageController
 from app.controllers.map_controller import MapController
 from app.controllers.data_controller import DataController
 from app.utils.data_structures import *
@@ -33,6 +29,9 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.app = app
         self.init_ui()
+        self.params_page_controller.complete_signal.connect(self.next_page)
+        self.plan_page_controller.complete_signal.connect(self.next_page)
+        self.connect_page_controller.complete_signal.connect(self.start)
 
     def init_ui(self):
         self.apply_dark_theme()
@@ -46,9 +45,6 @@ class MainWindow(QMainWindow):
         self.main_layout = QHBoxLayout()
         self.left_layout = QVBoxLayout()
         self.right_layout = QGridLayout()
-        self.scroll_layout1 = QVBoxLayout()
-        self.scroll_layout2 = QVBoxLayout()
-        self.scroll_layout3 = QVBoxLayout()
 
         self.main_layout.addLayout(self.left_layout)
         self.main_layout.addLayout(self.right_layout, 2)
@@ -86,11 +82,11 @@ class MainWindow(QMainWindow):
         Map
         """
         self.map_view = MapView()
-        self.map_controller = MapController(self.map_view, self.plan_model, self.telemetry_model)
+        self.map_controller = MapController(self.map_view, self.config_model, self.telemetry_model)
         self.right_layout.addWidget(self.map_view)
 
         self.altitude_graph = AltitudeGraph()
-        self.alt_controller = AltController(self.altitude_graph, self.plan_model)
+        self.alt_controller = AltController(self.altitude_graph, self.config_model)
         self.right_layout.addWidget(self.altitude_graph)
 
         self.live_alt_view = LiveAltView()
@@ -102,94 +98,34 @@ class MainWindow(QMainWindow):
         self.stacked_widget = QStackedWidget()
         self.left_layout.addWidget(self.stacked_widget)
 
-        # Page 1: Parameters
-        self.scroll_area1 = QScrollArea()
-        self.scroll_area1.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        self.scroll_area1.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.scroll_area1.setWidgetResizable(True)
-
-        self.params_view = ParamsView()
-        self.params_model = ParamsModel()
-        self.params_controller = ParamsController(self.params_view, self.params_model)
-        self.scroll_layout1.addWidget(self.params_view)
-
-        container1 = QWidget()
-        container1.setLayout(self.scroll_layout1)
-        self.scroll_area1.setWidget(container1)
-        self.stacked_widget.addWidget(self.scroll_area1)
-
-        # Page 2: Flight plan
-        self.scroll_area2 = QScrollArea()
-        self.scroll_area2.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        self.scroll_area2.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.scroll_area2.setWidgetResizable(True)
-
-        self.plan_view = PlanView()
-        self.plan_model = PlanModel()
-        self.plan_controller = PlanController(self.plan_view, self.plan_model)
-        self.scroll_layout2.addWidget(self.plan_view)
-
-        self.tiles_model = TilesModel()
-        self.tiles_view = TilesView()
-        self.tiles_controller = TilesController(self.tiles_view, self.tiles_model)
-        self.scroll_layout2.addWidget(self.tiles_view)
-
-        container2 = QWidget()
-        container2.setLayout(self.scroll_layout2)
-        self.scroll_area2.setWidget(container2)
-        self.stacked_widget.addWidget(self.scroll_area2)
-
-        # Page 3: Connect
-        self.scroll_area3 = QScrollArea()
-        self.scroll_area3.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        self.scroll_area3.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.scroll_area3.setWidgetResizable(True)
-
-        self.connect_view = ConnectView()
+        self.config_model = ConfigModel()
         self.telemetry_model = TelemetryModel()
-        self.connect_controller = ConnectController(self.connect_view, self.telemetry_model, self.plan_model, self.params_model)
-        self.scroll_layout3.addWidget(self.connect_view)
 
-        container3 = QWidget()
-        container3.setLayout(self.scroll_layout3)
-        self.scroll_area3.setWidget(container3)
-        self.stacked_widget.addWidget(self.scroll_area3)
+        self.params_page_view = ParamsPageView(self.config_model)
+        self.params_page_controller = ParamsPageController(self.params_page_view, self.config_model)
+        self.stacked_widget.addWidget(self.params_page_view)
 
-        # Next button
-        self.next_btn = QPushButton("Next")
-        self.next_btn.setStyleSheet("font-size: 24pt; font-weight: bold;")
-        self.next_btn.clicked.connect(self.next_page)
-        self.left_layout.addWidget(self.next_btn)
+        self.plan_page_view = PlanPageView(self.config_model)
+        self.plan_page_controller = PlanPageController(self.plan_page_view, self.config_model)
+        self.stacked_widget.addWidget(self.plan_page_view)
 
+        self.connect_page_view = ConnectPageView(self.telemetry_model)
+        self.connect_page_controller = ConnectPageController(self.connect_page_view, self.telemetry_model)
+        self.stacked_widget.addWidget(self.connect_page_view)
+    
     def next_page(self):
         current_index = self.stacked_widget.currentIndex()
-        if current_index == 0:
-            if self.params_model.get_params_values():
-                self.stacked_widget.setCurrentIndex(current_index + 1)
-            else:
-                QMessageBox.information(self, "Error", "Parameters missing")
-        elif current_index == 1:
-            if self.plan_model.get_waypoints():
-                self.stacked_widget.setCurrentIndex(current_index + 1)
-                self.next_btn.setText("START")
-            else:
-                QMessageBox.information(self, "Error", "Flight plan missing")
-        elif current_index == 2:
-            port = self.connect_controller.get_port()
-            if self.telemetry_model.connect(port):
-                self.start()
-            else:
-                QMessageBox.information(self, "Error", "COM port incorrect")
+        self.stacked_widget.setCurrentIndex(current_index + 1)
     
     def start(self):
         # Send parameters and waypoints to vehicle
-        waypoints = self.plan_model.get_waypoints()
-        params_values =  self.params_model.get_params_values()
-        params_format = self.params_model.get_params_format()
+        waypoints = self.config_model.get_waypoints()
+        params_values =  self.config_model.get_params_values()
+        params_format = self.config_model.get_params_format()
         self.telemetry_model.send_params(waypoints, params_values, params_format)
         
+        # Hide configuration and show flight display
         self.stacked_widget.hide()
-        self.next_btn.hide()
         self.pfd_view.show()
         self.tabs.show()
         self.live_alt_view.show()

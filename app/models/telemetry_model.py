@@ -9,14 +9,16 @@ class TelemetryModel(QObject):
 
     def __init__(self):
         super().__init__()
-
         self.input = Input()
         self.logger = Logger()
-
+        self.port = ""
         self.input.flight_data_updated.connect(self.update)
+    
+    def set_port(self, port):
+        self.port = port
 
-    def connect(self, port):
-        return self.input.connect_and_start_thread(port)
+    def connect(self):
+        return self.input.connect_and_start_thread(self.port)
 
     def update(self, flight_data):
         if flight_data.center_lat == 0 and flight_data.gps_fix:

@@ -3,17 +3,14 @@ from PyQt5.QtWidgets import *
 import serial.tools.list_ports
 
 class ConnectController(QObject):
-    def __init__(self, view, telem_model, plan_model, params_model):
+    def __init__(self, view, model):
         super().__init__()
-
         self.view = view
-        self.telem_model = telem_model
-        self.plan_model = plan_model
-        self.params_model = params_model
-
+        self.model = model
         self.view.refresh_button.clicked.connect(self.refresh_com_ports)
-
+        self.view.com_port_dropdown.currentIndexChanged.connect(self.port_changed)
         self.refresh_com_ports()
+        self.port_changed()
 
     def refresh_com_ports(self):
         """Refresh the list of available COM ports."""
@@ -23,5 +20,5 @@ class ConnectController(QObject):
             self.view.com_port_dropdown.addItem(port.device)
         self.view.com_port_dropdown.addItem("Testing")
     
-    def get_port(self):
-        return self.view.com_port_dropdown.currentText()
+    def port_changed(self):
+        self.model.set_port(self.view.com_port_dropdown.currentText())
