@@ -10,16 +10,37 @@
         "roll_lim_deg": 50,
         "min_dist_wp": 50,
         "guidance_kp": 0.03,
-        "flare_alt": 3,
+        "flare_alt": 5,
         "flare_sink_rate": 0.2,
         "touchdown_aspd_thresh": 10,
         "takeoff_alt": 10,
         "takeoff_ptch": 15,
-        "max_duty": [2000, 2000, 2000, 2000, 2000, 2000],
-        "min_duty": [1000, 1000, 1000, 1000, 1000, 1000],
+        "max_duty": [
+            2000,
+            2000,
+            2000,
+            2000,
+            2000,
+            2000
+        ],
+        "min_duty": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+        ],
         "rc_in_max": 1900,
         "rc_in_min": 1100,
-        "rev_channels": [false, true, false, false, false, false],
+        "rev_channels": [
+            false,
+            true,
+            false,
+            false,
+            false,
+            false
+        ],
         "aileron_ch": 0,
         "elevator_ch": 1,
         "throttle_ch": 2,
@@ -38,14 +59,30 @@
         "ahrs_beta": 0.005,
         "mag_decl": -10.2,
         "ahrs_acc_max": 2,
-        "hard_iron": [0, 0, 0],
+        "hard_iron": [
+            0,
+            0,
+            0
+        ],
         "soft_iron": [
-            [1, 0, 0], 
-            [0, 1, 0], 
-            [0, 0, 1]
+            [
+                1,
+                0,
+                0
+            ],
+            [
+                0,
+                1,
+                0
+            ],
+            [
+                0,
+                0,
+                1
+            ]
         ],
         "baro_r": 1000,
         "gnss_r": 1000,
         "gnss_alt_r": 1000
     }
-}  
+}

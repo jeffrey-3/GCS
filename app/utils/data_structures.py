@@ -33,13 +33,8 @@ class FlightData:
     center_lat = 0
     center_lon = 0
 
-class WaypointType(Enum):
-    WAYPOINT = 0
-    LAND = 1
-
 @dataclass
 class Waypoint:
-    type: WaypointType
     lat: float
     lon: float
     alt: float

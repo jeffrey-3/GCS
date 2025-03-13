@@ -8,11 +8,14 @@ import time
 class LiveAltView(pg.PlotWidget):
     def __init__(self):
         super().__init__()
-
-        self.setFixedHeight(250)
-        self.setFixedWidth(500)
         
+        self.setMenuEnabled(False)
+        self.hideButtons()
+        self.showGrid(x=True, y=True)
+        self.getViewBox().setMouseEnabled(x=False, y=False)
         self.setBackground(None)
+        self.getAxis('left').setStyle(tickFont=pg.QtGui.QFont('Arial', 16))
+        self.getAxis('bottom').setStyle(tickFont=pg.QtGui.QFont('Arial', 16))
 
         self.x_data = []
         self.alt_data = []

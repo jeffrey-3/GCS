@@ -18,21 +18,23 @@ class MainController:
         self.view.stacked_widget.setCurrentIndex(self.view.stacked_widget.count() - 1)
 
     def reconnect(self):
-        # Hide configuration and show flight display
-        self.view.stacked_widget.hide()
-        self.view.pfd_view.show()
-        self.view.tabs.show()
-        self.view.live_alt_view.show()
+        self.show_flight_view()
 
     def start(self):
+        self.config_model.save_last_flightplan_params()
+
         # Send parameters and waypoints to vehicle
         waypoints = self.config_model.get_waypoints()
         params_values =  self.config_model.get_params_values()
         params_format = self.config_model.get_params_format()
         self.telemetry_model.send_params(waypoints, params_values, params_format)
         
+        self.show_flight_view()
+    
+    def show_flight_view(self):
         # Hide configuration and show flight display
         self.view.stacked_widget.hide()
         self.view.pfd_view.show()
         self.view.tabs.show()
         self.view.live_alt_view.show()
+        self.view.state_view.show()

@@ -24,13 +24,14 @@ class ConfigModel(QObject):
         try:
             with open(path, "r") as file:
                 data = json.load(file)
+                self.params_json = data
             
             self.params_format = data['format']
-            self.params_json = data['params']
+            params = data['params']
             self.params_values = []
             
-            for key in self.params_json:
-                self.params_values.extend(flatten_array(self.params_json[key]))
+            for key in params:
+                self.params_values.extend(flatten_array(params[key]))
             
             return True  # Success
         except Exception as e:
@@ -56,7 +57,7 @@ class ConfigModel(QObject):
     def save_file(self, waypoints, file_path):
         if waypoints:
             json_data = [
-                {"type": wp.type.value, "lat": wp.lat, "lon": wp.lon, "alt": wp.alt} 
+                {"lat": wp.lat, "lon": wp.lon, "alt": wp.alt} 
                 for wp in waypoints
             ]
             
@@ -72,7 +73,7 @@ class ConfigModel(QObject):
                 json_data = json.load(f)
             
             self.waypoints = [
-                Waypoint(WaypointType(wp['type']), float(wp['lat']), float(wp['lon']), float(wp['alt'])) 
+                Waypoint(float(wp['lat']), float(wp['lon']), float(wp['alt'])) 
                 for wp in json_data
             ]
             
@@ -83,6 +84,7 @@ class ConfigModel(QObject):
             return False  # Failure
     
     def update_waypoints(self, waypoints):
+        self.waypoints = waypoints
         self.waypoints_updated.emit(waypoints)
     
     def map_clicked(self, pos):
@@ -93,3 +95,17 @@ class ConfigModel(QObject):
     
     def get_params_json(self):
         return self.params_json
+
+    def save_last_flightplan_params(self):
+        json_data = [
+            {"lat": wp.lat, "lon": wp.lon, "alt": wp.alt} 
+            for wp in self.waypoints
+        ]
+
+        f = open("app/resources/last_flightplan.json", "w")
+        json.dump(json_data, f, indent=4)
+
+        f = open("app/resources/last_params.json", 'w')
+        json.dump(self.params_json, f, indent=4)
+
+        print("Last flight plan and params saved")

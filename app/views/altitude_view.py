@@ -7,12 +7,13 @@ from app.utils.data_structures import *
 class AltitudeGraph(pg.PlotWidget):
     def __init__(self):
         super().__init__()
-        self.setFixedHeight(250)
         self.setMenuEnabled(False)
         self.hideButtons()
         self.showGrid(x=True, y=True)
         self.getViewBox().setMouseEnabled(x=False, y=False)
         self.setBackground(None)
+        self.getAxis('left').setStyle(tickFont=pg.QtGui.QFont('Arial', 16))
+        self.getAxis('bottom').setStyle(tickFont=pg.QtGui.QFont('Arial', 16))
     
     def update(self, waypoints, center_lat, center_lon):
         self.clear()
@@ -38,7 +39,9 @@ class AltitudeGraph(pg.PlotWidget):
         # Add waypoint number labels
         for i in range(len(waypoints)):
             s = str(i + 1)
-            if waypoints[i].type == WaypointType.LAND:
+            if i == 0:
+                s = "H"
+            elif i == len(waypoints) - 1:
                 s = "L"
             text = pg.TextItem(text=s, color=QColor("white"), anchor=(0.5, 0.5))
             text.setFont(QFont("Arial", 10))

@@ -60,12 +60,11 @@ class PlanView(QWidget):
             for col in range(self.table.columnCount()):
                 if not self.table.item(row, col) and not self.table.cellWidget(row, col):
                     return [], False
-            type = self.table.cellWidget(row, 0).currentIndex()
             lat = self.table.item(row, 1).text()
             lon = self.table.item(row, 2).text()
             alt = self.table.item(row, 3).text()
             if is_float(lat) and is_float(lon) and is_float(alt):
-                waypoints.append(Waypoint(WaypointType(type), float(lat), float(lon), float(alt)))
+                waypoints.append(Waypoint(float(lat), float(lon), float(alt)))
             else:
                 return [], False
         return waypoints, True
@@ -94,14 +93,16 @@ class PlanView(QWidget):
         for row in range(len(waypoints)):
             self.table.insertRow(row)
 
-            combo = QComboBox()
-            combo.addItems(["WAYPOINT", "LANDING"])
-            if waypoints[row].type == WaypointType.WAYPOINT:
-                combo.setCurrentIndex(0)
-            if waypoints[row].type == WaypointType.LAND:
-                combo.setCurrentIndex(1)
+            if row == 0:
+                type = "TAKEOFF"
+            elif row == len(waypoints) - 1:
+                type = "LAND"
+            else:
+                type = "WAYPOINT"
 
-            self.table.setCellWidget(row, 0, combo)
+            type_item = QTableWidgetItem(type)
+            type_item.setFlags(type_item.flags() & ~Qt.ItemIsEditable)  # Make it read-only
+            self.table.setItem(row, 0, type_item)
             self.table.setItem(row, 1, QTableWidgetItem(str(waypoints[row].lat)))
             self.table.setItem(row, 2, QTableWidgetItem(str(waypoints[row].lon)))
             self.table.setItem(row, 3, QTableWidgetItem(str(waypoints[row].alt)))
@@ -118,20 +119,14 @@ class PlanView(QWidget):
         if success:
             self.updated_waypoints.emit(waypoints)
 
-            if len(waypoints) > 0:
-                land_wp_exists = False
-                for waypoint in waypoints:
-                    if waypoint.type == WaypointType.LAND:
-                        land_wp_exists = True
+            if len(waypoints) > 2:
+                position_diff = geodesic((waypoints[-1].lat, waypoints[-1].lon), (waypoints[-2].lat, waypoints[-2].lon)).meters
+                alt_diff = waypoints[-1].alt - waypoints[-2].alt
+                gs_angle = math.atan(alt_diff / position_diff) * 180 / math.pi
+                
+                land_hdg = calculate_bearing((waypoints[-2].lat, waypoints[-2].lon), (waypoints[-1].lat, waypoints[-1].lon))
 
-                if land_wp_exists:
-                    position_diff = geodesic((waypoints[-1].lat, waypoints[-1].lon), (waypoints[-2].lat, waypoints[-2].lon)).meters
-                    alt_diff = waypoints[-1].alt - waypoints[-2].alt
-                    gs_angle = math.atan(alt_diff / position_diff) * 180 / math.pi
-                    
-                    land_hdg = calculate_bearing((waypoints[-2].lat, waypoints[-2].lon), (waypoints[-1].lat, waypoints[-1].lon))
-
-                    self.landing_label.setText(f"Glideslope Angle: {gs_angle:.1f}\nLanding Heading: {land_hdg:.1f}")
+                self.landing_label.setText(f"Glideslope Angle: {gs_angle:.1f}\nLanding Heading: {land_hdg:.1f}")
             else:
                 self.landing_label.setText("Glideslope Angle:\nLanding Heading:")
     

@@ -71,26 +71,7 @@ class MapView(QGraphicsView):
         self.draw_tiles()
         self.draw_waypoints()
         if not self.flight_data.center_lat == 0:
-            self.draw_home()
             self.draw_arrow()
-        
-    def draw_home(self):
-        x, y = self.lat_lon_to_map_coords(self.flight_data.center_lat, self.flight_data.center_lon)
-        point = QPointF(x, y)
-
-        radius = 20
-        circle = QGraphicsEllipseItem(QRectF(-radius, -radius, 2 * radius, 2 * radius))
-        circle.setBrush(QBrush(Qt.black))
-        circle.setPen(QPen(Qt.magenta, 5))
-        circle.setPos(point)
-        self.scene.addItem(circle)
-
-        text = QGraphicsTextItem("H")  # Text content (e.g., index + 1)
-        text.setFont(QFont("Arial", 10))  # Set font and size
-        text.setDefaultTextColor(Qt.white)  # Set text color
-        text.setPos(point.x() - text.boundingRect().width() / 2,  # Center the text horizontally
-                    point.y() - text.boundingRect().height() / 2)  # Center the text vertically
-        self.scene.addItem(text)
     
     def set_pixmap_opacity(self, pixmap, opacity):
         """Returns a new QPixmap with the specified opacity."""
@@ -157,7 +138,9 @@ class MapView(QGraphicsView):
 
             for i, point in enumerate(points):
                 s = str(i + 1)
-                if self.waypoints[i].type == WaypointType.LAND:
+                if i == 0:
+                    s = "H"
+                elif i == len(self.waypoints) - 1:
                     s = "L"
 
                 radius = 20

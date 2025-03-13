@@ -6,6 +6,7 @@ from app.views.data_view import DataView
 from app.views.raw_view import RawView
 from app.views.live_alt_view import LiveAltView
 from app.views.map_view import MapView
+from app.views.state_view import StateView
 from app.views.start_page_view import StartPageView
 from app.views.reconnect_page_view import ReconnectPageView
 from app.views.altitude_view import AltitudeGraph
@@ -16,6 +17,7 @@ from app.controllers.raw_controller import RawController
 from app.controllers.live_alt_controller import LiveAltController
 from app.controllers.pfd_controller import PFDController
 from app.controllers.altitude_controller import AltController
+from app.controllers.state_controller import StateController
 from app.controllers.plan_page_controller import PlanPageController
 from app.controllers.reconnect_page_controller import ReconnectPageController
 from app.controllers.connect_page_controller import ConnectPageController
@@ -62,34 +64,42 @@ class MainView(QMainWindow):
         self.pfd_view.hide()
         self.left_layout.addWidget(self.pfd_view)
 
+        self.state_view = StateView()
+        self.state_controller = StateController(self.state_view, self.telemetry_model)
+        self.state_view.hide()
+        self.left_layout.addWidget(self.state_view)
+
         """
         Tabs
         """
         self.tabs = QTabWidget()
+        font = QFont()
+        font.setPointSize(12)
+        self.tabs.setFont(font)
         self.tabs.hide()
         self.left_layout.addWidget(self.tabs)
 
         self.data_view = DataView()
         self.data_controller = DataController(self.data_view, self.telemetry_model)
-        self.tabs.addTab(self.data_view, "Quick")
+        self.tabs.addTab(self.data_view, "Quick (1)")
         
         self.raw_view = RawView()
         self.raw_controller = RawController(self.raw_view, self.telemetry_model)
-        self.tabs.addTab(self.raw_view, "Raw")
+        self.tabs.addTab(self.raw_view, "Raw (2)")
 
     def create_map_widgets(self):
         self.map_view = MapView()
         self.map_controller = MapController(self.map_view, self.config_model, self.telemetry_model)
-        self.right_layout.addWidget(self.map_view)
+        self.right_layout.addWidget(self.map_view, 0, 0, 1, 2)
 
         self.altitude_graph = AltitudeGraph()
         self.alt_controller = AltController(self.altitude_graph, self.config_model)
-        self.right_layout.addWidget(self.altitude_graph)
+        self.right_layout.addWidget(self.altitude_graph, 2, 0, 2, 1)
 
         self.live_alt_view = LiveAltView()
         self.live_alt_controller = LiveAltController(self.live_alt_view, self.telemetry_model)
         self.live_alt_view.hide()
-        self.right_layout.addWidget(self.live_alt_view, 0, 0, Qt.AlignBottom | Qt.AlignRight)
+        self.right_layout.addWidget(self.live_alt_view, 2, 1, 2, 1)
     
     def create_config_widgets(self):
         self.stacked_widget = QStackedWidget()

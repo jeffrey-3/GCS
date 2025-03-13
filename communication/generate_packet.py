@@ -8,7 +8,7 @@ PARAMS_MSG_ID = 2
 def get_wpt_payload(wp, wp_idx, num_waypoints):
     # Payload: Message ID + Waypoint Index + Waypoint
     # Equals sign to remove padding
-    return struct.pack("=BBBB3f", WPT_MSG_ID, wp_idx, num_waypoints, wp.type.value, wp.lat, wp.lon, wp.alt)
+    return struct.pack("=BBB3f", WPT_MSG_ID, wp_idx, num_waypoints, wp.lat, wp.lon, wp.alt)
 
 def get_params_payload(values, format):
     return bytes([PARAMS_MSG_ID]) + struct.pack(format, *values)

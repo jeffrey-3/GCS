@@ -15,4 +15,4 @@ if __name__ == "__main__":
     main_controller = MainController(main_window, telemetry_model, config_model)
     main_window.showFullScreen()
     
-    app.exec() 
+    app.exec()
