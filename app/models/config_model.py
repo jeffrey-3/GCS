@@ -15,6 +15,7 @@ class ConfigModel(QObject):
 
     def __init__(self):
         super().__init__()
+        self.params_json = ""
         self.params_values = None
         self.params_format = None
         self.waypoints = None
@@ -25,11 +26,11 @@ class ConfigModel(QObject):
                 data = json.load(file)
             
             self.params_format = data['format']
-            params = data['params']
+            self.params_json = data['params']
             self.params_values = []
             
-            for key in params:
-                self.params_values.extend(flatten_array(params[key]))
+            for key in self.params_json:
+                self.params_values.extend(flatten_array(self.params_json[key]))
             
             return True  # Success
         except Exception as e:
@@ -89,3 +90,6 @@ class ConfigModel(QObject):
     
     def get_waypoints(self):
         return self.waypoints
+    
+    def get_params_json(self):
+        return self.params_json

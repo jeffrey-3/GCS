@@ -29,5 +29,4 @@ class PlanController:
                 QMessageBox.information(self.view, "Error", "File format incorrect")
     
     def waypoints_updated(self, waypoints):
-        print("Plan Controller: Waypoints Updated")
         self.model.update_waypoints(waypoints)

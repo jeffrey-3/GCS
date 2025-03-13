@@ -22,7 +22,7 @@ class PlanView(QWidget):
         # Table setup
         self.table = QTableWidget()
         self.table.setStyleSheet("font-size: 10pt;")
-        self.table.setMinimumHeight(600)
+        self.table.setMinimumHeight(800)
         self.table.setMinimumWidth(800)
         self.table.setColumnCount(4)
         self.table.setHorizontalHeaderLabels(["Waypoint Type", "Latitude", "Longitude", "Altitude (m)"])
@@ -112,7 +112,7 @@ class PlanView(QWidget):
             self.table.setItem(row, 1, QTableWidgetItem(str(round(pos[0], 7))))
             self.table.setItem(row, 2, QTableWidgetItem(str(round(pos[1], 7))))
         self.table.clearSelection()
-        
+
     def on_cell_changed(self):
         waypoints, success = self.get_waypoints()
         if success:

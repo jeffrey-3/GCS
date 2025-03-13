@@ -16,10 +16,14 @@ class StartPageView(QWidget):
         title.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(title)
 
+        self.layout.addStretch()
+
         self.new_mission_btn = QPushButton("New Mission")
         self.new_mission_btn.setStyleSheet("font-size: 24pt; font-weight: bold;")
         self.new_mission_btn.clicked.connect(self.new_mission_signal.emit)
         self.layout.addWidget(self.new_mission_btn)
+
+        self.layout.addStretch()
 
         self.reconnect_btn = QPushButton("Reconnect")
         self.reconnect_btn.setStyleSheet("font-size: 24pt; font-weight: bold;")
