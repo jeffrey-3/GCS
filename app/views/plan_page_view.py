@@ -26,6 +26,7 @@ class PlanPageView(QScrollArea):
 
         self.next_btn = QPushButton("Next")
         self.next_btn.setStyleSheet("font-size: 24pt; font-weight: bold;")
+        self.next_btn.clicked.connect(self.plan_view.clear_table_selection)
         self.scroll_layout.addWidget(self.next_btn)
 
         container = QWidget()

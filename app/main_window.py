@@ -6,6 +6,7 @@ from app.views.data_view import DataView
 from app.views.raw_view import RawView
 from app.views.live_alt_view import LiveAltView
 from app.views.map_view import MapView
+from app.views.start_page_view import StartPageView
 from app.views.altitude_view import AltitudeGraph
 from app.views.params_page_view import ParamsPageView
 from app.views.plan_page_view import PlanPageView
@@ -29,6 +30,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.app = app
         self.init_ui()
+        self.start_page_view.new_mission_signal.connect(self.next_page)
         self.params_page_controller.complete_signal.connect(self.next_page)
         self.plan_page_controller.complete_signal.connect(self.next_page)
         self.connect_page_controller.complete_signal.connect(self.start)
@@ -100,6 +102,9 @@ class MainWindow(QMainWindow):
 
         self.config_model = ConfigModel()
         self.telemetry_model = TelemetryModel()
+
+        self.start_page_view = StartPageView()
+        self.stacked_widget.addWidget(self.start_page_view)
 
         self.params_page_view = ParamsPageView(self.config_model)
         self.params_page_controller = ParamsPageController(self.params_page_view, self.config_model)

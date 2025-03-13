@@ -112,7 +112,7 @@ class PlanView(QWidget):
             self.table.setItem(row, 1, QTableWidgetItem(str(round(pos[0], 7))))
             self.table.setItem(row, 2, QTableWidgetItem(str(round(pos[1], 7))))
         self.table.clearSelection()
-
+        
     def on_cell_changed(self):
         waypoints, success = self.get_waypoints()
         if success:
@@ -134,3 +134,10 @@ class PlanView(QWidget):
                     self.landing_label.setText(f"Glideslope Angle: {gs_angle:.1f}\nLanding Heading: {land_hdg:.1f}")
             else:
                 self.landing_label.setText("Glideslope Angle:\nLanding Heading:")
+    
+    def clear_table_selection(self):
+        self.table.clearSelection()
+    
+    def mousePressEvent(self, event):
+        super().mousePressEvent(event)
+        self.table.clearSelection()

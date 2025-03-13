@@ -4,8 +4,8 @@ class ParamsController:
     def __init__(self, view, model):
         self.view = view
         self.model = model
-
         self.view.params_btn.clicked.connect(self.open_params)
+        self.model.process_params_file("app/resources/last_params.json")
 
     def open_params(self):
         file_path, _ = QFileDialog.getOpenFileName(self.view, "Open File", "", "All Files (*)")

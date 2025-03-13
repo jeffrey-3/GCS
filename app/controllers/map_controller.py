@@ -3,7 +3,6 @@ class MapController:
         self.view = view
         self.model = model
         self.telemetry_model = telemetry_model
-
         self.telemetry_model.flight_data_updated.connect(self.update_flight_data)
         self.model.waypoints_updated.connect(self.update_waypoints)
         self.view.clicked.connect(self.map_clicked)
