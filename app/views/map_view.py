@@ -70,8 +70,7 @@ class MapView(QGraphicsView):
         self.scene.clear()
         self.draw_tiles()
         self.draw_waypoints()
-        if not self.flight_data.center_lat == 0:
-            self.draw_arrow()
+        self.draw_arrow()
     
     def set_pixmap_opacity(self, pixmap, opacity):
         """Returns a new QPixmap with the specified opacity."""

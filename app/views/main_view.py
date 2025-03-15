@@ -93,7 +93,7 @@ class MainView(QMainWindow):
         self.right_layout.addWidget(self.map_view, 0, 0, 1, 2)
 
         self.altitude_graph = AltitudeGraph()
-        self.alt_controller = AltController(self.altitude_graph, self.config_model)
+        self.alt_controller = AltController(self.altitude_graph, self.config_model, self.telemetry_model)
         self.right_layout.addWidget(self.altitude_graph, 2, 0, 2, 1)
 
         self.live_alt_view = LiveAltView()

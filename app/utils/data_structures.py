@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from enum import Enum
 
 @dataclass
 class FlightData:
@@ -28,10 +27,6 @@ class FlightData:
     heading_setpoint = 0
     alt_setpoint = 0
     speed_setpoint = 0
-
-    # Home position
-    center_lat = 0
-    center_lon = 0
 
 @dataclass
 class Waypoint:

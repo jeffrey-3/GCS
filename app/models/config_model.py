@@ -22,16 +22,14 @@ class ConfigModel(QObject):
     
     def process_params_file(self, path):
         try:
-            with open(path, "r") as file:
-                data = json.load(file)
-                self.params_json = data
+            file = open(path, "r")
+            self.params_json = json.load(file)
             
-            self.params_format = data['format']
-            params = data['params']
+            self.params_format = "="
             self.params_values = []
-            
-            for key in params:
-                self.params_values.extend(flatten_array(params[key]))
+            for param in self.params_json:
+                self.params_format += param["type"]
+                self.params_values.extend(flatten_array(param["value"]))
             
             return True  # Success
         except Exception as e:

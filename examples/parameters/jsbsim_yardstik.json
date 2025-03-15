@@ -71,26 +71,12 @@
     },
     {
         "name": "max_duty",
-        "value": [
-            2000,
-            2000,
-            2000,
-            2000,
-            2000,
-            2000
-        ],
+        "value": [2000, 2000, 2000, 2000, 2000, 2000],
         "type": "6H"
     },
     {
         "name": "min_duty",
-        "value": [
-            1000,
-            1000,
-            1000,
-            1000,
-            1000,
-            1000
-        ],
+        "value": [1000, 1000, 1000, 1000, 1000, 1000],
         "type": "6H"
     },
     {
@@ -105,14 +91,7 @@
     },
     {
         "name": "rev_channels",
-        "value": [
-            false,
-            true,
-            false,
-            false,
-            false,
-            false
-        ],
+        "value": [false, true, false, false, false, false],
         "type": "6?"
     },
     {
@@ -207,31 +186,15 @@
     },
     {
         "name": "hard_iron",
-        "value": [
-            0,
-            0,
-            0
-        ],
+        "value": [0, 0, 0],
         "type": "3f"
     },
     {
         "name": "soft_iron",
         "value": [
-            [
-                1,
-                0,
-                0
-            ],
-            [
-                0,
-                1,
-                0
-            ],
-            [
-                0,
-                0,
-                1
-            ]
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1]
         ],
         "type": "9f"
     },

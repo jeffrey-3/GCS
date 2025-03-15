@@ -4,6 +4,9 @@ from PyQt5.QtGui import QPixmap, QPainter, QFont, QPen, QColor, QBrush, QPolygon
 from app.utils.data_structures import *
 import math
 
+# You can draw pixmap, and then rotate entire pixmap instead of calculating every individual point
+
+
 class PFDView(QLabel):
     def __init__(self):
         super().__init__()
@@ -34,7 +37,7 @@ class PFDView(QLabel):
         self.pitch_scale_spacing = 70
         self.pitch_scale_length_big = 100
         self.pitch_scale_length_small = 70
-        self.pitch_scale_num = 10
+        self.pitch_scale_num = 18
         self.pitch_scale_thickness = 2
         self.pitch_scale_intervals = 5
 

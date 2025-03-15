@@ -4,6 +4,13 @@ from app.utils.data_structures import *
 from geopy.distance import geodesic
 from app.utils.utils import *
 
+class CustomTableWidget(QTableWidget):
+    def __init__(self, *args, **kwargs):
+        super(CustomTableWidget, self).__init__(*args, **kwargs)
+
+    def keyPressEvent(self, event):
+        event.ignore()
+
 class PlanView(QWidget):
     updated_waypoints = pyqtSignal(list)
 
@@ -20,7 +27,8 @@ class PlanView(QWidget):
         self.layout.addWidget(self.landing_label)
         
         # Table setup
-        self.table = QTableWidget()
+        self.table = CustomTableWidget()
+        self.table.setSelectionMode(QTableWidget.SingleSelection)
         self.table.setStyleSheet("font-size: 10pt;")
         self.table.setMinimumHeight(800)
         self.table.setMinimumWidth(800)
@@ -58,7 +66,7 @@ class PlanView(QWidget):
         waypoints = []
         for row in range(self.table.rowCount()):
             for col in range(self.table.columnCount()):
-                if not self.table.item(row, col) and not self.table.cellWidget(row, col):
+                if not self.table.item(row, col):
                     return [], False
             lat = self.table.item(row, 1).text()
             lon = self.table.item(row, 2).text()
@@ -70,23 +78,20 @@ class PlanView(QWidget):
         return waypoints, True
 
     def addWaypoint(self, lat="", lon="", alt=""):
-        rowPosition = self.table.rowCount()
+        rowPosition = self.table.rowCount() - 1 # Insert before last landing waypoint
         self.table.insertRow(rowPosition)
         
-        combo = QComboBox()
-        combo.addItems(["WAYPOINT", "LANDING"])
-        combo.setCurrentIndex(0)
-        self.table.setCellWidget(rowPosition, 0, combo)
+        type_item = QTableWidgetItem("WAYPOINT")
+        type_item.setFlags(type_item.flags() & ~Qt.ItemIsEditable)  # Make it read-only
+        self.table.setItem(rowPosition, 0, type_item)
         self.table.setItem(rowPosition, 1, QTableWidgetItem(lat))
         self.table.setItem(rowPosition, 2, QTableWidgetItem(lon))
         self.table.setItem(rowPosition, 3, QTableWidgetItem(alt))
 
     def removeWaypoint(self):
-        selectedRows = set(index.row() for index in self.table.selectedIndexes())
-        for row in sorted(selectedRows, reverse=True):
-            self.table.removeRow(row)
-        
-        self.on_cell_changed()
+        if self.table.rowCount() > 3 and self.table.currentRow() != 0 and self.table.currentRow() != self.table.rowCount() - 1:
+            self.table.removeRow(self.table.currentRow())
+            self.on_cell_changed()
     
     def load_waypoints(self, waypoints):
         self.table.setRowCount(0) # Remove all rows
@@ -129,6 +134,8 @@ class PlanView(QWidget):
                 self.landing_label.setText(f"Glideslope Angle: {gs_angle:.1f}\nLanding Heading: {land_hdg:.1f}")
             else:
                 self.landing_label.setText("Glideslope Angle:\nLanding Heading:")
+        
+        self.table.clearSelection()
     
     def clear_table_selection(self):
         self.table.clearSelection()

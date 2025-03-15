@@ -16,3 +16,6 @@ def get_params_payload(values, format):
 def get_pkt(payload):
     # Start byte, length byte, COBS byte, then payload
     return bytes([0x00]) + bytes([len(payload)]) + cobs.encode(payload)
+
+def get_payload(packet):
+    return

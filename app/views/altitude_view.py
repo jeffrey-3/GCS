@@ -15,7 +15,7 @@ class AltitudeGraph(pg.PlotWidget):
         self.getAxis('left').setStyle(tickFont=pg.QtGui.QFont('Arial', 16))
         self.getAxis('bottom').setStyle(tickFont=pg.QtGui.QFont('Arial', 16))
     
-    def update(self, waypoints, center_lat, center_lon):
+    def update(self, waypoints, center_lat, center_lon, wp_idx):
         self.clear()
 
         wp_pos = calculate_displacement_meters(waypoints[0].lat, waypoints[0].lon, center_lat, center_lon)
@@ -26,6 +26,9 @@ class AltitudeGraph(pg.PlotWidget):
             dist = math.sqrt((wp_pos[0] - prev_wp_pos[0])**2 + (wp_pos[1] - prev_wp_pos[1])**2)
             x.append(x[i - 1] + dist)
         y = [-wp.alt for wp in waypoints]
+        brush_color = [QColor("black")] * len(x)
+        if wp_idx:
+            brush_color[wp_idx] = QColor(139, 0, 139)
         self.plot(x, 
                 y,
                 pen=pg.mkPen('magenta', width=5), 
@@ -33,7 +36,7 @@ class AltitudeGraph(pg.PlotWidget):
                 brush=QColor(255, 0, 255, 50), 
                 symbol="o", 
                 symbolSize=40, 
-                symbolBrush=QColor("black"), 
+                symbolBrush=brush_color, 
                 symbolPen=pg.mkPen(QColor("magenta"), width=5))
 
         # Add waypoint number labels

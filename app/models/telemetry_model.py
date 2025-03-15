@@ -21,9 +21,6 @@ class TelemetryModel(QObject):
         return self.input.connect_and_start_thread(self.port)
 
     def update(self, flight_data):
-        if flight_data.center_lat == 0 and flight_data.gps_fix:
-            flight_data.center_lat = flight_data.lat
-            flight_data.center_lon = flight_data.lon
         self.logger.write_log(flight_data)
         self.flight_data_updated.emit(flight_data)
     
