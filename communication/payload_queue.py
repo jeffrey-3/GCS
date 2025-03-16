@@ -6,6 +6,7 @@ class PayloadQueue:
         self.queue = []  # List of (payload, expiry_time)
         self.timeout = timeout
         self.lock = threading.Lock()
+        self.run_cleanup()
     
     def add_payload(self, payload):
         """Adds a payload to the queue with a timeout if it doesn't already exist."""

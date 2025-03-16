@@ -1,8 +1,5 @@
 import pyqtgraph as pg
-from PyQt5.QtGui import QColor, QFont
-from app.utils.utils import calculate_displacement_meters
-import math
-from app.utils.data_structures import *
+from PyQt5.QtGui import QColor
 import time
 
 class LiveAltView(pg.PlotWidget):

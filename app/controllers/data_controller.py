@@ -2,7 +2,12 @@ class DataController:
     def __init__(self, view, model):
         self.view = view
         self.model = model
-        self.model.flight_data_updated.connect(self.update)
+        self.model.data_changed.connect(self.update)
     
-    def update(self, flight_data):
-        self.view.update(flight_data)
+    def update(self, data):
+        self.view.update(data["latest_packet"].data.gps_fix, 
+                         data["latest_packet"].data.gps_sats,
+                         data["byte_rate"],
+                         data["latest_packet"].data.cell_voltage,
+                         data["latest_packet"].data.battery_current,
+                         data["latest_packet"].data.capacity_consumed)

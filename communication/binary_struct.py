@@ -101,3 +101,11 @@ class BinaryStruct:
     def __repr__(self):
         return (f"BinaryStruct(format={self.format_string}, fields={self.field_names}, "
                 f"size={self.struct_size}, data={self._data}, multipliers={self.multipliers})")
+
+class TelemetryPayload(BinaryStruct):
+    def __init__(self):
+        super().__init__("communication/telemetry_format.json")
+
+class WaypointPayload(BinaryStruct):
+    def __init__(self):
+        super().__init__("communication/waypoint_format.json")

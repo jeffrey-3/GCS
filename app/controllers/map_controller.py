@@ -1,20 +1,23 @@
 class MapController:
-    def __init__(self, view, model, telemetry_model):
+    def __init__(self, view, config_model, telemetry_model):
         self.view = view
-        self.model = model
+        self.config_model = config_model
         self.telemetry_model = telemetry_model
-        self.telemetry_model.flight_data_updated.connect(self.update_flight_data)
-        self.model.waypoints_updated.connect(self.update_waypoints)
+        self.telemetry_model.data_changed.connect(self.update_flight_data)
+        self.config_model.waypoints_updated.connect(self.update_waypoints)
         self.view.clicked.connect(self.map_clicked)
     
     def update_waypoints(self, waypoints):
-        self.view.waypoints = waypoints
-        if len(waypoints) > 0:
-            self.view.lat = waypoints[0].lat
-            self.view.lon = waypoints[0].lon
-    
-    def update_flight_data(self, flight_data):
-        self.view.update_data(flight_data)
+        self.view.set_waypoints(waypoints)
+        self.view.render()
+
+    def update_flight_data(self, data):
+        self.view.set_map_position(data["latest_packet"].data.gnss_latitude, 
+                                   data["latest_packet"].data.gnss_longitude)
+        self.view.set_plane_position(data["latest_packet"].data.gnss_latitude, 
+                                     data["latest_packet"].data.gnss_longitude, 
+                                     data["latest_packet"].data.heading)
+        self.view.render()
     
     def map_clicked(self, pos):
-        self.model.map_clicked(pos)
+        self.config_model.map_clicked(pos)

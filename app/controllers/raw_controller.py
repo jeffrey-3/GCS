@@ -3,7 +3,14 @@ class RawController:
         self.view = view
         self.model = model
 
-        self.model.flight_data_updated.connect(self.update)
+        self.model.data_changed.connect(self.update)
     
-    def update(self, flight_data):
-        self.view.update(flight_data)
+    def update(self, data):
+        self.view.update(data["latest_packet"].data.roll,
+                         data["latest_packet"].data.pitch, 
+                         data["latest_packet"].data.heading, 
+                         data["latest_packet"].data.gnss_latitude, 
+                         data["latest_packet"].data.gnss_longitude, 
+                         data["queue_length"], 
+                         data["latest_packet"].data.altitude,
+                         data["latest_packet"].data.airspeed)

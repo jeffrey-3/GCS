@@ -1,8 +1,8 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-from app.utils.data_structures import *
 from geopy.distance import geodesic
 from app.utils.utils import *
+from app.models.config_model import Waypoint
 
 class CustomTableWidget(QTableWidget):
     def __init__(self, *args, **kwargs):

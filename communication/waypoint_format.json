@@ -1,0 +1,7 @@
+[
+    {"name": "waypoint_index", "type": "B"},
+    {"name": "num_waypoints", "type": "B"},
+    {"name": "lat", "type": "i", "multiplier": 1e-7},
+    {"name": "lon", "type": "i", "multiplier": 1e-7},
+    {"name": "alt", "type": "h", "multiplier": 1e-1}
+]

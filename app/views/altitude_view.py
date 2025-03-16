@@ -2,7 +2,6 @@ import pyqtgraph as pg
 from PyQt5.QtGui import QColor, QFont
 from app.utils.utils import calculate_displacement_meters
 import math
-from app.utils.data_structures import *
 
 class AltitudeGraph(pg.PlotWidget):
     def __init__(self):

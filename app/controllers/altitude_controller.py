@@ -4,7 +4,7 @@ class AltController:
         self.model = model
         self.telemetry_model = telemetry_model
         self.model.waypoints_updated.connect(self.update_waypoints)
-        self.telemetry_model.flight_data_updated.connect(self.update_wp_idx)
+        self.telemetry_model.data_changed.connect(self.update_wp_idx)
         self.prev_wp_idx = None
     
     def update_waypoints(self, waypoints):
@@ -14,8 +14,8 @@ class AltController:
             self.view.clear()
     
     # This causes lag
-    def update_wp_idx(self, flight_data):
-        if not flight_data.wp_idx == self.prev_wp_idx:
-            self.prev_wp_idx = flight_data.wp_idx
+    def update_wp_idx(self, data):
+        if not data["latest_packet"].data.target_waypoint_index == self.prev_wp_idx:
+            self.prev_wp_idx = data["latest_packet"].data.target_waypoint_index
             waypoints = self.model.get_waypoints()
-            self.view.update(waypoints, waypoints[0].lat, waypoints[0].lon, flight_data.wp_idx)
+            self.view.update(waypoints, waypoints[0].lat, waypoints[0].lon, data["latest_packet"].data.target_waypoint_index)

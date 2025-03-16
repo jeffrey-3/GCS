@@ -4,6 +4,7 @@
     {"name": "heading", "type": "H", "multiplier": 1e-2},
     {"name": "altitude", "type": "h", "multiplier": 1e-1},
     {"name": "airspeed", "type": "H", "multiplier": 1e-1},
+    {"name": "altitude_setpoint", "type": "h", "multiplier": 1e-1},
     {"name": "gnss_latitude", "type": "i", "multiplier": 1e-7},
     {"name": "gnss_longitude", "type": "i", "multiplier": 1e-7},
     {"name": "position_estimate_north", "type": "f", "multiplier": 1},

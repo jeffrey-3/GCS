@@ -15,9 +15,9 @@ class DataView(QWidget):
             for col in range(len(self.names[0])):
                 self.layout.addWidget(QLabel(alignment=Qt.AlignCenter), row, col)
 
-    def update(self, flight_data):
-        values = [["YES" if flight_data.gps_fix else "NO", str(flight_data.sats), f"{flight_data.packet_rate:.0f}"],
-                  [f"{flight_data.cell_voltage:.2f}", f"{flight_data.current:.1f}", f"{flight_data.capacity_consumed:.0f}"]]
+    def update(self, gps_fix, gps_sats, byte_rate, cell_voltage, battery_current, capacity_consumed):
+        values = [["YES" if gps_fix else "NO", str(gps_sats), f"{byte_rate:.0f}"],
+                  [f"{cell_voltage:.2f}", f"{battery_current:.1f}", f"{capacity_consumed:.0f}"]]
         
         for row in range(len(self.names)):
             for col in range(len(self.names[0])):

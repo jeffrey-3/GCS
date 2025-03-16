@@ -8,16 +8,11 @@ class Logger():
     def __init__(self):
         self.csvfile = open('logs/{date:%Y_%m_%d_%H_%M_%S}.csv'.format(date=datetime.datetime.now()), 'w', newline='')
         self.csvwriter = csv.writer(self.csvfile, delimiter=',')
-        self.csvwriter.writerow(["time", "roll", "pitch", "heading"])
+        self.header_written = False
+        self.start_time = time.time()
     
     def write_log(self, flight_data):
-        self.csvwriter.writerow([time.time(),
-                                 flight_data.roll, 
-                                 flight_data.pitch, 
-                                 flight_data.heading, 
-                                 flight_data.altitude, 
-                                 flight_data.speed,
-                                 flight_data.lat,
-                                 flight_data.lon,
-                                 flight_data.mode_id,
-                                 flight_data.wp_idx])
+        if not self.header_written:
+            self.csvwriter.writerow(("time",) + flight_data.field_names)
+            self.header_written = True
+        self.csvwriter.writerow([time.time() - self.start_time] + list(flight_data.data))

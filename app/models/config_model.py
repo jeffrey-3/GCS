@@ -1,13 +1,17 @@
 from app.utils.tile_downloader import TileDownloader
-from app.utils.data_structures import *
 from app.utils.utils import *
 import json
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-from app.utils.data_structures import *
 from app.utils.utils import *
 import json
-import datetime
+from dataclasses import dataclass
+
+@dataclass
+class Waypoint:
+    lat: float
+    lon: float
+    alt: float
 
 class ConfigModel(QObject):
     waypoints_updated = pyqtSignal(list)

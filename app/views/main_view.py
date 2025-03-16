@@ -24,7 +24,6 @@ from app.controllers.connect_page_controller import ConnectPageController
 from app.controllers.params_page_controller import ParamsPageController
 from app.controllers.map_controller import MapController
 from app.controllers.data_controller import DataController
-from app.utils.data_structures import *
 from app.utils.utils import *
 
 class MainView(QMainWindow):
