@@ -1,14 +1,15 @@
 import time
 import threading
 import serial
-import struct
 import random
 from lib.cobs import cobs
 import math
-from communication.generate_packet import *
 from PyQt5.QtCore import *
-from communication.payload_queue import PayloadQueue
-from communication.binary_struct import BinaryStruct
+from communication.binary_struct import *
+
+# Send payload to radio
+# Radio adds header, COBS, and checksum and sends it through
+# Radio receives packet and decodes into payload 
 
 class Radio(QObject):
     RATE_CALC_DT = 1 # Delta time to calculate received byte rate
@@ -18,76 +19,75 @@ class Radio(QObject):
 
     def __init__(self):
         super().__init__()
-        self._tlm_packet = BinaryStruct("communication/telemetry_format.json") # Latest telemetry packet
-        self._queue = PayloadQueue() # Transmit queue
-        self._queue_len = 0
+        self._tlm_payload = TelemetryPayload()
+        self._queue = []
         self._rx_byte_rate = 0
-
-        # Serial
         self.ser = None
         self.port = None
-    
         self.bytes_read = 0 # Bytes read since last byte rate calculation
-
-        # Time keepers
         self.prev_send_time = time.time() # Time of last transmit
         self.prev_rate_calc_time = time.time() # Time of last byte rate calculation
     
     def start(self, port):
         self.port = port
-
         if port != 'Testing':
             try:
                 self.ser = serial.Serial(port, 115200, timeout=1000)
             except:
                 return False
-            
-        threading.Thread(target=self.thread, daemon=True).start()
         
-        return True
-    
-    def thread(self):
+            threading.Thread(target=self.transmit_thread, daemon=True).start()
+            threading.Thread(target=self.receive_thread, daemon=True).start()
+            return True
+        else:
+            threading.Thread(target=self.testing_thread, daemon=True).start()
+            return True
+
+    def transmit_thread(self):
         while True:
-            if self.port == "Testing":
-                self.execute_testing()
-            else:
-                self.execute()
+            elapsed_time = time.time() - self.prev_send_time
+            if len(self._queue.queue) > 0 and elapsed_time > self.TRANSMIT_DT:
+                self.ser.write(
+                    self.payload_to_packet(self._queue[0])
+                )
+                self._queue.remove(self._queue[0])
+                self.prev_send_time = time.time()
     
-    def execute(self):
-        # Find start byte
-        start_byte = self.ser.read(1)
+    def receive_thread(self):
+        while True:
+            # Find start byte
+            packet = self.ser.read(1)
 
-        # Detect start byte
-        if start_byte == b'\x00':
-            # Get length byte
-            payload_length = self.ser.read(1)[0]
-    
-            # Get payload and COBS byte
-            # Then decode to remove COBS byte and get payload
-            payload = cobs.decode(self.ser.read(payload_length + 1))
-            
-            # Get message ID
-            payload_type = payload[0]
+            # Detect start byte
+            if packet == b'\x00':
+                # Get length byte
+                payload_length = self.ser.read(1)
+                packet.extend(payload_length)
 
-            # Figure out what type of payload from message ID
-            if payload_type == TELEM_MSG_ID: 
-                # Telemetry payload
-                self.parse_telemetry(payload, payload_length)
-            else:
-                # If acknowledgement received, remove from queue
-                self._queue.remove_payload(payload)
+                # Get message ID
+                msg_id = self.ser.read(1)
+                packet.extend(msg_id)
         
-        elapsed_time = time.time() - self.prev_send_time
-        if len(self._queue.queue) > 0 and elapsed_time > self.TRANSMIT_DT:
-            self.ser.write(get_pkt(self._queue.get_payload()))
-            self.prev_send_time = time.time()
-                
-        self.flight_data.queue_len = len(self._queue.queue)
+                # Read payload and COBS byte
+                payload_cobs = self.ser.read(int.from_bytes(payload_length, 'little') + 1)
+                packet.extend(payload_cobs)
+
+                # Decode to remove COBS byte and get payload
+                payload = cobs.decode(payload_cobs)
+
+                # Figure out what type of payload from message ID
+                if int.from_bytes(msg_id, 'little') == TelemetryPayload().msg_id: 
+                    # Telemetry payload
+                    self.parse_telemetry(payload, int.from_bytes(payload_length, 'little'))
+                else:
+                    # If acknowledgement received, remove from queue
+                    if payload in self._queue:
+                        self._queue.remove(payload)
     
-    def execute_testing(self):
+    def testing_thread(self):
         while True:
             t = time.time()
-            self._tlm_packet.set_data(
+            self._tlm_payload.set_data(
                 roll = 10 * math.cos(t),
                 pitch = 10 * math.sin(t),
                 heading = 180 + 180*math.sin(t/5),
@@ -113,10 +113,10 @@ class Radio(QObject):
 
             self.emit_signal()
 
-            time.sleep(0.03)
+            time.sleep(0.02)
     
     def parse_telemetry(self, payload, payload_length):
-        self._tlm_packet.unpack(payload)
+        self._tlm_payload.unpack(payload)
 
         self.bytes_read += payload_length + 3 # Add 3 because header
         elapsed = time.time() - self.prev_rate_calc_time
@@ -127,15 +127,18 @@ class Radio(QObject):
         
         self.emit_signal()
 
-    def append_queue(self, payload):
-        self._queue.add_payload(payload)
+    def payload_to_packet(self, payload):
+        return bytes([0x00]) + bytes([len(payload)]) + bytes([payload.id]) + cobs.encode(payload)
+
+    def add_payload_to_queue(self, payload):
+        self._queue.append(payload)
 
     def emit_signal(self):
         self.tlm_recv.emit({
-            "latest_packet": self._tlm_packet,
-            "queue_length": self._queue_len,
+            "latest_payload": self._tlm_payload,
+            "queue_length": len(self._queue),
             "byte_rate": self._rx_byte_rate
         })
     
     def get_data(self):
-        return self._tlm_packet
+        return self._tlm_payload

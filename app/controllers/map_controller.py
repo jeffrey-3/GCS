@@ -12,11 +12,11 @@ class MapController:
         self.view.render()
 
     def update_flight_data(self, data):
-        self.view.set_map_position(data["latest_packet"].data.gnss_latitude, 
-                                   data["latest_packet"].data.gnss_longitude)
-        self.view.set_plane_position(data["latest_packet"].data.gnss_latitude, 
-                                     data["latest_packet"].data.gnss_longitude, 
-                                     data["latest_packet"].data.heading)
+        self.view.set_map_position(data["latest_payload"].data.gnss_latitude, 
+                                   data["latest_payload"].data.gnss_longitude)
+        self.view.set_plane_position(data["latest_payload"].data.gnss_latitude, 
+                                     data["latest_payload"].data.gnss_longitude, 
+                                     data["latest_payload"].data.heading)
         self.view.render()
     
     def map_clicked(self, pos):

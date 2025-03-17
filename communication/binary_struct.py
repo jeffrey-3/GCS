@@ -17,17 +17,22 @@ class BinaryStruct:
         """
         # Load the JSON file
         with open(json_file_path, 'r') as file:
-            fields = json.load(file)
+            json_data = json.load(file)
 
-        # Validate the JSON structure
-        if not isinstance(fields, list):
-            raise ValueError("JSON file must contain a list of field definitions.")
+        # Validate JSON structure
+        if not isinstance(json_data, dict) or 'msg_id' not in json_data or 'fields' not in json_data:
+            raise ValueError("JSON file must contain 'msg_id' and a list of 'fields'.")
 
-        # Initialize fields
-        self.fields = fields
-        self.format_string = endianness + ''.join(field['type'] for field in fields)  # Build the format string
-        self.field_names = tuple(field['name'] for field in fields)  # Extract field names
-        self.multipliers = {field['name']: field.get('multiplier', 1) for field in fields}  # Extract multipliers
+        self.msg_id = json_data['msg_id']
+        self.fields = json_data['fields']
+
+        if not isinstance(self.fields, list):
+            raise ValueError("'fields' must be a list of field definitions.")
+
+        # Construct format string and metadata
+        self.format_string = endianness + ''.join(field['type'] for field in self.fields)
+        self.field_names = tuple(field['name'] for field in self.fields)
+        self.multipliers = {field['name']: field.get('multiplier', 1) for field in self.fields}
         self.struct_size = struct.calcsize(self.format_string)
         self._data = None  # Internal storage for the unpacked namedtuple
 
@@ -45,13 +50,10 @@ class BinaryStruct:
         unpacked_data = struct.unpack(self.format_string, data)
 
         # Apply multipliers to scale the data
-        scaled_data = []
-        for field, value in zip(self.fields, unpacked_data):
-            scaled_value = value * field.get('multiplier', 1)  # Multiply by multiplier if it exists
-            scaled_data.append(scaled_value)
+        scaled_data = [value * self.multipliers[name] for name, value in zip(self.field_names, unpacked_data)]
 
         # Create a namedtuple dynamically
-        StructTuple = NamedTuple('StructTuple', zip(self.field_names, scaled_data))
+        StructTuple = NamedTuple('StructTuple', [(name, type(value)) for name, value in zip(self.field_names, scaled_data)])
         self._data = StructTuple(*scaled_data)  # Store the namedtuple internally
 
     def pack(self) -> bytes:
@@ -65,10 +67,7 @@ class BinaryStruct:
             raise ValueError("No data has been unpacked or set yet.")
 
         # Apply multipliers to scale the data
-        scaled_data = []
-        for field, value in zip(self.fields, self._data):
-            scaled_value = value / field.get('multiplier', 1)  # Divide by multiplier if it exists
-            scaled_data.append(scaled_value)
+        scaled_data = [getattr(self._data, name) / self.multipliers[name] for name in self.field_names]
 
         # Pack the scaled data
         return struct.pack(self.format_string, *scaled_data)
@@ -84,7 +83,7 @@ class BinaryStruct:
             raise ValueError(f"Expected fields: {self.field_names}, got: {list(kwargs.keys())}")
 
         # Create a namedtuple dynamically
-        StructTuple = NamedTuple('StructTuple', zip(self.field_names, self.field_names))
+        StructTuple = NamedTuple('StructTuple', [(name, type(kwargs[name])) for name in self.field_names])
         self._data = StructTuple(**kwargs)  # Store the namedtuple internally
 
     @property
@@ -98,8 +97,23 @@ class BinaryStruct:
             raise ValueError("No data has been unpacked or set yet.")
         return self._data
 
+    def __eq__(self, other):
+        """
+        Compare two BinaryStruct instances for equality.
+
+        :param other: The other BinaryStruct instance to compare with.
+        :return: True if the instances are equal, False otherwise.
+        """
+        if not isinstance(other, BinaryStruct):
+            return False
+
+        return (self.format_string == other.format_string and
+                self.field_names == other.field_names and
+                self.multipliers == other.multipliers and
+                self._data == other._data)
+
     def __repr__(self):
-        return (f"BinaryStruct(format={self.format_string}, fields={self.field_names}, "
+        return (f"BinaryStruct(msg_id={self.msg_id}, format={self.format_string}, fields={self.field_names}, "
                 f"size={self.struct_size}, data={self._data}, multipliers={self.multipliers})")
 
 class TelemetryPayload(BinaryStruct):

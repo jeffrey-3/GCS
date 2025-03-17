@@ -6,11 +6,11 @@ class RawController:
         self.model.data_changed.connect(self.update)
     
     def update(self, data):
-        self.view.update(data["latest_packet"].data.roll,
-                         data["latest_packet"].data.pitch, 
-                         data["latest_packet"].data.heading, 
-                         data["latest_packet"].data.gnss_latitude, 
-                         data["latest_packet"].data.gnss_longitude, 
+        self.view.update(data["latest_payload"].data.roll,
+                         data["latest_payload"].data.pitch, 
+                         data["latest_payload"].data.heading, 
+                         data["latest_payload"].data.gnss_latitude, 
+                         data["latest_payload"].data.gnss_longitude, 
                          data["queue_length"], 
-                         data["latest_packet"].data.altitude,
-                         data["latest_packet"].data.airspeed)
+                         data["latest_payload"].data.altitude,
+                         data["latest_payload"].data.airspeed)

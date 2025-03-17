@@ -4,5 +4,5 @@ class StateController:
         self.model = model
         self.model.data_changed.connect(self.update)
     
-    def update(self, flight_data):
-        self.view.update(flight_data)
+    def update(self, data):
+        self.view.update(data["latest_payload"].data.mode_id)

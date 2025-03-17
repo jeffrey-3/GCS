@@ -5,8 +5,8 @@ class PFDController:
         self.model.data_changed.connect(self.update)
     
     def update(self, data):
-        self.view.update(data['latest_packet'].data.roll, 
-                         data['latest_packet'].data.pitch,
-                         data['latest_packet'].data.heading,
-                         data['latest_packet'].data.altitude,
-                         data['latest_packet'].data.airspeed)
+        self.view.update(data['latest_payload'].data.roll, 
+                         data['latest_payload'].data.pitch,
+                         data['latest_payload'].data.heading,
+                         data['latest_payload'].data.altitude,
+                         data['latest_payload'].data.airspeed)

@@ -15,7 +15,7 @@ class AltController:
     
     # This causes lag
     def update_wp_idx(self, data):
-        if not data["latest_packet"].data.target_waypoint_index == self.prev_wp_idx:
-            self.prev_wp_idx = data["latest_packet"].data.target_waypoint_index
+        if not data["latest_payload"].data.target_waypoint_index == self.prev_wp_idx:
+            self.prev_wp_idx = data["latest_payload"].data.target_waypoint_index
             waypoints = self.model.get_waypoints()
-            self.view.update(waypoints, waypoints[0].lat, waypoints[0].lon, data["latest_packet"].data.target_waypoint_index)
+            self.view.update(waypoints, waypoints[0].lat, waypoints[0].lon, data["latest_payload"].data.target_waypoint_index)

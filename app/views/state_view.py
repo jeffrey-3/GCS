@@ -22,32 +22,30 @@ class StateView(QWidget):
 
         self.start_time = None
     
-    def update(self, data):
-        flight_data = data["latest_packet"]
-
+    def update(self, mode_id):
         if not self.start_time:
             self.start_time = time.time()
 
-        if flight_data.data.mode_id == 0:
+        if mode_id == 0:
             state = "CONFIG"
-        elif flight_data.data.mode_id == 1:
+        elif mode_id == 1:
             state = "STARTUP"
-        elif flight_data.data.mode_id == 2:
+        elif mode_id == 2:
             state = "TAKEOFF"
-        elif flight_data.data.mode_id == 3:
+        elif mode_id == 3:
             state = "MISSION"
-        elif flight_data.data.mode_id == 4:
+        elif mode_id == 4:
             state = "LAND"
-        elif flight_data.data.mode_id == 5:
+        elif mode_id == 5:
             state = "FLARE"
-        elif flight_data.data.mode_id == 6:
+        elif mode_id == 6:
             state = "CONTACT"
-        elif flight_data.data.mode_id == 7:
+        elif mode_id == 7:
             state = "DIRECT"
-        elif flight_data.data.mode_id == 8:
+        elif mode_id == 8:
             state = "STAB"
         else:
-            state = f"UNKNOWN: {flight_data.data.mode_id}"
+            state = f"ERR: {mode_id}"
         
         elapsed_time = time.time() - self.start_time
         elapsed_hours = int(elapsed_time // 3600)

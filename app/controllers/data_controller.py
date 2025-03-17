@@ -5,9 +5,9 @@ class DataController:
         self.model.data_changed.connect(self.update)
     
     def update(self, data):
-        self.view.update(data["latest_packet"].data.gps_fix, 
-                         data["latest_packet"].data.gps_sats,
+        self.view.update(data["latest_payload"].data.gps_fix, 
+                         data["latest_payload"].data.gps_sats,
                          data["byte_rate"],
-                         data["latest_packet"].data.cell_voltage,
-                         data["latest_packet"].data.battery_current,
-                         data["latest_packet"].data.capacity_consumed)
+                         data["latest_payload"].data.cell_voltage,
+                         data["latest_payload"].data.battery_current,
+                         data["latest_payload"].data.capacity_consumed)
