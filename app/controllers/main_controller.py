@@ -24,10 +24,8 @@ class MainController:
         self.config_model.save_last_flightplan_params()
 
         # Send parameters and waypoints to vehicle
-        waypoints = self.config_model.get_waypoints()
-        params_values =  self.config_model.get_params_values()
-        params_format = self.config_model.get_params_format()
-        self.telemetry_model.send_params(waypoints, params_values, params_format)
+        self.telemetry_model.send_params(self.config_model.get_waypoints(), 
+                                         self.config_model.params_payload)
         
         self.show_flight_view()
     

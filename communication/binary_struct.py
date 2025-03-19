@@ -97,6 +97,15 @@ class BinaryStruct:
             raise ValueError("No data has been unpacked or set yet.")
         return self._data
 
+    @property
+    def is_empty(self) -> bool:
+        """
+        Check if the BinaryStruct instance is empty (no data has been unpacked or set).
+
+        :return: True if the instance is empty, False otherwise.
+        """
+        return self._data is None
+
     def __eq__(self, other):
         """
         Compare two BinaryStruct instances for equality.
@@ -123,3 +132,7 @@ class TelemetryPayload(BinaryStruct):
 class WaypointPayload(BinaryStruct):
     def __init__(self):
         super().__init__("communication/waypoint_format.json")
+
+class ParamsPayload(BinaryStruct):
+    def __init__(self):
+        super().__init__("communication/params_format.json")

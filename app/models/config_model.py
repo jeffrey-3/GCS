@@ -1,9 +1,9 @@
-from app.utils.tile_downloader import TileDownloader
-from app.utils.utils import *
-import json
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
+from app.utils.tile_downloader import TileDownloader
 from app.utils.utils import *
+from app.utils.utils import *
+from communication.binary_struct import ParamsPayload
 import json
 from dataclasses import dataclass
 
@@ -16,35 +16,24 @@ class Waypoint:
 class ConfigModel(QObject):
     waypoints_updated = pyqtSignal(list)
     map_clicked_signal = pyqtSignal(tuple)
+    params_loaded = pyqtSignal()
 
     def __init__(self):
         super().__init__()
-        self.params_json = ""
-        self.params_values = None
-        self.params_format = None
+        self.params_payload = ParamsPayload()
         self.waypoints = None
+        self.params_json = None
     
     def process_params_file(self, path):
         try:
             file = open(path, "r")
             self.params_json = json.load(file)
-            
-            self.params_format = "="
-            self.params_values = []
-            for param in self.params_json:
-                self.params_format += param["type"]
-                self.params_values.extend(flatten_array(param["value"]))
-            
+            self.params_payload.set_data(**self.params_json)
+            self.params_loaded.emit()
             return True  # Success
         except Exception as e:
             print(f"Error processing params file: {e}")
             return False  # Failure
-    
-    def get_params_values(self):
-        return self.params_values
-
-    def get_params_format(self):
-        return self.params_format
     
     # Tiles
     def download(self, top_left_lat, top_left_lon, bottom_right_lat, bottom_right_lon, min_zoom, max_zoom):

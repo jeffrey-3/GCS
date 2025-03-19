@@ -68,5 +68,5 @@
     "baro_r": 1000.0,
     "gnss_r": 1000.0,
     "gnss_alt_r": 1000.0,
-    "enable_hitl": true
+    "enable_hitl": false
 }

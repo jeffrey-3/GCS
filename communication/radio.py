@@ -20,8 +20,8 @@ class Radio(QObject):
     def __init__(self):
         super().__init__()
         self._tlm_payload = TelemetryPayload()
-        self._queue = []
-        self._rx_byte_rate = 0
+        self._queue = [] # Queue to store payloads awaiting transmission
+        self._rx_byte_rate = 0 # Received byte rate
         self.ser = None
         self.port = None
         self.bytes_read = 0 # Bytes read since last byte rate calculation
@@ -38,9 +38,11 @@ class Radio(QObject):
         
             threading.Thread(target=self.transmit_thread, daemon=True).start()
             threading.Thread(target=self.receive_thread, daemon=True).start()
+
             return True
         else:
             threading.Thread(target=self.testing_thread, daemon=True).start()
+
             return True
 
     def transmit_thread(self):
@@ -94,8 +96,8 @@ class Radio(QObject):
                 altitude = 20 - 5 * math.sin(t),
                 airspeed = 10 - 5 * math.cos(t),
                 altitude_setpoint = 0,
-                gnss_latitude = 43.878258 + 0.0005 * math.sin(t/6),
-                gnss_longitude = -79.413123 + 0.0005 * math.cos(t/6),
+                gnss_latitude = 43.878258 + 0.002 * math.sin(t/6),
+                gnss_longitude = -79.413123 + 0.002 * math.cos(t/6),
                 position_estimate_north = 0,
                 position_estimate_east = 0,
                 mode_id = 2,
@@ -128,7 +130,7 @@ class Radio(QObject):
         self.emit_signal()
 
     def payload_to_packet(self, payload):
-        return bytes([0x00]) + bytes([len(payload)]) + bytes([payload.id]) + cobs.encode(payload)
+        return bytes([0x00]) + bytes([len(payload)]) + bytes([payload.id]) + cobs.encode(payload.pack)
 
     def add_payload_to_queue(self, payload):
         self._queue.append(payload)

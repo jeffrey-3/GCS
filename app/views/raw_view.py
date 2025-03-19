@@ -54,6 +54,11 @@ class RawView(QScrollArea):
         self.ahrs_table = RawTable(["Roll", "Pitch", "Heading"], ["deg", "deg", "deg"])
         self.layout.addWidget(self.ahrs_table)
 
+        self.layout.addWidget(QLabel("<h1>RC Transmitter</h1>"))
+
+        self.rc_table = RawTable(["Aileron", "Elevator", "Throttle"], ["", "", ""])
+        self.layout.addWidget(self.rc_table)
+
         self.layout.addStretch()
 
         container = QWidget()

@@ -12,7 +12,7 @@ class ParamsPageController(QObject):
         self.view.next_btn.clicked.connect(self.next)
     
     def next(self):
-        if self.model.get_params_values():
+        if not self.model.params_payload.is_empty:
             self.complete_signal.emit()
         else:
             QMessageBox.information(self.view, "Error", "Parameters missing")

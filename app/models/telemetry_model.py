@@ -23,8 +23,8 @@ class TelemetryModel(QObject):
         self.logger.write_log(data["latest_payload"])
         self.data_changed.emit(data)
     
-    def send_params(self, waypoints, params_values, params_format):
-        # self.radio.append_queue(get_params_payload(params_values, params_format))
+    def send_params(self, waypoints, params_payload):
+        self.radio.add_payload_to_queue(params_payload)
 
         for i, waypoint in enumerate(waypoints):
             payload = WaypointPayload()

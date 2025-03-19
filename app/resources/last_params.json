@@ -1,253 +1,72 @@
-[
-    {
-        "name": "aspd_cruise",
-        "value": 20.0,
-        "type": "f"
-    },
-    {
-        "name": "aspd_land",
-        "value": 15.0,
-        "type": "f"
-    },
-    {
-        "name": "tecs_min_aspd_mps",
-        "value": 5.0,
-        "type": "f"
-    },
-    {
-        "name": "tecs_max_aspd_mps",
-        "value": 30.0,
-        "type": "f"
-    },
-    {
-        "name": "throttle_cruise",
-        "value": 0.1,
-        "type": "f"
-    },
-    {
-        "name": "ptch_lim_deg",
-        "value": 50,
-        "type": "f"
-    },
-    {
-        "name": "roll_lim_deg",
-        "value": 50,
-        "type": "f"
-    },
-    {
-        "name": "min_dist_wp",
-        "value": 50,
-        "type": "f"
-    },
-    {
-        "name": "guidance_kp",
-        "value": 0.03,
-        "type": "f"
-    },
-    {
-        "name": "flare_alt",
-        "value": 3,
-        "type": "f"
-    },
-    {
-        "name": "flare_sink_rate",
-        "value": 0.2,
-        "type": "f"
-    },
-    {
-        "name": "touchdown_aspd_thresh",
-        "value": 10,
-        "type": "f"
-    },
-    {
-        "name": "takeoff_alt",
-        "value": 6,
-        "type": "f"
-    },
-    {
-        "name": "takeoff_ptch",
-        "value": 15,
-        "type": "f"
-    },
-    {
-        "name": "max_duty",
-        "value": [
-            2000,
-            2000,
-            2000,
-            2000,
-            2000,
-            2000
-        ],
-        "type": "6H"
-    },
-    {
-        "name": "min_duty",
-        "value": [
-            1000,
-            1000,
-            1000,
-            1000,
-            1000,
-            1000
-        ],
-        "type": "6H"
-    },
-    {
-        "name": "rc_in_max",
-        "value": 1900,
-        "type": "H"
-    },
-    {
-        "name": "rc_in_min",
-        "value": 1100,
-        "type": "H"
-    },
-    {
-        "name": "rev_channels",
-        "value": [
-            false,
-            true,
-            false,
-            false,
-            false,
-            false
-        ],
-        "type": "6?"
-    },
-    {
-        "name": "aileron_ch",
-        "value": 0,
-        "type": "B"
-    },
-    {
-        "name": "elevator_ch",
-        "value": 1,
-        "type": "B"
-    },
-    {
-        "name": "throttle_ch",
-        "value": 2,
-        "type": "B"
-    },
-    {
-        "name": "manual_sw_ch",
-        "value": 4,
-        "type": "B"
-    },
-    {
-        "name": "mode_sw_ch",
-        "value": 5,
-        "type": "B"
-    },
-    {
-        "name": "ptch_kp",
-        "value": 0.1,
-        "type": "f"
-    },
-    {
-        "name": "ptch_ki",
-        "value": 0.05,
-        "type": "f"
-    },
-    {
-        "name": "roll_kp",
-        "value": 0.05,
-        "type": "f"
-    },
-    {
-        "name": "roll_ki",
-        "value": 0,
-        "type": "f"
-    },
-    {
-        "name": "thr_kp",
-        "value": 0.01,
-        "type": "f"
-    },
-    {
-        "name": "thr_ki",
-        "value": 0.01,
-        "type": "f"
-    },
-    {
-        "name": "alt_kp",
-        "value": 0.4,
-        "type": "f"
-    },
-    {
-        "name": "alt_ki",
-        "value": 0.01,
-        "type": "f"
-    },
-    {
-        "name": "hdg_kp",
-        "value": 1,
-        "type": "f"
-    },
-    {
-        "name": "hdg_ki",
-        "value": 0.01,
-        "type": "f"
-    },
-    {
-        "name": "ahrs_beta",
-        "value": 0.005,
-        "type": "f"
-    },
-    {
-        "name": "mag_decl",
-        "value": -10.2,
-        "type": "f"
-    },
-    {
-        "name": "ahrs_acc_max",
-        "value": 2,
-        "type": "f"
-    },
-    {
-        "name": "hard_iron",
-        "value": [
-            0,
-            0,
-            0
-        ],
-        "type": "3f"
-    },
-    {
-        "name": "soft_iron",
-        "value": [
-            [
-                1,
-                0,
-                0
-            ],
-            [
-                0,
-                1,
-                0
-            ],
-            [
-                0,
-                0,
-                1
-            ]
-        ],
-        "type": "9f"
-    },
-    {
-        "name": "baro_r",
-        "value": 1000,
-        "type": "f"
-    },
-    {
-        "name": "gnss_r",
-        "value": 1000,
-        "type": "f"
-    },
-    {
-        "name": "gnss_alt_r",
-        "value": 1000,
-        "type": "f"
-    }
-]
+{
+    "aspd_cruise": 7.3,
+    "aspd_land": 5.8,
+    "tecs_min_aspd_mps": 2.1,
+    "tecs_max_aspd_mps": 9.4,
+    "throttle_cruise": 6.7,
+    "ptch_lim_deg": 3.5,
+    "roll_lim_deg": 4.2,
+    "min_dist_wp": 1.9,
+    "guidance_kp": 8.6,
+    "flare_alt": 0.5,
+    "flare_sink_rate": 2.3,
+    "touchdown_aspd_thresh": 3.7,
+    "takeoff_alt": 4.8,
+    "takeoff_ptch": 5.2,
+    "takeoff_roll_lim": 6.1,
+    "pwm_max_ail": 9,
+    "pwm_max_ele": 7,
+    "pwm_max_rud": 8,
+    "pwm_max_thr": 6,
+    "pwm_max_aux1": 5,
+    "pwm_max_aux2": 4,
+    "pwm_max_aux3": 3,
+    "pwm_max_aux4": 2,
+    "pwm_min_ail": 1,
+    "pwm_min_ele": 2,
+    "pwm_min_rud": 3,
+    "pwm_min_thr": 4,
+    "pwm_min_aux1": 5,
+    "pwm_min_aux2": 6,
+    "pwm_min_aux3": 7,
+    "pwm_min_aux4": 8,
+    "pwm_rev_ail": true,
+    "pwm_rev_ele": false,
+    "pwm_rev_rud": true,
+    "pwm_rev_thr": false,
+    "pwm_rev_aux1": true,
+    "pwm_rev_aux2": false,
+    "pwm_rev_aux3": true,
+    "pwm_rev_aux4": false,
+    "rc_max": 10,
+    "rc_min": 0,
+    "ptch_kp": 7.2,
+    "ptch_ki": 3.4,
+    "roll_kp": 5.6,
+    "roll_ki": 2.8,
+    "thr_kp": 6.9,
+    "thr_ki": 1.3,
+    "alt_kp": 4.7,
+    "alt_ki": 8.1,
+    "hdg_kp": 9.5,
+    "hdg_ki": 0.2,
+    "ahrs_beta": 2.4,
+    "mag_decl": 3.6,
+    "ahrs_acc_max": 7.8,
+    "hard_iron_x": 1.5,
+    "hard_iron_y": 4.9,
+    "hard_iron_z": 6.2,
+    "soft_iron_xx": 0.7,
+    "soft_iron_xy": 8.3,
+    "soft_iron_xz": 5.4,
+    "soft_iron_yx": 2.6,
+    "soft_iron_yy": 9.1,
+    "soft_iron_yz": 3.8,
+    "soft_iron_zx": 7.2,
+    "soft_iron_zy": 4.5,
+    "soft_iron_zz": 6.7,
+    "baro_r": 0.9,
+    "gnss_r": 1.8,
+    "gnss_alt_r": 2.7,
+    "enable_hitl": true
+}
