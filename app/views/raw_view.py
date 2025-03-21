@@ -65,7 +65,8 @@ class RawView(QScrollArea):
         container.setLayout(self.layout)
         self.setWidget(container)
     
-    def update(self, ahrs_roll, ahrs_pitch, ahrs_heading, gnss_lat, gnss_lon, queue_len, nav_alt, nav_as):
+    def update(self, ahrs_roll, ahrs_pitch, ahrs_heading, gnss_lat, gnss_lon, 
+               queue_len, nav_alt, nav_as, nav_north, nav_east):
         self.gnss_table.update([str(round(gnss_lat, 7)),
                                 str(round(gnss_lon, 7)),
                                 str(0),
@@ -73,8 +74,8 @@ class RawView(QScrollArea):
         self.tlm_table.update([str(queue_len), 
                                str(0),
                                str(0)])
-        self.nav_table.update([str(round(0)),
-                               str(0),
+        self.nav_table.update([str(round(nav_north, 2)),
+                               str(round(nav_east, 2)),
                                str(round(nav_alt, 2)),
                                str(round(nav_as, 2))])
         self.ahrs_table.update([str(round(ahrs_roll, 2)),

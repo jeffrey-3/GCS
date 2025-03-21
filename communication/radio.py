@@ -48,12 +48,14 @@ class Radio(QObject):
     def transmit_thread(self):
         while True:
             elapsed_time = time.time() - self.prev_send_time
-            if len(self._queue.queue) > 0 and elapsed_time > self.TRANSMIT_DT:
+            if len(self._queue) > 0 and elapsed_time > self.TRANSMIT_DT:
+                print("Transmit:", self.payload_to_packet(self._queue[0]))
                 self.ser.write(
                     self.payload_to_packet(self._queue[0])
                 )
-                self._queue.remove(self._queue[0])
                 self.prev_send_time = time.time()
+            
+            time.sleep(0.01)
     
     def receive_thread(self):
         while True:
@@ -62,29 +64,40 @@ class Radio(QObject):
 
             # Detect start byte
             if packet == b'\x00':
+                print("--- Radio Received ---")
+
                 # Get length byte
                 payload_length = self.ser.read(1)
-                packet.extend(payload_length)
+                packet += payload_length
+
+                print("Length byte: ", int.from_bytes(payload_length, 'little'))
 
                 # Get message ID
                 msg_id = self.ser.read(1)
-                packet.extend(msg_id)
+                packet += msg_id
+
+                print("Message ID: ", int.from_bytes(msg_id, 'little'))
         
                 # Read payload and COBS byte
                 payload_cobs = self.ser.read(int.from_bytes(payload_length, 'little') + 1)
-                packet.extend(payload_cobs)
+                packet += payload_cobs
+                # print(payload_cobs)
+                print("RECV: ", packet)
+                print(len(packet))
 
-                # Decode to remove COBS byte and get payload
-                payload = cobs.decode(payload_cobs)
+                # # Decode to remove COBS byte and get payload
+                # payload = cobs.decode(payload_cobs)
 
-                # Figure out what type of payload from message ID
-                if int.from_bytes(msg_id, 'little') == TelemetryPayload().msg_id: 
-                    # Telemetry payload
-                    self.parse_telemetry(payload, int.from_bytes(payload_length, 'little'))
-                else:
-                    # If acknowledgement received, remove from queue
-                    if payload in self._queue:
-                        self._queue.remove(payload)
+                # # Figure out what type of payload from message ID
+                # if int.from_bytes(msg_id, 'little') == TelemetryPayload().msg_id: 
+                #     # Telemetry payload
+                #     self.parse_telemetry(payload, int.from_bytes(payload_length, 'little'))
+                # else:
+                #     # If acknowledgement received, remove from queue
+                #     for queued_payload in self._queue:
+                #         if payload == queued_payload.pack():  # Compare bytes with bytes
+                #             self._queue.remove(queued_payload)
+                #             break
     
     def testing_thread(self):
         while True:
@@ -130,7 +143,7 @@ class Radio(QObject):
         self.emit_signal()
 
     def payload_to_packet(self, payload):
-        return bytes([0x00]) + bytes([len(payload)]) + bytes([payload.id]) + cobs.encode(payload.pack)
+        return bytes([0x00]) + bytes([payload.struct_size]) + bytes([payload.msg_id]) + cobs.encode(payload.pack())
 
     def add_payload_to_queue(self, payload):
         self._queue.append(payload)

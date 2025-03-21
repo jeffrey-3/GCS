@@ -1,5 +1,4 @@
 from PyQt5.QtWidgets import *
-import serial
 
 class ConnectView(QWidget):
     def __init__(self):

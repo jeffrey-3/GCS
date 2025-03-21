@@ -3,7 +3,7 @@
     "fields": [
         {"name": "roll", "type": "h", "multiplier": 1e-2},
         {"name": "pitch", "type": "h", "multiplier": 1e-2},
-        {"name": "heading", "type": "H", "multiplier": 1e-2},
+        {"name": "heading", "type": "H", "multiplier": 1e-1},
         {"name": "altitude", "type": "h", "multiplier": 1e-1},
         {"name": "airspeed", "type": "H", "multiplier": 1e-1},
         {"name": "altitude_setpoint", "type": "h", "multiplier": 1e-1},
@@ -19,8 +19,8 @@
         {"name": "autopilot_current", "type": "H", "multiplier": 1e-3},
         {"name": "gps_sats", "type": "B", "multiplier": 1},
         {"name": "gps_fix", "type": "?", "multiplier": 1},
-        {"name": "aileron", "type": "B", "multiplier": 1},
-        {"name": "elevator", "type": "B", "multiplier": 1},
-        {"name": "throttle", "type": "B", "multiplier": 1}
+        {"name": "aileron", "type": "B", "multiplier": 100},
+        {"name": "elevator", "type": "B", "multiplier": 100},
+        {"name": "throttle", "type": "B", "multiplier": 100}
     ]
 }

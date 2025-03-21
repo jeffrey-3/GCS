@@ -13,4 +13,6 @@ class RawController:
                          data["latest_payload"].data.gnss_longitude, 
                          data["queue_length"], 
                          data["latest_payload"].data.altitude,
-                         data["latest_payload"].data.airspeed)
+                         data["latest_payload"].data.airspeed,
+                         data["latest_payload"].data.position_estimate_north,
+                         data["latest_payload"].data.position_estimate_east)

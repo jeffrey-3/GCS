@@ -90,6 +90,7 @@ class MainView(QMainWindow):
         self.map_view = MapView()
         self.map_controller = MapController(self.map_view, self.config_model, self.telemetry_model)
         self.right_layout.addWidget(self.map_view, 0, 0, 1, 2)
+        self.map_view.key_press_signal.connect(self.handle_key_press)
 
         self.altitude_graph = AltitudeGraph()
         self.alt_controller = AltController(self.altitude_graph, self.config_model, self.telemetry_model)
@@ -122,6 +123,24 @@ class MainView(QMainWindow):
         self.reconnect_page_view = ReconnectPageView(self.telemetry_model)
         self.reconnect_page_controller = ReconnectPageController(self.reconnect_page_view, self.telemetry_model)
         self.stacked_widget.addWidget(self.reconnect_page_view)
+    
+    def keyPressEvent(self, event):
+        print("Key press event in MainView")  # Debug statement
+        if event.key() == 49:  # Key code for '1'
+            self.tabs.setCurrentIndex(0)  # Set to Tab 1
+        elif event.key() == 50:  # Key code for '2'
+            self.tabs.setCurrentIndex(1)  # Set to Tab 2
+        else:
+            super().keyPressEvent(event)  # Pass the event to the parent class
+
+    def handle_key_press(self, event):
+        print("Key press event in MainView")  # Debug statement
+        if event.key() == 49:  # Key code for '1'
+            self.tabs.setCurrentIndex(0)  # Set to Tab 1
+        elif event.key() == 50:  # Key code for '2'
+            self.tabs.setCurrentIndex(1)  # Set to Tab 2
+        else:
+            super().keyPressEvent(event)  # Pass the event to the parent class
 
     def apply_dark_theme(self):
         self.app.setStyle("Fusion")

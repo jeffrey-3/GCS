@@ -66,8 +66,25 @@ class BinaryStruct:
         if self._data is None:
             raise ValueError("No data has been unpacked or set yet.")
 
-        # Apply multipliers to scale the data
-        scaled_data = [getattr(self._data, name) / self.multipliers[name] for name in self.field_names]
+        # Apply multipliers to scale the data and ensure correct types
+        scaled_data = []
+        for name in self.field_names:
+            value = getattr(self._data, name)
+            multiplier = self.multipliers[name]
+
+            if multiplier == 0:
+                raise ValueError(f"Multiplier for field '{name}' is zero, division not possible.")
+
+            scaled_value = value / multiplier
+
+            # Convert to expected type
+            field_type = self.format_string[len(self.format_string) - len(self.field_names) + self.field_names.index(name)]
+            if field_type in 'bBhHiI':  # Integer types
+                scaled_value = int(round(scaled_value))
+            elif field_type in 'fd':  # Floating point types
+                scaled_value = float(scaled_value)
+
+            scaled_data.append(scaled_value)
 
         # Pack the scaled data
         return struct.pack(self.format_string, *scaled_data)

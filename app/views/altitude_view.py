@@ -49,3 +49,7 @@ class AltitudeGraph(pg.PlotWidget):
             text.setFont(QFont("Arial", 10))
             text.setPos(x[i], y[i])
             self.addItem(text)
+    
+    def keyPressEvent(self, event):
+        # Propagate the key press event to the parent widget
+        self.parent().keyPressEvent(event)

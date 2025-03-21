@@ -19,4 +19,8 @@ class ParamsController:
                 QMessageBox.information(self.view, "Error", "File format incorrect")
 
     def params_loaded(self):
-        self.view.file_view.setPlainText(str(self.model.params_payload.data))
+        result = ""
+        for field_name in self.model.params_payload.field_names:
+            value = getattr(self.model.params_payload.data, field_name)
+            result += f"{field_name}: {value}\n"
+        self.view.file_view.setPlainText(result)
