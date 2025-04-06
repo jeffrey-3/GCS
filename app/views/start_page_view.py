@@ -32,4 +32,18 @@ class StartPageView(QWidget):
 
         self.layout.addStretch()
 
+        self.download_logs_btn = QPushButton("Download Logs")
+        self.download_logs_btn.setStyleSheet("font-size: 24pt; font-weight: bold;")
+        # self.download_logs_btn.clicked.connect(self.reconnect_signal.emit)
+        self.layout.addWidget(self.download_logs_btn)
+
+        # Calibrate all sensors at once, you don't have to use the values tho
+        # Three calibration buttons for gyro, accel, mag
+        # When clicked, it calibrates
+        # In calibration mode, it sends command to put plane in calibration mode
+        self.calib_btn = QPushButton("Sensor Calibration")
+        self.calib_btn.setStyleSheet("font-size: 24pt; font-weight: bold;")
+        # self.download_logs_btn.clicked.connect(self.reconnect_signal.emit)
+        self.layout.addWidget(self.calib_btn)
+
         self.setLayout(self.layout)

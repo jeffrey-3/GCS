@@ -31,6 +31,10 @@ class PlanPageView(QWidget):
 
         self.scroll_layout = QVBoxLayout()
 
+        self.center_btn = QPushButton("Center Map")
+        self.center_btn.setStyleSheet("font-size: 12pt;")
+        self.scroll_layout.addWidget(self.center_btn)
+
         self.plan_view = PlanView()
         self.plan_controller = PlanController(self.plan_view, self.model)
         self.scroll_layout.addWidget(self.plan_view)

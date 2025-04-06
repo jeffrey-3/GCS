@@ -3,7 +3,6 @@ from PyQt5.QtCore import *
 from app.utils.tile_downloader import TileDownloader
 from app.utils.utils import *
 from app.utils.utils import *
-from communication.binary_struct import ParamsPayload
 import json
 from dataclasses import dataclass
 

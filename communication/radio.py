@@ -5,99 +5,75 @@ import random
 from lib.cobs import cobs
 import math
 from PyQt5.QtCore import *
-from communication.binary_struct import *
-
-# Send payload to radio
-# Radio adds header, COBS, and checksum and sends it through
-# Radio receives packet and decodes into payload 
+from aplink.aplink import APLink
+from aplink.messages.cal_sensors import CalSensors
+from aplink.messages.vfr_hud import VFRHUD
+from aplink.messages.nav_display import NavDisplay
 
 class Radio(QObject):
     RATE_CALC_DT = 1 # Delta time to calculate received byte rate
-    TRANSMIT_DT = 0.5 # Delta time to transmit packets
 
-    tlm_recv = pyqtSignal(dict)
+    cal_sensors_signal = pyqtSignal(CalSensors)
+    vfr_hud_signal = pyqtSignal(VFRHUD)
+    nav_display_signal = pyqtSignal(NavDisplay)
+    rx_byte_rate_signal = pyqtSignal(float)
 
     def __init__(self):
         super().__init__()
-        self._tlm_payload = TelemetryPayload()
-        self._queue = [] # Queue to store payloads awaiting transmission
-        self._rx_byte_rate = 0 # Received byte rate
+        self.aplink = APLink()
         self.ser = None
         self.port = None
-        self.bytes_read = 0 # Bytes read since last byte rate calculation
-        self.prev_send_time = time.time() # Time of last transmit
+        self.bytes_read_sum = 0 # Bytes read since last byte rate calculation
         self.prev_rate_calc_time = time.time() # Time of last byte rate calculation
     
     def start(self, port):
-        self.port = port
         if port != 'Testing':
             try:
                 self.ser = serial.Serial(port, 115200, timeout=1000)
             except:
                 return False
-        
-            threading.Thread(target=self.transmit_thread, daemon=True).start()
+            self.port = port
             threading.Thread(target=self.receive_thread, daemon=True).start()
-
             return True
         else:
             threading.Thread(target=self.testing_thread, daemon=True).start()
-
             return True
 
-    def transmit_thread(self):
-        while True:
-            elapsed_time = time.time() - self.prev_send_time
-            if len(self._queue) > 0 and elapsed_time > self.TRANSMIT_DT:
-                print("Transmit:", self.payload_to_packet(self._queue[0]))
-                self.ser.write(
-                    self.payload_to_packet(self._queue[0])
-                )
-                self.prev_send_time = time.time()
-            
-            time.sleep(0.01)
+    def transmit(self):
+        self.ser.write(self.payload_to_packet(self._queue[0]))
     
     def receive_thread(self):
         while True:
-            # Find start byte
-            packet = self.ser.read(1)
+            byte = self.ser.read(1)
+            result = self.aplink.parse_byte(byte)
+            if result is not None:
+                payload, msg_id = result
 
-            # Detect start byte
-            if packet == b'\x00':
-                print("--- Radio Received ---")
+                self.bytes_read_sum += APLink.calculate_packet_size(len(payload))
+                elapsed = time.time() - self.prev_rate_calc_time
+                if elapsed >= self.RATE_CALC_DT:
+                    self.rx_byte_rate_signal.emit(self.bytes_read_sum / elapsed)
+                    self.bytes_read_sum = 0
+                    self.prev_rate_calc_time = time.time()
 
-                # Get length byte
-                payload_length = self.ser.read(1)
-                packet += payload_length
-
-                print("Length byte: ", int.from_bytes(payload_length, 'little'))
-
-                # Get message ID
-                msg_id = self.ser.read(1)
-                packet += msg_id
-
-                print("Message ID: ", int.from_bytes(msg_id, 'little'))
-        
-                # Read payload and COBS byte
-                payload_cobs = self.ser.read(int.from_bytes(payload_length, 'little') + 1)
-                packet += payload_cobs
-                # print(payload_cobs)
-                print("RECV: ", packet)
-                print(len(packet))
-
-                # # Decode to remove COBS byte and get payload
-                # payload = cobs.decode(payload_cobs)
-
-                # # Figure out what type of payload from message ID
-                # if int.from_bytes(msg_id, 'little') == TelemetryPayload().msg_id: 
-                #     # Telemetry payload
-                #     self.parse_telemetry(payload, int.from_bytes(payload_length, 'little'))
-                # else:
-                #     # If acknowledgement received, remove from queue
-                #     for queued_payload in self._queue:
-                #         if payload == queued_payload.pack():  # Compare bytes with bytes
-                #             self._queue.remove(queued_payload)
-                #             break
+                if msg_id == CalSensors.MSG_ID:
+                    cal_sensors = CalSensors()
+                    cal_sensors.unpack(payload)
+                    print(cal_sensors.az)
+                    self.cal_sensors_signal.emit([
+                        cal_sensors.ax, cal_sensors.ay, cal_sensors.az, 
+                        cal_sensors.gx, cal_sensors.gy, cal_sensors.gz,
+                        cal_sensors.mx, cal_sensors.my, cal_sensors.mz
+                    ])
+                elif msg_id == VFRHUD.MSG_ID:
+                    vfr_hud = VFRHUD()
+                    vfr_hud.unpack(payload)
+                    print(vfr_hud.alt)
+                    self.vfr_hud_signal.emit({
+                        "roll": vfr_hud.roll, 
+                        "pitch": vfr_hud.pitch, 
+                        "yaw:": vfr_hud.yaw
+                    })
     
     def testing_thread(self):
         while True:
@@ -128,32 +104,13 @@ class Radio(QObject):
 
             self.emit_signal()
 
-            time.sleep(0.02)
-    
-    def parse_telemetry(self, payload, payload_length):
-        self._tlm_payload.unpack(payload)
-
-        self.bytes_read += payload_length + 3 # Add 3 because header
-        elapsed = time.time() - self.prev_rate_calc_time
-        if elapsed >= self.RATE_CALC_DT:
-            self._rx_byte_rate = self.bytes_read / elapsed
-            self.bytes_read = 0
-            self.prev_rate_calc_time = time.time()
-        
-        self.emit_signal()
+            time.sleep(0.02)        
 
     def payload_to_packet(self, payload):
         return bytes([0x00]) + bytes([payload.struct_size]) + bytes([payload.msg_id]) + cobs.encode(payload.pack())
 
     def add_payload_to_queue(self, payload):
         self._queue.append(payload)
-
-    def emit_signal(self):
-        self.tlm_recv.emit({
-            "latest_payload": self._tlm_payload,
-            "queue_length": len(self._queue),
-            "byte_rate": self._rx_byte_rate
-        })
     
     def get_data(self):
         return self._tlm_payload

@@ -81,3 +81,6 @@ class RawView(QScrollArea):
         self.ahrs_table.update([str(round(ahrs_roll, 2)),
                                str(round(ahrs_pitch, 2)),
                                str(round(ahrs_heading, 2))])
+        # self.rc_table.update([str(round(, 2)),
+        #                       str(round(, 2)),
+        #                       str(round(, 2))])

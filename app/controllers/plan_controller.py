@@ -30,3 +30,4 @@ class PlanController:
     
     def waypoints_updated(self, waypoints):
         self.model.update_waypoints(waypoints)
+        self.view.calculate_landing_stats(waypoints, self.model.params_payload.data.navigator_min_dist_wp)

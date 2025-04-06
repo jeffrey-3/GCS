@@ -7,6 +7,7 @@ class MainController:
         self.view.start_page_view.reconnect_signal.connect(self.go_to_reconnect_page)
         self.view.params_page_controller.complete_signal.connect(self.next_page)
         self.view.plan_page_controller.complete_signal.connect(self.next_page)
+        self.view.plan_page_controller.center_map_signal.connect(self.center_map)
         self.view.connect_page_controller.complete_signal.connect(self.start)
         self.view.reconnect_page_controller.complete_signal.connect(self.reconnect)
     
@@ -36,3 +37,6 @@ class MainController:
         self.view.tabs.show()
         self.view.live_alt_view.show()
         self.view.state_view.show()
+    
+    def center_map(self):
+        self.view.map_view.pan_to_home()

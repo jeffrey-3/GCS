@@ -25,5 +25,5 @@ class MapController:
         self.config_model.map_clicked(pos)
     
     def params_updated(self):
-        self.view.accept_radius = self.config_model.params_payload.data.min_dist_wp
+        self.view.accept_radius = self.config_model.params_payload.data.navigator_min_dist_wp
         self.view.render()

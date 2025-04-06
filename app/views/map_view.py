@@ -6,7 +6,7 @@ import math
 class MapView(QGraphicsView):
     MIN_ZOOM = 1
     MAX_ZOOM = 19
-    TILE_SIZE = 500  # Size of tiles in pixels
+    TILE_SIZE = 256  # Size of tiles in pixels
 
     clicked = pyqtSignal(tuple)  # Signal emitted when the map is clicked
     key_press_signal = pyqtSignal(QKeyEvent)  # Signal emitted on key press
@@ -43,12 +43,16 @@ class MapView(QGraphicsView):
         self.plane_lat = lat
         self.plane_lon = lon
         self.plane_hdg = hdg
+    
+    def pan_to_home(self):
+        self.set_map_position(self.waypoints[0].lat, self.waypoints[0].lon)
+        self.render()
 
     def set_waypoints(self, waypoints):
         """Set the list of waypoints and center the map on the first waypoint if not already centered."""
         self.waypoints = waypoints
         if self.map_lat == 0:  # If the map is not yet centered
-            self.set_map_position(waypoints[0].lat, waypoints[0].lon)
+            self.pan_to_home()
 
     def render(self):
         """Render the map, waypoints, acceptance radius, and plane arrow."""
@@ -181,6 +185,7 @@ class MapView(QGraphicsView):
         if len(self.waypoints) > 0:
             points = [self.lat_lon_to_map_coords(wp.lat, wp.lon) for wp in self.waypoints]
             for i, point in enumerate(points):
+                # if i != 0 and i != len(self.waypoints) - 1:
                 radius = self.meters_to_pixels(self.accept_radius, self.waypoints[i].lat)
                 circle = QGraphicsEllipseItem(QRectF(-radius, -radius, 2 * radius, 2 * radius))
                 circle.setPen(QPen(Qt.white, 3))
@@ -278,3 +283,22 @@ class MapView(QGraphicsView):
                 self.zoom -= 1
 
         self.render()  # Redraw the map after changes
+    
+    def mousePressEvent(self, event):
+        self.render() # For some reason it messes up pixel coordinates of if not rendered
+        """Handle mouse press events to detect clicks on the map."""
+        if event.button() == Qt.LeftButton:
+            # Get the position of the click in view coordinates
+            view_pos = event.pos()
+            
+            # Convert the view coordinates to scene coordinates
+            scene_pos = self.mapToScene(view_pos)
+            
+            # Convert the scene coordinates to latitude and longitude
+            lat, lon = self.pixel_to_lat_lon(scene_pos.x(), scene_pos.y())
+            
+            # Emit the clicked signal with the latitude and longitude
+            self.clicked.emit((lat, lon))
+        
+        # Call the base class method to ensure proper event handling
+        super().mousePressEvent(event)

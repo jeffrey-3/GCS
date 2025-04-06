@@ -123,17 +123,6 @@ class PlanView(QWidget):
         waypoints, success = self.get_waypoints()
         if success:
             self.updated_waypoints.emit(waypoints)
-
-            if len(waypoints) > 2:
-                position_diff = geodesic((waypoints[-1].lat, waypoints[-1].lon), (waypoints[-2].lat, waypoints[-2].lon)).meters
-                alt_diff = waypoints[-1].alt - waypoints[-2].alt
-                gs_angle = math.atan(alt_diff / position_diff) * 180 / math.pi
-                
-                land_hdg = calculate_bearing((waypoints[-2].lat, waypoints[-2].lon), (waypoints[-1].lat, waypoints[-1].lon))
-
-                self.landing_label.setText(f"Glideslope Angle: {gs_angle:.1f}\nLanding Heading: {land_hdg:.1f}")
-            else:
-                self.landing_label.setText("Glideslope Angle:\nLanding Heading:")
         
         self.table.clearSelection()
     
@@ -143,3 +132,15 @@ class PlanView(QWidget):
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
         self.table.clearSelection()
+    
+    def calculate_landing_stats(self, waypoints, accept_radius):
+        if len(waypoints) > 2:
+            position_diff = geodesic((waypoints[-1].lat, waypoints[-1].lon), (waypoints[-2].lat, waypoints[-2].lon)).meters - accept_radius
+            alt_diff = waypoints[-1].alt - waypoints[-2].alt
+            gs_angle = math.atan(alt_diff / position_diff) * 180 / math.pi
+            
+            land_hdg = calculate_bearing((waypoints[-2].lat, waypoints[-2].lon), (waypoints[-1].lat, waypoints[-1].lon))
+
+            self.landing_label.setText(f"Glideslope Angle: {gs_angle:.1f}\nLanding Heading: {land_hdg:.1f}")
+        else:
+            self.landing_label.setText("Glideslope Angle:\nLanding Heading:")
