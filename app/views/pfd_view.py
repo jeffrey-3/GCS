@@ -8,7 +8,7 @@ import math
 
 class PFDView(QLabel):
     # Canvas
-    WIDTH = 1200
+    WIDTH = 1000
     HEIGHT = 600
 
     # Wings
@@ -57,12 +57,14 @@ class PFDView(QLabel):
     HDG_SCALE_LENGTH = 30
     HDG_TICK_INTERVAL = 22.5  # Degrees per tick on scale
 
-    def __init__(self):
+    def __init__(self, radio):
         super().__init__()
         self.canvas = QPixmap(self.WIDTH, self.HEIGHT)
         self.setPixmap(self.canvas)
         self.painter = QPainter(self.canvas)
         self.painter.setFont(QFont("Arial", 20))
+
+        radio.vfr_pfd_signal.connect(self.update)
 
     def update(self, roll, pitch, heading, altitude, airspeed):
         self.draw_background(roll, pitch)

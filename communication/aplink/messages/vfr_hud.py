@@ -1,4 +1,4 @@
-from aplink import APLink
+from communication.aplink.aplink import APLink
 import struct
 
 class VFRHUD:

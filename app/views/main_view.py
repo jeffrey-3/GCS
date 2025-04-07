@@ -15,7 +15,6 @@ from app.views.plan_page_view import PlanPageView
 from app.views.connect_page_view import ConnectPageView
 from app.controllers.raw_controller import RawController
 from app.controllers.live_alt_controller import LiveAltController
-from app.controllers.pfd_controller import PFDController
 from app.controllers.altitude_controller import AltController
 from app.controllers.state_controller import StateController
 from app.controllers.plan_page_controller import PlanPageController
@@ -27,10 +26,10 @@ from app.controllers.data_controller import DataController
 from app.utils.utils import *
 
 class MainView(QMainWindow):
-    def __init__(self, app, telemetry_model, config_model):
+    def __init__(self, app, radio, config_model):
         super().__init__()
         self.app = app
-        self.telemetry_model = telemetry_model
+        self.radio = radio
         self.config_model = config_model
         self.init_ui()
 
@@ -58,13 +57,12 @@ class MainView(QMainWindow):
         """
         PFD
         """
-        self.pfd_view = PFDView()
-        self.pfd_controller = PFDController(self.pfd_view, self.telemetry_model)
+        self.pfd_view = PFDView(self.radio)
         self.pfd_view.hide()
         self.left_layout.addWidget(self.pfd_view)
 
         self.state_view = StateView()
-        self.state_controller = StateController(self.state_view, self.telemetry_model)
+        self.state_controller = StateController(self.state_view, self.radio)
         self.state_view.hide()
         self.left_layout.addWidget(self.state_view)
 
@@ -79,25 +77,25 @@ class MainView(QMainWindow):
         self.left_layout.addWidget(self.tabs)
 
         self.data_view = DataView()
-        self.data_controller = DataController(self.data_view, self.telemetry_model)
+        self.data_controller = DataController(self.data_view, self.radio)
         self.tabs.addTab(self.data_view, "Quick (1)")
         
         self.raw_view = RawView()
-        self.raw_controller = RawController(self.raw_view, self.telemetry_model)
+        self.raw_controller = RawController(self.raw_view, self.radio)
         self.tabs.addTab(self.raw_view, "Raw (2)")
 
     def create_map_widgets(self):
         self.map_view = MapView()
-        self.map_controller = MapController(self.map_view, self.config_model, self.telemetry_model)
+        self.map_controller = MapController(self.map_view, self.config_model, self.radio)
         self.right_layout.addWidget(self.map_view, 0, 0, 1, 2)
         self.map_view.key_press_signal.connect(self.handle_key_press)
 
         self.altitude_graph = AltitudeGraph()
-        self.alt_controller = AltController(self.altitude_graph, self.config_model, self.telemetry_model)
+        self.alt_controller = AltController(self.altitude_graph, self.config_model, self.radio)
         self.right_layout.addWidget(self.altitude_graph, 2, 0, 2, 1)
 
         self.live_alt_view = LiveAltView()
-        self.live_alt_controller = LiveAltController(self.live_alt_view, self.telemetry_model)
+        self.live_alt_controller = LiveAltController(self.live_alt_view, self.radio)
         self.live_alt_view.hide()
         self.right_layout.addWidget(self.live_alt_view, 2, 1, 2, 1)
     
@@ -116,12 +114,12 @@ class MainView(QMainWindow):
         self.plan_page_controller = PlanPageController(self.plan_page_view, self.config_model)
         self.stacked_widget.addWidget(self.plan_page_view)
 
-        self.connect_page_view = ConnectPageView(self.telemetry_model)
-        self.connect_page_controller = ConnectPageController(self.connect_page_view, self.telemetry_model)
+        self.connect_page_view = ConnectPageView(self.radio)
+        self.connect_page_controller = ConnectPageController(self.connect_page_view, self.radio)
         self.stacked_widget.addWidget(self.connect_page_view)
 
-        self.reconnect_page_view = ReconnectPageView(self.telemetry_model)
-        self.reconnect_page_controller = ReconnectPageController(self.reconnect_page_view, self.telemetry_model)
+        self.reconnect_page_view = ReconnectPageView(self.radio)
+        self.reconnect_page_controller = ReconnectPageController(self.reconnect_page_view, self.radio)
         self.stacked_widget.addWidget(self.reconnect_page_view)
     
     def keyPressEvent(self, event):

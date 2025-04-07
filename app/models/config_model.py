@@ -19,7 +19,6 @@ class ConfigModel(QObject):
 
     def __init__(self):
         super().__init__()
-        self.params_payload = ParamsPayload()
         self.waypoints = None
         self.params_json = None
     
