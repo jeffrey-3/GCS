@@ -12,7 +12,8 @@ class Waypoint:
     lon: float
     alt: float
 
-class ConfigModel(QObject):
+# Data storage class that gets passed to all instruments
+class GCS(QObject):
     waypoints_updated = pyqtSignal(list)
     map_clicked_signal = pyqtSignal(tuple)
     params_loaded = pyqtSignal()
@@ -21,6 +22,9 @@ class ConfigModel(QObject):
         super().__init__()
         self.waypoints = None
         self.params_json = None
+
+        # Before map loaded...
+        self.process_flightplan_file("app/resources/last_flightplan.json")
     
     def process_params_file(self, path):
         try:
@@ -65,7 +69,7 @@ class ConfigModel(QObject):
                 Waypoint(float(wp['lat']), float(wp['lon']), float(wp['alt'])) 
                 for wp in json_data
             ]
-            
+            print("waypoint update emitted")
             self.waypoints_updated.emit(self.waypoints)
             return True  # Success
         except Exception as e:

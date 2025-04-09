@@ -5,6 +5,12 @@ import math
 
 # You can draw pixmap, and then rotate entire pixmap instead of calculating every individual point
 
+# If you make PFD green with black background with the grey map it looks more military like
+
+
+# Use arrows outside of the scale along with line
+# make scale red below min speed
+# make colours variables
 
 class PFDView(QLabel):
     # Canvas
@@ -17,7 +23,7 @@ class PFDView(QLabel):
     WINGS_BORDER_WIDTH = 2
     WINGS_LENGTH = 100
     WINGS_HEIGHT = 20
-    WINGS_STARTING = WIDTH/2 - 250  # How far apart the sides are
+    WINGS_STARTING = WIDTH/2 - 230  # How far apart the sides are
 
     # Horizon
     HORIZON_THICKNESS = 2
@@ -31,7 +37,6 @@ class PFDView(QLabel):
     PITCH_SCALE_INTERVALS = 5
 
     # Altitude and speed scale
-    SCALE_HEIGHT = 550
     SCALE_WIDTH = 180
     TICK_LENGTH = 30
     TICK_THICKNESS = 4
@@ -50,7 +55,8 @@ class PFDView(QLabel):
     # Flight director
     FLIGHT_DIRECTOR_THICKNESS = 5
     FLIGHT_DIRECTOR_LENGTH = 170
-    FD_PX_PER_HDG_DEG = 2
+    FD_PX_PER_ROLL_DEG = 10
+    FD_LINE_WIDTH = 225
 
     # Heading scale
     HDG_SCALE_SPACING = 150
@@ -64,16 +70,22 @@ class PFDView(QLabel):
         self.painter = QPainter(self.canvas)
         self.painter.setFont(QFont("Arial", 20))
 
-        radio.vfr_pfd_signal.connect(self.update)
+        radio.vfr_hud_signal.connect(self.update)
+    
+    def resizeEvent(self, event):
+        print("resize event")
+        pixmap = self.pixmap()
+        pixmap=pixmap.scaled(self.width(), self.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.setPixmap(pixmap)
 
     def update(self, roll, pitch, heading, altitude, airspeed):
         self.draw_background(roll, pitch)
         self.draw_pitch_scale(roll, pitch)
-        self.draw_altitude_scale(altitude)
-        self.draw_speed_scale(airspeed)
+        self.draw_altitude_scale(altitude, 20)
+        self.draw_speed_scale(airspeed, 10)
         self.draw_heading_scale(heading)
         self.draw_wings()
-        # self.draw_flight_director()
+        self.draw_flight_director(roll, pitch, 0, 0)
 
         self.setPixmap(self.canvas)
 
@@ -124,16 +136,10 @@ class PFDView(QLabel):
     def altitude_to_px(self, altitude):
         return altitude * (self.ALTITUDE_SCALE_SPACING / self.ALTITUDE_SCALE_INTERVALS)
 
-    def draw_flight_director(self):
+    def draw_flight_director(self, roll, pitch, roll_setpoint, pitch_setpoint):
         # Calculate deviation from setpoints
-        pitch_error = self.flight_data.pitch_setpoint - self.flight_data.pitch
-        heading_error = self.flight_data.heading_setpoint - self.flight_data.heading
-
-        # Normalize heading error to nearest
-        while heading_error >= 180:
-            heading_error -= 360
-        while heading_error < -180:
-            heading_error += 360
+        pitch_error = pitch_setpoint - pitch
+        roll_error = roll_setpoint - roll
 
         self.painter.setPen(QPen(QColor("magenta"), self.FLIGHT_DIRECTOR_THICKNESS, Qt.SolidLine))
 
@@ -146,14 +152,14 @@ class PFDView(QLabel):
                               QPointF(self.WIDTH/2 + self.FLIGHT_DIRECTOR_LENGTH, y))
 
         # Vertical
-        x = self.WIDTH/2 + heading_error*self.FD_PX_PER_HDG_DEG
+        x = self.WIDTH/2 + roll_error*self.FD_PX_PER_ROLL_DEG
         x = self.clamp(x,
                        self.WIDTH/2 - self.FLIGHT_DIRECTOR_LENGTH*0.8,
                        self.WIDTH/2 + self.FLIGHT_DIRECTOR_LENGTH*0.8)
-        self.painter.drawLine(QPointF(x, self.HEIGHT/2 - self.FLIGHT_DIRECTOR_LENGTH - self.flight_data.pitch_setpoint),
-                              QPointF(x, self.HEIGHT/2 + self.FLIGHT_DIRECTOR_LENGTH - self.flight_data.pitch_setpoint))
+        self.painter.drawLine(QPointF(x, self.HEIGHT/2 - self.FLIGHT_DIRECTOR_LENGTH - pitch_setpoint),
+                              QPointF(x, self.HEIGHT/2 + self.FLIGHT_DIRECTOR_LENGTH - pitch_setpoint))
 
-    def draw_speed_scale(self, speed):
+    def draw_speed_scale(self, speed, setpoint):
         self.painter.setPen(QPen(QColor("black"), 1, Qt.SolidLine))
         self.painter.setBrush(QBrush(QColor("black"), Qt.SolidPattern))
         self.painter.setOpacity(0.3)
@@ -165,10 +171,10 @@ class PFDView(QLabel):
         self.painter.setOpacity(1.0)
         self.painter.setPen(QPen(QColor("#b4b2b4"), self.TICK_THICKNESS, Qt.SolidLine))
         for i in range(self.SPEED_SCALE_N_TICKS):
-            offset = i * self.SPEED_SCALE_SPACING - self.SCALE_HEIGHT/2
+            offset = i * self.SPEED_SCALE_SPACING - self.HEIGHT/2
             x1 = 0
             x2 = self.TICK_LENGTH
-            y = self.HEIGHT/2 - self.SCALE_HEIGHT/2 - offset + self.speed_to_px(speed)
+            y = -offset + self.speed_to_px(speed)
 
             self.painter.drawLine(QPointF(x1, y), QPointF(x2, y))
 
@@ -177,6 +183,11 @@ class PFDView(QLabel):
 
         self.painter.drawLine(QPointF(self.TICK_THICKNESS/2, 0),
                               QPointF(self.TICK_THICKNESS/2, self.HEIGHT))  # Scale
+        
+        # Speed setpoint
+        self.painter.setPen(QPen(Qt.magenta, self.FLIGHT_DIRECTOR_THICKNESS, Qt.SolidLine))
+        self.painter.drawLine(QPointF(self.SCALE_WIDTH, self.HEIGHT / 2 + self.speed_to_px(speed) - self.speed_to_px(setpoint)), 
+                              QPointF(self.FD_LINE_WIDTH, self.HEIGHT / 2 + self.speed_to_px(speed) - self.speed_to_px(setpoint)))
 
         # Draw black box with speed reading
         self.painter.setPen(QPen(QColor("#b4b2b4"), self.TICK_THICKNESS, Qt.SolidLine))
@@ -185,7 +196,7 @@ class PFDView(QLabel):
         self.painter.setPen(QPen(QColor("white"), 1, Qt.SolidLine))
         self.painter.drawText(QRectF(0, self.HEIGHT/2 - self.BOX_HEIGHT/2, self.SCALE_WIDTH, self.BOX_HEIGHT), Qt.AlignCenter, "{:.1f}".format(speed))
 
-    def draw_altitude_scale(self, altitude):
+    def draw_altitude_scale(self, altitude, setpoint):
         self.painter.setPen(QPen(QColor("black"), 1, Qt.SolidLine))
         self.painter.setBrush(QBrush(QColor("black"), Qt.SolidPattern))
         self.painter.setOpacity(0.3)
@@ -197,10 +208,10 @@ class PFDView(QLabel):
         self.painter.setOpacity(1.0)
         self.painter.setPen(QPen(QColor("#b4b2b4"), self.TICK_THICKNESS, Qt.SolidLine))
         for i in range(self.ALTITUDE_SCALE_N_TICKS):
-            offset = i * self.ALTITUDE_SCALE_SPACING - self.SCALE_HEIGHT/2
+            offset = i * self.ALTITUDE_SCALE_SPACING - self.HEIGHT/2
             x1 = self.WIDTH
             x2 = self.WIDTH - self.TICK_LENGTH
-            y = self.HEIGHT/2 - self.SCALE_HEIGHT/2 - offset + self.altitude_to_px(altitude)
+            y = -offset + self.altitude_to_px(altitude)
 
             self.painter.drawLine(QPointF(x1, y), QPointF(x2, y))
 
@@ -210,7 +221,13 @@ class PFDView(QLabel):
                                         self.SCALE_WIDTH - self.TICK_LENGTH - margin,
                                         self.ALTITUDE_SCALE_SPACING), Qt.AlignVCenter | Qt.AlignRight, str(int(i * self.ALTITUDE_SCALE_INTERVALS)))
 
-        self.painter.drawLine(QPointF(self.WIDTH - self.TICK_THICKNESS/2, 0), QPointF(self.WIDTH - self.TICK_THICKNESS/2, self.HEIGHT))  # Scale
+        self.painter.drawLine(QPointF(self.WIDTH - self.TICK_THICKNESS/2, 0), 
+                              QPointF(self.WIDTH - self.TICK_THICKNESS/2, self.HEIGHT))  # Scale
+        
+        # Setpoint
+        self.painter.setPen(QPen(Qt.magenta, self.FLIGHT_DIRECTOR_THICKNESS, Qt.SolidLine))
+        self.painter.drawLine(QPointF(self.WIDTH - self.SCALE_WIDTH, self.HEIGHT / 2 + self.altitude_to_px(altitude) - self.altitude_to_px(setpoint)), 
+                              QPointF(self.WIDTH - self.FD_LINE_WIDTH, self.HEIGHT / 2 + self.altitude_to_px(altitude) - self.altitude_to_px(setpoint)))
 
         # Draw black box with altitude reading
         self.painter.setPen(QPen(QColor("#b4b2b4"), self.TICK_THICKNESS, Qt.SolidLine))

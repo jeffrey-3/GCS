@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from geopy.distance import geodesic
 from app.utils.utils import *
-from app.models.config_model import Waypoint
+from app.gcs import Waypoint
 
 class CustomTableWidget(QTableWidget):
     def __init__(self, *args, **kwargs):
@@ -11,11 +11,15 @@ class CustomTableWidget(QTableWidget):
     def keyPressEvent(self, event):
         event.ignore()
 
-class PlanView(QWidget):
+class PlanView(QScrollArea):
     updated_waypoints = pyqtSignal(list)
 
     def __init__(self):
         super().__init__()
+
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setWidgetResizable(True)
 
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
@@ -30,8 +34,7 @@ class PlanView(QWidget):
         self.table = CustomTableWidget()
         self.table.setSelectionMode(QTableWidget.SingleSelection)
         self.table.setStyleSheet("font-size: 10pt;")
-        self.table.setMinimumHeight(800)
-        self.table.setMinimumWidth(800)
+        self.table.setMinimumHeight(300)
         self.table.setColumnCount(4)
         self.table.setHorizontalHeaderLabels(["Waypoint Type", "Latitude", "Longitude", "Altitude (m)"])
         for col in range(self.table.columnCount()):
@@ -61,6 +64,61 @@ class PlanView(QWidget):
         self.layout.addStretch()
 
         self.table.cellChanged.connect(self.on_cell_changed)
+
+        self.add_tiles_downloader()
+
+        container = QWidget()
+        container.setLayout(self.layout)
+        self.setWidget(container)
+    
+    def add_tiles_downloader(self):
+        layout = QFormLayout()
+
+        layout.addRow(QLabel("<h1>Download Map Tiles</h1>"))
+
+        self.top_left_lat_input = QLineEdit("43.884043")
+        self.top_left_lat_input.setStyleSheet("font-size: 12pt;")
+        self.top_left_lon_input = QLineEdit("-79.424526")
+        self.top_left_lon_input.setStyleSheet("font-size: 12pt;")
+        self.bottom_right_lat_input = QLineEdit("43.874797")
+        self.bottom_right_lat_input.setStyleSheet("font-size: 12pt;")
+        self.bottom_right_lon_input = QLineEdit("-79.404941")
+        self.bottom_right_lon_input.setStyleSheet("font-size: 12pt;")
+        self.min_zoom_input = QLineEdit("1")
+        self.min_zoom_input.setStyleSheet("font-size: 12pt;")
+        self.max_zoom_input = QLineEdit("19")
+        self.max_zoom_input.setStyleSheet("font-size: 12pt;")
+
+        self.top_left_lat_label = QLabel("Top Left Lat:")
+        self.top_left_lat_label.setStyleSheet("font-size: 12pt;")
+
+        self.top_left_lon_label = QLabel("Top Left Lon:")
+        self.top_left_lon_label.setStyleSheet("font-size: 12pt;")
+
+        self.bottom_right_lat_label = QLabel("Bottom Right Lat:")
+        self.bottom_right_lat_label.setStyleSheet("font-size: 12pt;")
+
+        self.bottom_right_lon_label = QLabel("Bottom Right Lon:")
+        self.bottom_right_lon_label.setStyleSheet("font-size: 12pt;")
+
+        self.min_zoom_label = QLabel("Min Zoom:")
+        self.min_zoom_label.setStyleSheet("font-size: 12pt;")
+
+        self.max_zoom_label = QLabel("Max Zoom:")
+        self.max_zoom_label.setStyleSheet("font-size: 12pt;")
+
+        layout.addRow(self.top_left_lat_label, self.top_left_lat_input)
+        layout.addRow(self.top_left_lon_label, self.top_left_lon_input)
+        layout.addRow(self.bottom_right_lat_label, self.bottom_right_lat_input)
+        layout.addRow(self.bottom_right_lon_label, self.bottom_right_lon_input)
+        layout.addRow(self.min_zoom_label, self.min_zoom_input)
+        layout.addRow(self.max_zoom_label, self.max_zoom_input)
+
+        self.download_btn = QPushButton("Download Tiles")
+        self.download_btn.setStyleSheet("font-size: 12pt;")
+        layout.addRow(self.download_btn)
+
+        self.layout.addLayout(layout)
     
     def get_waypoints(self):
         waypoints = []

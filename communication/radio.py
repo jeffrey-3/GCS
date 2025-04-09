@@ -88,26 +88,17 @@ class Radio(QObject):
             t = time.time()
 
             self.nav_display_signal.emit(
-                0,
-                0,
-                0,
-                0,
-                0
+                100 * math.sin(t / 2),
+                100 * math.cos(t / 2),
+                2
             )
 
             self.vfr_hud_signal.emit(
-                0,
-                0,
-                0,
+                10 * math.sin(t / 2),
+                10 * math.sin(t / 2),
+                10 * math.sin(t / 2),
+                15 + 10 * math.sin(t / 2),
+                15 + 10 * math.sin(t / 2)
             )
 
             time.sleep(0.02)        
-
-    def payload_to_packet(self, payload):
-        return bytes([0x00]) + bytes([payload.struct_size]) + bytes([payload.msg_id]) + cobs.encode(payload.pack())
-
-    def add_payload_to_queue(self, payload):
-        self._queue.append(payload)
-    
-    def get_data(self):
-        return self._tlm_payload

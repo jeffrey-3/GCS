@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+from app.utils.utils import *
 import math
 
 class MapView(QGraphicsView):
@@ -11,8 +12,11 @@ class MapView(QGraphicsView):
     clicked = pyqtSignal(tuple)  # Signal emitted when the map is clicked
     key_press_signal = pyqtSignal(QKeyEvent)  # Signal emitted on key press
 
-    def __init__(self):
+    def __init__(self, radio, gcs):
         super().__init__()
+        self.radio = radio
+        self.gcs = gcs
+
         # Disable scroll bars
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -26,12 +30,38 @@ class MapView(QGraphicsView):
         self.plane_lat = 0  # Plane's current latitude
         self.plane_lon = 0  # Plane's current longitude
         self.plane_hdg = 0  # Plane's current heading
-        self.plane_current_wp = 0  # Index of the current waypoint
+        self.plane_current_wp = 1000  # Index of the current waypoint
         self.map_lat = 0  # Map's center latitude
         self.map_lon = 0  # Map's center longitude
         self.zoom = 16  # Current zoom level
-        self.waypoints = []  # List of waypoints
+        self.waypoints = gcs.get_waypoints()  # List of waypoints
         self.tile_cache = {}  # Cache for loaded tiles to improve performance
+
+        self.radio.nav_display_signal.connect(self.nav_display_update)
+        self.gcs.waypoints_updated.connect(self.set_waypoints)
+
+        if self.waypoints is not None:
+            self.map_lat = self.waypoints[0].lat
+            self.map_lon = self.waypoints[0].lon
+
+        self.render()
+    
+    def nav_display_update(self, north, east, waypoint_index):
+        self.plane_lat, self.plane_lon = calculate_new_coordinate(
+            self.waypoints[0].lat,
+            self.waypoints[0].lon,
+            north,
+            east
+        )
+        self.map_lat, self.map_lon = calculate_new_coordinate(
+            self.waypoints[0].lat,
+            self.waypoints[0].lon,
+            north,
+            east
+        )
+        self.plane_current_wp = waypoint_index
+        
+        self.render()
 
     def set_map_position(self, lat, lon):
         """Set the map's center position using latitude and longitude."""
@@ -49,6 +79,7 @@ class MapView(QGraphicsView):
         self.render()
 
     def set_waypoints(self, waypoints):
+        print("set waypoints")
         """Set the list of waypoints and center the map on the first waypoint if not already centered."""
         self.waypoints = waypoints
         if self.map_lat == 0:  # If the map is not yet centered
@@ -118,6 +149,8 @@ class MapView(QGraphicsView):
                     pixmap = self.tile_cache[tile_key]
                 else:
                     pixmap = QPixmap(f"tiles/{self.zoom}/{tile_x}/{tile_y}.png")
+                    pixmap = QPixmap.fromImage(pixmap.toImage().convertToFormat(QImage.Format_Grayscale8))
+
                     if not pixmap.isNull():
                         pixmap = pixmap.scaled(self.TILE_SIZE, self.TILE_SIZE)
                         self.tile_cache[tile_key] = pixmap
@@ -156,11 +189,13 @@ class MapView(QGraphicsView):
             for i, point in enumerate(points):
                 s = "H" if i == 0 else "L" if i == len(self.waypoints) - 1 else str(i + 1)
                 radius = 20
-                circle = QGraphicsEllipseItem(QRectF(-radius, -radius, 2 * radius, 2 * radius))
-                circle.setBrush(QBrush(Qt.black))
-                circle.setPen(QPen(Qt.magenta, 5))
+                brush = QBrush(Qt.black)
                 if self.plane_current_wp == i:
-                    circle.setBrush(QBrush(QColor(139, 0, 139)))  # Highlight current waypoint
+                    brush = QBrush(QColor(139, 0, 139))  # Highlight current waypoint
+                    # radius = 30
+                circle = QGraphicsEllipseItem(QRectF(-radius, -radius, 2 * radius, 2 * radius))
+                circle.setBrush(brush)
+                circle.setPen(QPen(Qt.magenta, 5))
                 circle.setPos(QPointF(point[0], point[1]))  # Convert tuple to QPointF
                 self.scene.addItem(circle)
 

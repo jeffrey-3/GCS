@@ -11,8 +11,8 @@ class LiveAltView(pg.PlotWidget):
         self.showGrid(x=True, y=True)
         self.getViewBox().setMouseEnabled(x=False, y=False)
         self.setBackground(None)
-        self.getAxis('left').setStyle(tickFont=pg.QtGui.QFont('Arial', 16))
-        self.getAxis('bottom').setStyle(tickFont=pg.QtGui.QFont('Arial', 16))
+        self.getAxis('left').setStyle(tickFont=pg.QtGui.QFont('Arial', 14))
+        self.getAxis('bottom').setStyle(tickFont=pg.QtGui.QFont('Arial', 14))
 
         self.x_data = []
         self.alt_data = []
