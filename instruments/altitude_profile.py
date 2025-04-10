@@ -4,7 +4,7 @@ from utils.utils import calculate_displacement_meters
 import math
 
 class AltitudeGraph(pg.PlotWidget):
-    def __init__(self):
+    def __init__(self, gcs):
         super().__init__()
         self.setMenuEnabled(False)
         self.hideButtons()
@@ -13,15 +13,16 @@ class AltitudeGraph(pg.PlotWidget):
         self.setBackground(None)
         self.getAxis('left').setStyle(tickFont=pg.QtGui.QFont('Arial', 14))
         self.getAxis('bottom').setStyle(tickFont=pg.QtGui.QFont('Arial', 14))
+
+        self.update(gcs.get_waypoints(), 0)
     
-    def update(self, waypoints, center_lat, center_lon, wp_idx):
+    def update(self, waypoints, wp_idx):
         self.clear()
 
-        wp_pos = calculate_displacement_meters(waypoints[0].lat, waypoints[0].lon, center_lat, center_lon)
-        x = [math.sqrt(wp_pos[0]**2 + wp_pos[1]**2)]
+        x = [0]
         for i in range(1, len(waypoints)):
-            wp_pos = calculate_displacement_meters(waypoints[i].lat, waypoints[i].lon, center_lat, center_lon)
-            prev_wp_pos = calculate_displacement_meters(waypoints[i-1].lat, waypoints[i-1].lon, center_lat, center_lon)
+            wp_pos = calculate_displacement_meters(waypoints[i].lat, waypoints[i].lon, waypoints[0].lat, waypoints[0].lon)
+            prev_wp_pos = calculate_displacement_meters(waypoints[i-1].lat, waypoints[i-1].lon, waypoints[0].lat, waypoints[0].lon)
             dist = math.sqrt((wp_pos[0] - prev_wp_pos[0])**2 + (wp_pos[1] - prev_wp_pos[1])**2)
             x.append(x[i - 1] + dist)
         y = [-wp.alt for wp in waypoints]

@@ -2,15 +2,10 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import qdarktheme
-from instruments.pfd import PFDView
-from instruments.quick import DataView
-from instruments.raw import RawView
-from instruments.state import StateView
-from instruments.altitude_profile import AltitudeGraph
 from instruments.planner import PlanView
 from instruments.params import ParamsView
 from instruments.connect import ConnectView
-from instruments.nav_display import NavDisplay
+from instruments.flight_display import FlightDisplay
 from utils.utils import *
 from gcs import GCS
 from communication.radio import Radio
@@ -24,6 +19,9 @@ from communication.radio import Radio
 
 # Top bar using qhboxlayout with buttons
 
+# Clickable map is simpler code wise becuase you can just store waypoints in a single module
+# Buttons and planner both in same planner.py file so its easy to transfer between
+
 # modern theme
 # Flight view
 
@@ -33,54 +31,21 @@ class MainView(QMainWindow):
         self.app = app
         self.radio = radio
         self.gcs = gcs
+
+        self.tabs_font = QFont()
+        self.tabs_font.setPointSize(12)
         
         self.setWindowTitle("UAV Ground Control")
-        self.create_layouts()
-        self.create_map_widgets()
-        self.create_data_widgets()
-
-    def create_layouts(self):
-        self.main_layout = QHBoxLayout()
-        self.left_layout = QVBoxLayout()
-        self.right_layout = QGridLayout()
-
-        self.main_layout.addLayout(self.left_layout, 1)
-        self.main_layout.addLayout(self.right_layout, 2)
-
-        container = QWidget()
-        container.setLayout(self.main_layout)
-
+        
         main_tabs = QTabWidget()
-        main_tabs.addTab(container, "Flight")
+        main_tabs.setFont(self.tabs_font)
+        main_tabs.addTab(FlightDisplay(self.radio, self.gcs), "Flight")
         main_tabs.addTab(PlanView(self.radio, self.gcs), "Waypoints")
-        main_tabs.addTab(ParamsView(), "Config")
+        main_tabs.addTab(ParamsView(), "Parameters")
+        main_tabs.addTab(QWidget(), "Calibration")
         main_tabs.addTab(ConnectView(self.radio), "Connect")
+        
         self.setCentralWidget(main_tabs)
-
-        font = QFont()
-        font.setPointSize(12)
-        main_tabs.setFont(font)
-
-    def create_data_widgets(self):
-        self.left_layout.addWidget(PFDView(self.radio))
-        self.left_layout.addWidget(StateView())
-
-        self.tabs = QTabWidget()
-        self.tabs.addTab(DataView(), "Quick")
-        self.tabs.addTab(RawView(), "Raw")
-        self.tabs.addTab(QWidget(), "Calibrate")
-
-        font = QFont()
-        font.setPointSize(12)
-        self.tabs.setFont(font)
-
-        self.left_layout.addWidget(self.tabs)
-
-    def create_map_widgets(self):
-        self.right_layout.addWidget(NavDisplay(self.radio, self.gcs), 0, 0, 1, 1)
-        self.right_layout.addWidget(AltitudeGraph(), 1, 0, 1, 1)
-        self.right_layout.setRowStretch(0, 3) 
-        self.right_layout.setRowStretch(1, 1)
         
 if __name__ == "__main__":
     # if hasattr(Qt, 'AA_EnableHighDpiScaling'):
@@ -89,14 +54,10 @@ if __name__ == "__main__":
     #     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
 
     app = QApplication([])
-
     qdarktheme.setup_theme(corner_shape="sharp")
     qdarktheme.load_palette()
-
     gcs = GCS()
     radio = Radio()
-
     main_window = MainView(app, radio, gcs)
     main_window.show()
-    
     app.exec()
