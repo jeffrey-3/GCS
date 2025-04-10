@@ -1,8 +1,6 @@
 import time
 import threading
 import serial
-import random
-from lib.cobs import cobs
 import math
 from PyQt5.QtCore import *
 from communication.aplink.aplink import APLink

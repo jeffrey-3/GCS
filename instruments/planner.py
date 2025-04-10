@@ -1,8 +1,11 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from geopy.distance import geodesic
-from app.utils.utils import *
-from app.gcs import Waypoint
+from utils.utils import *
+from gcs import Waypoint
+from instruments.plan_map import PlanMap
+
+# Radius from home instead of min/max latlon
 
 class CustomTableWidget(QTableWidget):
     def __init__(self, *args, **kwargs):
@@ -14,21 +17,27 @@ class CustomTableWidget(QTableWidget):
 class PlanView(QScrollArea):
     updated_waypoints = pyqtSignal(list)
 
-    def __init__(self):
+    def __init__(self, radio, gcs):
         super().__init__()
 
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setWidgetResizable(True)
 
-        self.layout = QVBoxLayout()
+        self.layout = QHBoxLayout()
         self.setLayout(self.layout)
 
-        self.layout.addWidget(QLabel("<h1>Flight Plan</h1>"))
+        self.left_layout = QVBoxLayout()
+        
+        container = QWidget()
+        container.setLayout(self.left_layout)
+        self.layout.addWidget(container, 1)
+
+        self.left_layout.addWidget(QLabel("<h1>Flight Plan</h1>"))
 
         self.landing_label = QLabel("Glideslope Angle:\nLanding Heading:")
         self.landing_label.setStyleSheet("font-size: 12pt;")
-        self.layout.addWidget(self.landing_label)
+        self.left_layout.addWidget(self.landing_label)
         
         # Table setup
         self.table = CustomTableWidget()
@@ -39,15 +48,17 @@ class PlanView(QScrollArea):
         self.table.setHorizontalHeaderLabels(["Waypoint Type", "Latitude", "Longitude", "Altitude (m)"])
         for col in range(self.table.columnCount()):
             self.table.horizontalHeader().setSectionResizeMode(col, 1)  # 1 means stretching mode
-        self.layout.addWidget(self.table)
+        self.left_layout.addWidget(self.table)
         
         # Buttons for adding and removing rows
         buttonLayout = QGridLayout()
-        self.layout.addLayout(buttonLayout)
+        self.left_layout.addLayout(buttonLayout)
         self.addButton = QPushButton("Add Waypoint")
         self.addButton.setStyleSheet("font-size: 12pt;")
         self.removeButton = QPushButton("Remove Selected")
         self.removeButton.setStyleSheet("font-size: 12pt;")
+        self.editButton = QPushButton("Edit Selected") # Edit lat/lon/alt
+        self.editButton.setStyleSheet("font-size: 12pt;")
         self.importButton = QPushButton("Import File")
         self.importButton.setStyleSheet("font-size: 12pt;")
         self.exportButton = QPushButton("Export File")
@@ -58,14 +69,17 @@ class PlanView(QScrollArea):
         
         buttonLayout.addWidget(self.addButton, 0, 0)
         buttonLayout.addWidget(self.removeButton, 0, 1)
+        # buttonLayout.addWidget(self.editButton, 0, 2)
         buttonLayout.addWidget(self.importButton, 1, 0)
         buttonLayout.addWidget(self.exportButton, 1, 1)
 
-        self.layout.addStretch()
+        # self.left_layout.addStretch()
 
         self.table.cellChanged.connect(self.on_cell_changed)
 
         self.add_tiles_downloader()
+
+        self.layout.addWidget(PlanMap(radio, gcs), 2)
 
         container = QWidget()
         container.setLayout(self.layout)
@@ -118,7 +132,7 @@ class PlanView(QScrollArea):
         self.download_btn.setStyleSheet("font-size: 12pt;")
         layout.addRow(self.download_btn)
 
-        self.layout.addLayout(layout)
+        self.left_layout.addLayout(layout)
     
     def get_waypoints(self):
         waypoints = []

@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
-from app.utils.utils import *
+from utils.utils import *
 import math
 
 class MapView(QGraphicsView):
@@ -12,9 +12,8 @@ class MapView(QGraphicsView):
     clicked = pyqtSignal(tuple)  # Signal emitted when the map is clicked
     key_press_signal = pyqtSignal(QKeyEvent)  # Signal emitted on key press
 
-    def __init__(self, radio, gcs):
+    def __init__(self, gcs):
         super().__init__()
-        self.radio = radio
         self.gcs = gcs
 
         # Disable scroll bars
@@ -33,57 +32,11 @@ class MapView(QGraphicsView):
         self.plane_current_wp = 1000  # Index of the current waypoint
         self.map_lat = 0  # Map's center latitude
         self.map_lon = 0  # Map's center longitude
-        self.zoom = 16  # Current zoom level
-        self.waypoints = gcs.get_waypoints()  # List of waypoints
+        self.zoom = 17  # Current zoom level
+        self.waypoints = []  # List of waypoints
         self.tile_cache = {}  # Cache for loaded tiles to improve performance
 
-        self.radio.nav_display_signal.connect(self.nav_display_update)
-        self.gcs.waypoints_updated.connect(self.set_waypoints)
-
-        if self.waypoints is not None:
-            self.map_lat = self.waypoints[0].lat
-            self.map_lon = self.waypoints[0].lon
-
         self.render()
-    
-    def nav_display_update(self, north, east, waypoint_index):
-        self.plane_lat, self.plane_lon = calculate_new_coordinate(
-            self.waypoints[0].lat,
-            self.waypoints[0].lon,
-            north,
-            east
-        )
-        self.map_lat, self.map_lon = calculate_new_coordinate(
-            self.waypoints[0].lat,
-            self.waypoints[0].lon,
-            north,
-            east
-        )
-        self.plane_current_wp = waypoint_index
-        
-        self.render()
-
-    def set_map_position(self, lat, lon):
-        """Set the map's center position using latitude and longitude."""
-        self.map_lat = lat
-        self.map_lon = lon
-
-    def set_plane_position(self, lat, lon, hdg):
-        """Set the plane's current position and heading."""
-        self.plane_lat = lat
-        self.plane_lon = lon
-        self.plane_hdg = hdg
-    
-    def pan_to_home(self):
-        self.set_map_position(self.waypoints[0].lat, self.waypoints[0].lon)
-        self.render()
-
-    def set_waypoints(self, waypoints):
-        print("set waypoints")
-        """Set the list of waypoints and center the map on the first waypoint if not already centered."""
-        self.waypoints = waypoints
-        if self.map_lat == 0:  # If the map is not yet centered
-            self.pan_to_home()
 
     def render(self):
         """Render the map, waypoints, acceptance radius, and plane arrow."""
@@ -207,9 +160,10 @@ class MapView(QGraphicsView):
                 self.scene.addItem(text)
 
     def draw_arrow(self):
+        print("Draw arrow")
         """Draw the plane's arrow at its current position and heading."""
         x, y = self.lat_lon_to_map_coords(self.plane_lat, self.plane_lon)
-        arrow_pixmap = QPixmap("app/resources/arrow.png").scaled(50, 50)
+        arrow_pixmap = QPixmap("resources/arrow.png").scaled(50, 50)
         arrow = self.scene.addPixmap(arrow_pixmap)
         arrow.setPos(x - 25, y - 25)  # Center the arrow
         arrow.setTransformOriginPoint(arrow_pixmap.width() / 2, arrow_pixmap.height() / 2)

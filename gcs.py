@@ -1,8 +1,7 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-from app.utils.tile_downloader import TileDownloader
-from app.utils.utils import *
-from app.utils.utils import *
+from utils.tile_downloader import TileDownloader
+from utils.utils import *
 import json
 from dataclasses import dataclass
 
@@ -14,6 +13,9 @@ class Waypoint:
 
 # Data storage class that gets passed to all instruments
 class GCS(QObject):
+    MAP_MAX_ZOOM = 10
+    MAP_MIN_ZOOM = 10
+
     waypoints_updated = pyqtSignal(list)
     map_clicked_signal = pyqtSignal(tuple)
     params_loaded = pyqtSignal()
@@ -24,7 +26,7 @@ class GCS(QObject):
         self.params_json = None
 
         # Before map loaded...
-        self.process_flightplan_file("app/resources/last_flightplan.json")
+        self.process_flightplan_file("resources/last_flightplan.json")
     
     def process_params_file(self, path):
         try:

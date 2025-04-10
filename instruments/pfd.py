@@ -74,9 +74,9 @@ class PFDView(QLabel):
     
     def resizeEvent(self, event):
         print("resize event")
-        pixmap = self.pixmap()
-        pixmap=pixmap.scaled(self.width(), self.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        self.setPixmap(pixmap)
+        # pixmap = self.pixmap()
+        # pixmap=pixmap.scaled(self.width(), self.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        # self.setPixmap(pixmap)
 
     def update(self, roll, pitch, heading, altitude, airspeed):
         self.draw_background(roll, pitch)
@@ -90,6 +90,9 @@ class PFDView(QLabel):
         self.setPixmap(self.canvas)
 
     def draw_heading_scale(self, heading):
+        if heading < 0:
+            heading += 360
+
         scale_width = (360 / self.HDG_TICK_INTERVAL) * self.HDG_SCALE_SPACING
         x_offset = self.WIDTH/2 - (heading / self.HDG_TICK_INTERVAL) * self.HDG_SCALE_SPACING
         self.draw_hdg_ticks(-scale_width + x_offset)
