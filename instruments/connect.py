@@ -21,19 +21,23 @@ class ConnectView(QWidget):
         # COM Port Selection
         self.com_port_label = QLabel("Select COM Port:")
         self.com_port_label.setStyleSheet("font-size: 12pt;")
+        self.com_port_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.layout.addWidget(self.com_port_label)
 
         self.com_port_dropdown = QComboBox()
         self.com_port_dropdown.setStyleSheet("font-size: 12pt;")
+        self.com_port_dropdown.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.layout.addWidget(self.com_port_dropdown)
 
         # Refresh Button
         self.refresh_button = QPushButton("Refresh COM Ports")
         self.refresh_button.setStyleSheet("font-size: 12pt;")
+        self.refresh_button.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.layout.addWidget(self.refresh_button)
 
         self.connect_button = QPushButton("Connect")
         self.connect_button.setStyleSheet("font-size: 12pt;")
+        self.connect_button.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.layout.addWidget(self.connect_button)
 
         self.layout.addStretch()

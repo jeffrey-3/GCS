@@ -38,14 +38,23 @@ class FlightDisplay(QWidget):
         self.add_right_widgets()
     
     def add_left_widgets(self):
-        self.left_layout.addWidget(PFDView(self.radio))
-        self.left_layout.addWidget(StateView())
+        self.vsplitter = QSplitter(Qt.Vertical)
+        self.left_layout.addWidget(self.vsplitter)
+
+        self.vsplitter.addWidget(PFDView(self.radio))
+
+        self.left_sub_layout = QVBoxLayout()
+        container = QWidget()
+        container.setLayout(self.left_sub_layout)
+        self.vsplitter.addWidget(container)
+
+        self.left_sub_layout.addWidget(StateView())
 
         self.tabs = QTabWidget()
         self.tabs.setFont(self.tabs_font)
         self.tabs.addTab(DataView(), "Quick")
         self.tabs.addTab(RawView(), "Raw")
-        self.left_layout.addWidget(self.tabs)
+        self.left_sub_layout.addWidget(self.tabs)
 
     def add_right_widgets(self):
         self.right_layout.addWidget(NavDisplay(self.radio, self.gcs), 0, 0, 1, 1)

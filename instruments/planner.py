@@ -4,25 +4,79 @@ from geopy.distance import geodesic
 from utils.utils import *
 from gcs import Waypoint
 from instruments.map import MapView
+from instruments.altitude_profile import AltitudeGraph
 
+# You still need lat/lon for download tiles because you download tiles at home, and create flight plan on field, so knowledge of waypoints does not exist yet
 # Radius from home instead of min/max latlon
 
 class PlanMap(MapView):
-    def __init__(self, radio, gcs):
+    def __init__(self, radio, gcs, view):
         super().__init__(gcs)
-        self.waypoints = gcs.get_waypoints() 
+        self.last_click_pos = None
+        self.adding_waypoint = False
+        self.waypoints = gcs.get_waypoints().copy()
 
         if self.waypoints is not None:
             self.map_lat = self.waypoints[0].lat
             self.map_lon = self.waypoints[0].lon
 
         self.gcs.waypoints_updated.connect(self.set_waypoints)
+        view.removeButton.clicked.connect(self.remove_btn_press)
+        view.addButton.clicked.connect(self.add_btn_press)
+        view.upload_btn.clicked.connect(self.upload)
     
     def set_waypoints(self, waypoints):
         self.waypoints = waypoints
         if self.map_lat == 0:  # If the map is not yet centered
             self.pan_to_home()
+    
+    def mousePressEvent(self, event):
+        print("Clicked map")
+        self.render() # For some reason it messes up pixel coordinates of if not rendered
+        """Handle mouse press events to detect clicks on the map."""
+        if event.button() == Qt.LeftButton:
+            self.last_click_pos = event.pos()
 
+            if self.adding_waypoint:
+                lat, lon = self.pixel_to_lat_lon(self.last_click_pos.x(), self.last_click_pos.y())
+                self.waypoints.append(Waypoint(lat, lon, self.waypoints[-2].alt))
+                self.adding_waypoint = False
+                self.plane_current_wp = 10000
+                self.render()
+            else:
+                selected = False
+                for i in range(len(self.waypoints)):
+                    x, y = self.lat_lon_to_map_coords(self.waypoints[i].lat, self.waypoints[i].lon)
+                    if (math.sqrt((self.last_click_pos.x() - x)**2 + (self.last_click_pos.y() - y)**2) < 50):
+                        print(i)
+                        self.plane_current_wp = i
+                        self.render()
+                        selected = True
+                if not selected:
+                    lat, lon = self.pixel_to_lat_lon(self.last_click_pos.x(), self.last_click_pos.y())
+                    self.waypoints[self.plane_current_wp] = Waypoint(lat, lon, self.waypoints[self.plane_current_wp].alt)
+                    
+
+                    print("Reset map")
+                    self.plane_current_wp = 10000
+                    self.render()
+
+        super().mousePressEvent(event)
+    
+    def remove_btn_press(self):
+        if len(self.waypoints) > 3:
+            del self.waypoints[self.plane_current_wp]
+            self.plane_current_wp = 10000
+            self.render()
+    
+    def add_btn_press(self):
+        print("add btn press")
+        self.adding_waypoint = True
+    
+    def upload(self):
+        print("Upload")
+        self.gcs.update_waypoints(self.waypoints)
+        
 class CustomTableWidget(QTableWidget):
     def __init__(self, *args, **kwargs):
         super(CustomTableWidget, self).__init__(*args, **kwargs)
@@ -40,31 +94,23 @@ class PlanView(QScrollArea):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setWidgetResizable(True)
 
+        self.upload_btn = QPushButton("Upload To Vehicle")
+        self.upload_btn.setStyleSheet("font-size: 20pt;")
+
         self.layout = QHBoxLayout()
         self.setLayout(self.layout)
 
         self.left_layout = QVBoxLayout()
+        self.right_layout = QGridLayout()
         
-        container = QWidget()
-        container.setLayout(self.left_layout)
-        self.layout.addWidget(container, 1)
+        self.layout.addLayout(self.left_layout, 1)
+        self.layout.addLayout(self.right_layout, 2)
 
         self.left_layout.addWidget(QLabel("<h1>Flight Plan</h1>"))
 
         self.landing_label = QLabel("Glideslope Angle:\nLanding Heading:")
         self.landing_label.setStyleSheet("font-size: 12pt;")
         self.left_layout.addWidget(self.landing_label)
-        
-        # Table setup
-        self.table = CustomTableWidget()
-        self.table.setSelectionMode(QTableWidget.SingleSelection)
-        self.table.setStyleSheet("font-size: 10pt;")
-        self.table.setMinimumHeight(300)
-        self.table.setColumnCount(4)
-        self.table.setHorizontalHeaderLabels(["Waypoint Type", "Latitude", "Longitude", "Altitude (m)"])
-        for col in range(self.table.columnCount()):
-            self.table.horizontalHeader().setSectionResizeMode(col, 1)  # 1 means stretching mode
-        self.left_layout.addWidget(self.table)
         
         # Buttons for adding and removing rows
         buttonLayout = QGridLayout()
@@ -79,23 +125,25 @@ class PlanView(QScrollArea):
         self.importButton.setStyleSheet("font-size: 12pt;")
         self.exportButton = QPushButton("Export File")
         self.exportButton.setStyleSheet("font-size: 12pt;")
-
-        self.removeButton.clicked.connect(self.removeWaypoint)
-        self.addButton.clicked.connect(self.addWaypoint)
         
-        buttonLayout.addWidget(self.addButton, 0, 0)
-        buttonLayout.addWidget(self.removeButton, 0, 1)
-        # buttonLayout.addWidget(self.editButton, 0, 2)
-        buttonLayout.addWidget(self.importButton, 1, 0)
-        buttonLayout.addWidget(self.exportButton, 1, 1)
-
-        # self.left_layout.addStretch()
-
-        self.table.cellChanged.connect(self.on_cell_changed)
+        buttonLayout.addWidget(self.addButton, 0, 0, 1, 2)
+        buttonLayout.addWidget(self.removeButton, 0, 2, 1, 2)
+        buttonLayout.addWidget(self.editButton, 0, 4, 1, 2)
+        buttonLayout.addWidget(self.importButton, 1, 0, 1, 3)
+        buttonLayout.addWidget(self.exportButton, 1, 3, 1, 3)
 
         self.add_tiles_downloader()
 
-        self.layout.addWidget(PlanMap(radio, gcs), 2)
+        self.map = PlanMap(radio, gcs, self)
+        self.right_layout.addWidget(self.map)
+        self.right_layout.setRowStretch(0, 3) 
+        
+        self.right_layout.addWidget(AltitudeGraph(gcs))
+        self.right_layout.setRowStretch(1, 1)
+
+        self.left_layout.addStretch()
+
+        self.left_layout.addWidget(self.upload_btn)
 
         container = QWidget()
         container.setLayout(self.layout)
@@ -149,77 +197,6 @@ class PlanView(QScrollArea):
         layout.addRow(self.download_btn)
 
         self.left_layout.addLayout(layout)
-    
-    def get_waypoints(self):
-        waypoints = []
-        for row in range(self.table.rowCount()):
-            for col in range(self.table.columnCount()):
-                if not self.table.item(row, col):
-                    return [], False
-            lat = self.table.item(row, 1).text()
-            lon = self.table.item(row, 2).text()
-            alt = self.table.item(row, 3).text()
-            if is_float(lat) and is_float(lon) and is_float(alt):
-                waypoints.append(Waypoint(float(lat), float(lon), float(alt)))
-            else:
-                return [], False
-        return waypoints, True
-
-    def addWaypoint(self, lat="", lon="", alt=""):
-        rowPosition = self.table.rowCount() - 1 # Insert before last landing waypoint
-        self.table.insertRow(rowPosition)
-        
-        type_item = QTableWidgetItem("WAYPOINT")
-        type_item.setFlags(type_item.flags() & ~Qt.ItemIsEditable)  # Make it read-only
-        self.table.setItem(rowPosition, 0, type_item)
-        self.table.setItem(rowPosition, 1, QTableWidgetItem(lat))
-        self.table.setItem(rowPosition, 2, QTableWidgetItem(lon))
-        self.table.setItem(rowPosition, 3, QTableWidgetItem(alt))
-
-    def removeWaypoint(self):
-        if self.table.rowCount() > 3 and self.table.currentRow() != 0 and self.table.currentRow() != self.table.rowCount() - 1:
-            self.table.removeRow(self.table.currentRow())
-            self.on_cell_changed()
-    
-    def load_waypoints(self, waypoints):
-        self.table.setRowCount(0) # Remove all rows
-        for row in range(len(waypoints)):
-            self.table.insertRow(row)
-
-            if row == 0:
-                type = "TAKEOFF"
-            elif row == len(waypoints) - 1:
-                type = "LAND"
-            else:
-                type = "WAYPOINT"
-
-            type_item = QTableWidgetItem(type)
-            type_item.setFlags(type_item.flags() & ~Qt.ItemIsEditable)  # Make it read-only
-            self.table.setItem(row, 0, type_item)
-            self.table.setItem(row, 1, QTableWidgetItem(str(waypoints[row].lat)))
-            self.table.setItem(row, 2, QTableWidgetItem(str(waypoints[row].lon)))
-            self.table.setItem(row, 3, QTableWidgetItem(str(waypoints[row].alt)))
-    
-    def clicked(self, pos):
-        selectedRows = set(index.row() for index in self.table.selectedIndexes())
-        for row in sorted(selectedRows, reverse=True):
-            self.table.setItem(row, 1, QTableWidgetItem(str(round(pos[0], 7))))
-            self.table.setItem(row, 2, QTableWidgetItem(str(round(pos[1], 7))))
-        self.table.clearSelection()
-
-    def on_cell_changed(self):
-        waypoints, success = self.get_waypoints()
-        if success:
-            self.updated_waypoints.emit(waypoints)
-        
-        self.table.clearSelection()
-    
-    def clear_table_selection(self):
-        self.table.clearSelection()
-    
-    def mousePressEvent(self, event):
-        super().mousePressEvent(event)
-        self.table.clearSelection()
     
     def calculate_landing_stats(self, waypoints, accept_radius):
         if len(waypoints) > 2:

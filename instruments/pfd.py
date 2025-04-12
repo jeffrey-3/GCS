@@ -1,18 +1,19 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-import math
-
-# You can draw pixmap, and then rotate entire pixmap instead of calculating every individual point
-
-# If you make PFD green with black background with the grey map it looks more military like
 
 
-# Use arrows outside of the scale along with line
 # make scale red below min speed
 # make colours variables
 
 class PFDView(QLabel):
+    # Colors
+    SKY_COLOR = QColor("#0079b4")
+    GROUND_COLOR = QColor("#624408")
+    LIGHT_GREY = QColor("#b4b2b4")
+    DARK_GREY = QColor("#383434")
+    YELLOW = QColor("#f6d210")
+
     # Wings
     WINGS_CENTER_SQUARE_SIZE = 15
     WINGS_WIDTH = 10
@@ -52,7 +53,6 @@ class PFDView(QLabel):
     FLIGHT_DIRECTOR_THICKNESS = 5
     FLIGHT_DIRECTOR_LENGTH = 170
     FD_PX_PER_ROLL_DEG = 10
-    FD_LINE_WIDTH = 225
 
     # Heading scale
     HDG_SCALE_SPACING = 150
@@ -65,9 +65,6 @@ class PFDView(QLabel):
         self.update_values(0, 0, 0, 0, 0)
 
         radio.vfr_hud_signal.connect(self.update_values)
-    
-    def resizeEvent(self, event):
-        self.setFixedHeight(self.size().width() * 0.6)
 
     def update_values(self, roll, pitch, heading, altitude, airspeed):
         self.roll = roll
@@ -87,7 +84,7 @@ class PFDView(QLabel):
         self.draw_speed_scale(painter, self.airspeed, 10)
         self.draw_heading_scale(painter, self.heading)
         self.draw_wings(painter)
-        # self.draw_flight_director(roll, pitch, 0, 0)
+        # self.draw_flight_director(painter, self.roll, self.pitch, 0, 0)
 
         painter.end()
 
@@ -102,12 +99,12 @@ class PFDView(QLabel):
         self.draw_hdg_ticks(painter, scale_width + x_offset)
 
         # Scale on edge
-        painter.setPen(QPen(QColor("#b4b2b4"), self.TICK_THICKNESS, Qt.SolidLine))
+        painter.setPen(QPen(self.LIGHT_GREY, self.TICK_THICKNESS, Qt.SolidLine))
         painter.drawLine(QPointF(0, self.size().height() - self.TICK_THICKNESS/2), QPointF(self.size().width(), self.size().height() - self.TICK_THICKNESS/2))
 
         # Box
-        painter.setPen(QPen(QColor("#b4b2b4"), self.TICK_THICKNESS, Qt.SolidLine))
-        painter.setBrush(QBrush(QColor("#383434"), Qt.SolidPattern))
+        painter.setPen(QPen(self.LIGHT_GREY, self.TICK_THICKNESS, Qt.SolidLine))
+        painter.setBrush(QBrush(self.DARK_GREY, Qt.SolidPattern))
         self.draw_rect_center(painter, self.size().width()/2, self.size().height() - self.BOX_HEIGHT/2, self.SCALE_WIDTH, self.BOX_HEIGHT)
 
         painter.setPen(QPen(QColor("white"), 1, Qt.SolidLine))
@@ -174,7 +171,7 @@ class PFDView(QLabel):
 
         # Tick marks
         painter.setOpacity(1.0)
-        painter.setPen(QPen(QColor("#b4b2b4"), self.TICK_THICKNESS, Qt.SolidLine))
+        painter.setPen(QPen(self.LIGHT_GREY, self.TICK_THICKNESS, Qt.SolidLine))
         for i in range(self.SPEED_SCALE_N_TICKS):
             offset = i * self.SPEED_SCALE_SPACING - self.size().height()/2
             x1 = 0
@@ -190,13 +187,23 @@ class PFDView(QLabel):
                               QPointF(self.TICK_THICKNESS/2, self.size().height()))  # Scale
         
         # Speed setpoint
-        painter.setPen(QPen(Qt.magenta, self.FLIGHT_DIRECTOR_THICKNESS, Qt.SolidLine))
-        painter.drawLine(QPointF(self.SCALE_WIDTH, self.size().height() / 2 + self.speed_to_px(speed) - self.speed_to_px(setpoint)), 
-                              QPointF(self.FD_LINE_WIDTH, self.size().height() / 2 + self.speed_to_px(speed) - self.speed_to_px(setpoint)))
+        triangle_width = 20
+        triangle_height = 20
+        painter.setPen(QPen(Qt.NoPen))
+        painter.setBrush(QBrush(Qt.magenta))
+        first_point = QPoint(self.SCALE_WIDTH, self.size().height() / 2 + self.speed_to_px(speed) - self.speed_to_px(setpoint))
+        if first_point.y() < triangle_height:
+            first_point.setY(triangle_height)
+        if first_point.y() > self.size().height() - triangle_height:
+            first_point.setY(self.size().height() - triangle_height)
+        points = QPolygon([first_point, 
+                          QPoint(first_point.x() + triangle_width, first_point.y() + triangle_height),
+                          QPoint(first_point.x() + triangle_width, first_point.y() - triangle_height)])
+        painter.drawPolygon(points)
 
         # Draw black box with speed reading
-        painter.setPen(QPen(QColor("#b4b2b4"), self.TICK_THICKNESS, Qt.SolidLine))
-        painter.setBrush(QBrush(QColor("#383434"), Qt.SolidPattern))
+        painter.setPen(QPen(self.LIGHT_GREY, self.TICK_THICKNESS, Qt.SolidLine))
+        painter.setBrush(QBrush(self.DARK_GREY, Qt.SolidPattern))
         self.draw_rect_center(painter, self.SCALE_WIDTH/2, self.size().height()/2, self.SCALE_WIDTH - self.TICK_THICKNESS, self.BOX_HEIGHT)
         painter.setPen(QPen(QColor("white"), 1, Qt.SolidLine))
         painter.drawText(QRectF(0, self.size().height()/2 - self.BOX_HEIGHT/2, self.SCALE_WIDTH, self.BOX_HEIGHT), Qt.AlignCenter, "{:.1f}".format(speed))
@@ -211,7 +218,7 @@ class PFDView(QLabel):
 
         # Tick marks
         painter.setOpacity(1.0)
-        painter.setPen(QPen(QColor("#b4b2b4"), self.TICK_THICKNESS, Qt.SolidLine))
+        painter.setPen(QPen(self.LIGHT_GREY, self.TICK_THICKNESS, Qt.SolidLine))
         for i in range(self.ALTITUDE_SCALE_N_TICKS):
             offset = i * self.ALTITUDE_SCALE_SPACING - self.size().height()/2
             x1 = self.size().width()
@@ -230,13 +237,23 @@ class PFDView(QLabel):
                               QPointF(self.size().width() - self.TICK_THICKNESS/2, self.size().height()))  # Scale
         
         # Setpoint
-        painter.setPen(QPen(Qt.magenta, self.FLIGHT_DIRECTOR_THICKNESS, Qt.SolidLine))
-        painter.drawLine(QPointF(self.size().width() - self.SCALE_WIDTH, self.size().height() / 2 + self.altitude_to_px(altitude) - self.altitude_to_px(setpoint)), 
-                              QPointF(self.size().width() - self.FD_LINE_WIDTH, self.size().height() / 2 + self.altitude_to_px(altitude) - self.altitude_to_px(setpoint)))
+        triangle_width = 20
+        triangle_height = 20
+        painter.setPen(QPen(Qt.NoPen))
+        painter.setBrush(QBrush(Qt.magenta))
+        first_point = QPoint(self.size().width() - self.SCALE_WIDTH, self.size().height() / 2 + self.altitude_to_px(altitude) - self.altitude_to_px(setpoint))
+        if first_point.y() < triangle_height:
+            first_point.setY(triangle_height)
+        if first_point.y() > self.size().height() - triangle_height:
+            first_point.setY(self.size().height() - triangle_height)
+        points = QPolygon([first_point, 
+                          QPoint(first_point.x() - triangle_width, first_point.y() + triangle_height),
+                          QPoint(first_point.x() - triangle_width, first_point.y() - triangle_height)])
+        painter.drawPolygon(points)
 
         # Draw black box with altitude reading
-        painter.setPen(QPen(QColor("#b4b2b4"), self.TICK_THICKNESS, Qt.SolidLine))
-        painter.setBrush(QBrush(QColor("#383434"), Qt.SolidPattern))
+        painter.setPen(QPen(self.LIGHT_GREY, self.TICK_THICKNESS, Qt.SolidLine))
+        painter.setBrush(QBrush(self.DARK_GREY, Qt.SolidPattern))
         self.draw_rect_center(painter, self.size().width() - self.SCALE_WIDTH/2, self.size().height()/2, self.SCALE_WIDTH - self.TICK_THICKNESS, self.BOX_HEIGHT)
         painter.setPen(QPen(QColor("white"), 1, Qt.SolidLine))
         painter.drawText(QRectF(self.size().width() - self.SCALE_WIDTH, self.size().height()/2 - self.BOX_HEIGHT/2, self.SCALE_WIDTH, self.BOX_HEIGHT), Qt.AlignCenter, "{:.1f}".format(altitude))
@@ -244,20 +261,11 @@ class PFDView(QLabel):
     def draw_rect_center(self, painter, x, y, width, height):
         painter.drawRect(QRectF(x - width/2, y - height/2, width, height))
 
-    def rotate_point(self, origin, point, angle):
-        """
-        Rotate a point counterclockwise by a given angle around a given origin.
-
-        The angle should be given in radians.
-        """
-        ox, oy = origin
-        px, py = point
-
-        qx = ox + math.cos(angle) * (px - ox) - math.sin(angle) * (py - oy)
-        qy = oy + math.sin(angle) * (px - ox) + math.cos(angle) * (py - oy)
-        return [qx, qy]
-
     def draw_pitch_scale(self, painter, roll, pitch):
+        painter.translate(QRectF(0, 0, self.size().width(), self.size().height()).center())
+        painter.rotate(-roll) # Test
+        painter.translate(QRectF(0, 0, self.size().width(), self.size().height()).center() * -1)
+
         for i in range(1, self.PITCH_SCALE_NUM):
             pitch_scale_length = self.PITCH_SCALE_LENGTH_SMALL
 
@@ -266,22 +274,22 @@ class PFDView(QLabel):
                 pitch_scale_length = self.PITCH_SCALE_LENGTH_BIG
                 painter.setPen(QPen(QColor("white"), self.PITCH_SCALE_THICKNESS, Qt.SolidLine))
             else:
-                painter.setPen(QPen(QColor("#b4b6b4"), self.PITCH_SCALE_THICKNESS, Qt.SolidLine))
-
-            origin = (self.size().width()/2, self.size().height()/2)
+                painter.setPen(QPen(self.LIGHT_GREY, self.PITCH_SCALE_THICKNESS, Qt.SolidLine))
 
             height = self.size().height()/2 - i * self.PITCH_SCALE_SPACING + self.pitch_deg_to_px(pitch)
-            point_left = self.rotate_point(origin, (self.size().width()/2 - pitch_scale_length, height), -math.radians(roll))
-            point_right = self.rotate_point(origin, (self.size().width()/2 + pitch_scale_length, height), -math.radians(roll))
+            point_left = (self.size().width()/2 - pitch_scale_length, height)
+            point_right = (self.size().width()/2 + pitch_scale_length, height)
             painter.drawLine(QPointF(point_left[0], point_left[1]), QPointF(point_right[0], point_right[1]))
 
             height = self.size().height()/2 + i * self.PITCH_SCALE_SPACING + self.pitch_deg_to_px(pitch)
-            point_left = self.rotate_point(origin, (self.size().width()/2 - pitch_scale_length, height), -math.radians(roll))
-            point_right = self.rotate_point(origin, (self.size().width()/2 + pitch_scale_length, height), -math.radians(roll))
+            point_left = (self.size().width()/2 - pitch_scale_length, height)
+            point_right = (self.size().width()/2 + pitch_scale_length, height)
             painter.drawLine(QPointF(point_left[0], point_left[1]), QPointF(point_right[0], point_right[1]))
+    
+        painter.resetTransform()
 
     def draw_wings(self, painter):
-        painter.setPen(QPen(QColor("#f6d210"), self.WINGS_BORDER_WIDTH, Qt.SolidLine))
+        painter.setPen(QPen(self.YELLOW, self.WINGS_BORDER_WIDTH, Qt.SolidLine))
         painter.setBrush(QBrush(QColor("black"), Qt.SolidPattern))
 
         # Left wing
@@ -304,44 +312,39 @@ class PFDView(QLabel):
         painter.drawRect(QRectF(self.size().width()/2 - self.WINGS_CENTER_SQUARE_SIZE/2, self.size().height()/2 - self.WINGS_CENTER_SQUARE_SIZE/2, self.WINGS_CENTER_SQUARE_SIZE, self.WINGS_CENTER_SQUARE_SIZE))
 
     def draw_background(self, painter, roll, pitch):
-        origin = (self.size().width()/2, self.size().height()/2)
+        painter.translate(QRectF(0, 0, self.size().width(), self.size().height()).center())
+        painter.rotate(-roll) # Test
+        painter.translate(QRectF(0, 0, self.size().width(), self.size().height()).center() * -1)
 
-        # Points of left and right of horizon at 0 pitch and roll
-        buffer = 5000
-        original_left = (-buffer, self.size().height()/2 + self.pitch_deg_to_px(pitch))
-        original_right = (self.size().width() + buffer, self.size().height()/2 + self.pitch_deg_to_px(pitch))
-        sky_top_left = (original_left[0], original_left[1] - buffer)
-        sky_top_right = (original_right[0], original_right[1] - buffer)
-        ground_bottom_left = (original_left[0], original_left[1] + buffer)
-        ground_bottom_right = (original_right[0], original_right[1] + buffer)
-
-        # Rotate the points for roll
-        point_left = self.rotate_point(origin, original_left, -math.radians(roll))
-        point_right = self.rotate_point(origin, original_right, -math.radians(roll))
-        sky_top_left = self.rotate_point(origin, sky_top_left, -math.radians(roll))
-        sky_top_right = self.rotate_point(origin, sky_top_right, -math.radians(roll))
-        ground_bottom_left = self.rotate_point(origin, ground_bottom_left, -math.radians(roll))
-        ground_bottom_right = self.rotate_point(origin, ground_bottom_right, -math.radians(roll))
+        buffer = 5000 # Extend beyond window to make sure it covers completely
+        point_left = (-buffer, self.size().height()/2 + self.pitch_deg_to_px(pitch))
+        point_right = (self.size().width() + buffer, self.size().height()/2 + self.pitch_deg_to_px(pitch))
+        sky_top_left = (point_left[0], point_left[1] - buffer)
+        sky_top_right = (point_right[0], point_right[1] - buffer)
+        ground_bottom_left = (point_left[0], point_left[1] + buffer)
+        ground_bottom_right = (point_right[0], point_right[1] + buffer)
 
         # Sky
-        painter.setPen(QPen(QColor("#0079b4"), 1, Qt.SolidLine))
-        painter.setBrush(QBrush(QColor("#0079b4"), Qt.SolidPattern))
+        painter.setPen(QPen(self.SKY_COLOR, 1, Qt.SolidLine))
+        painter.setBrush(QBrush(self.SKY_COLOR, Qt.SolidPattern))
         painter.drawPolygon(QPolygonF([QPointF(sky_top_left[0], sky_top_left[1]),
                                             QPointF(sky_top_right[0], sky_top_right[1]),
                                             QPointF(point_right[0], point_right[1]),
                                             QPointF(point_left[0], point_left[1])]))
 
         # Ground
-        painter.setPen(QPen(QColor("#624408"), 1, Qt.SolidLine))
-        painter.setBrush(QBrush(QColor("#624408"), Qt.SolidPattern))
+        painter.setPen(QPen(self.GROUND_COLOR, 1, Qt.SolidLine))
+        painter.setBrush(QBrush(self.GROUND_COLOR, Qt.SolidPattern))
         painter.drawPolygon(QPolygonF([QPointF(ground_bottom_left[0], ground_bottom_left[1]),
                                             QPointF(ground_bottom_right[0], ground_bottom_right[1]),
                                             QPointF(point_right[0], point_right[1]),
                                             QPointF(point_left[0], point_left[1])]))
 
         # Horizon
-        painter.setPen(QPen(QColor("#b4b6b4"), self.HORIZON_THICKNESS, Qt.SolidLine))
+        painter.setPen(QPen(self.LIGHT_GREY, self.HORIZON_THICKNESS, Qt.SolidLine))
         painter.drawLine(QPointF(point_left[0], point_left[1]), QPointF(point_right[0], point_right[1]))
+
+        painter.resetTransform()
 
     def clamp(self, value, minval, maxval):
         return sorted((minval, value, maxval))[1]

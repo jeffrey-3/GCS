@@ -140,7 +140,7 @@ class MapView(QGraphicsView):
 
             # Draw waypoint markers
             for i, point in enumerate(points):
-                s = "H" if i == 0 else "L" if i == len(self.waypoints) - 1 else str(i + 1)
+                s = "H" if i == 0 else "L" if i == len(self.waypoints) - 1 else str(i)
                 radius = 20
                 brush = QBrush(Qt.black)
                 if self.plane_current_wp == i:
@@ -160,7 +160,6 @@ class MapView(QGraphicsView):
                 self.scene.addItem(text)
 
     def draw_arrow(self):
-        print("Draw arrow")
         """Draw the plane's arrow at its current position and heading."""
         x, y = self.lat_lon_to_map_coords(self.plane_lat, self.plane_lon)
         arrow_pixmap = QPixmap("resources/arrow.png").scaled(50, 50)
@@ -272,22 +271,3 @@ class MapView(QGraphicsView):
                 self.zoom -= 1
 
         self.render()  # Redraw the map after changes
-    
-    def mousePressEvent(self, event):
-        self.render() # For some reason it messes up pixel coordinates of if not rendered
-        """Handle mouse press events to detect clicks on the map."""
-        if event.button() == Qt.LeftButton:
-            # Get the position of the click in view coordinates
-            view_pos = event.pos()
-            
-            # Convert the view coordinates to scene coordinates
-            scene_pos = self.mapToScene(view_pos)
-            
-            # Convert the scene coordinates to latitude and longitude
-            lat, lon = self.pixel_to_lat_lon(scene_pos.x(), scene_pos.y())
-            
-            # Emit the clicked signal with the latitude and longitude
-            self.clicked.emit((lat, lon))
-        
-        # Call the base class method to ensure proper event handling
-        super().mousePressEvent(event)

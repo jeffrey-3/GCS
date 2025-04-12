@@ -41,7 +41,7 @@ class AltitudeGraph(pg.PlotWidget):
 
         # Add waypoint number labels
         for i in range(len(waypoints)):
-            s = str(i + 1)
+            s = str(i)
             if i == 0:
                 s = "H"
             elif i == len(waypoints) - 1:

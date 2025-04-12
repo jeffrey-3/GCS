@@ -5,7 +5,8 @@ class NavDisplay(MapView):
     def __init__(self, radio, gcs):
         super().__init__(gcs)
         self.radio = radio
-        self.waypoints = gcs.get_waypoints() 
+        self.gcs = gcs
+        self.waypoints = self.gcs.get_waypoints()
 
         if self.waypoints is not None:
             self.map_lat = self.waypoints[0].lat
@@ -13,6 +14,8 @@ class NavDisplay(MapView):
         self.radio.nav_display_signal.connect(self.nav_display_update)
     
     def nav_display_update(self, north, east, waypoint_index):
+        self.waypoints = self.gcs.get_waypoints()
+
         if len(self.waypoints) == 0:
             return
 

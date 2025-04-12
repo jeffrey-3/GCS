@@ -8,22 +8,37 @@ from instruments.connect import ConnectView
 from instruments.flight_display import FlightDisplay
 from utils.utils import *
 from gcs import GCS
-from communication.radio import Radio
+from radio import Radio
+
+# Scale font size based on window size
 
 # Add more signals to radio and more aplink messages
 # Then you can test the other instruments like raw
 
-# 2. Get it working with preflight sidebar removed
-# 3. Test qpainter writing to QWidget instead of canvas
+# 1. Figure out how to make aplink python lib cleaner
+# 2. add more signals
 # 4. rename everything
 
 # Top bar using qhboxlayout with buttons
 
-# Clickable map is simpler code wise becuase you can just store waypoints in a single module
+# Clickable map is simpler code wise becuase you can just store waypoints in a single module, write this in GCS docs
 # Buttons and planner both in same planner.py file so its easy to transfer between
 
+# PFD red areas
+
+# PFD pitch scale numbers
+
+# exe
+
+# Path nav dipaly trajcetory
+
 # modern theme
-# Flight view
+
+# if you change first waypoint, then center lat/lon will be off.... maybe use EKF center is better
+# Just prevent changing waypoint before the current waypoint in flight?
+# But what happens if you load waypoints, ekf initialize, then you change takeoff point agian before flight, it will take time to converge...
+# Or just re-converge every time you load new waypoints 
+# Or send lat/lon instead of float for position estimate
 
 class MainView(QMainWindow):
     def __init__(self, app, radio, gcs):
