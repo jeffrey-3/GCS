@@ -58,6 +58,7 @@ class MainView(QMainWindow):
         main_tabs.addTab(PlanView(self.radio, self.gcs), "Waypoints")
         main_tabs.addTab(ParamsView(), "Parameters")
         main_tabs.addTab(QWidget(), "Calibration")
+        main_tabs.addTab(QWidget(), "Download Logs")
         main_tabs.addTab(ConnectView(self.radio), "Connect")
         
         self.setCentralWidget(main_tabs)
