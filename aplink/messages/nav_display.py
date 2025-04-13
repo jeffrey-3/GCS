@@ -1,4 +1,4 @@
-from communication.aplink.aplink import APLink
+from aplink.aplink import APLink
 import struct
 
 class NavDisplay:

@@ -1,0 +1,26 @@
+[
+    {
+        "msg_name": "nav_display",
+        "msg_id": 0,
+        "fields": [
+            {"name": "pos_est_north", "type": "float"},
+            {"name": "pos_est_east", "type": "float"},
+            {"name": "current_waypoint", "type": "uint8_t"}
+        ]
+    },
+    {
+        "msg_name": "cal_sensors",
+        "msg_id": 1,
+        "fields": [
+            {"name": "gx", "type": "float"},
+            {"name": "gy", "type": "float"},
+            {"name": "gz", "type": "float"},
+            {"name": "ax", "type": "float"},
+            {"name": "ay", "type": "float"},
+            {"name": "az", "type": "float"},
+            {"name": "mx", "type": "float"},
+            {"name": "my", "type": "float"},
+            {"name": "mz", "type": "float"}
+        ]
+    }
+]
