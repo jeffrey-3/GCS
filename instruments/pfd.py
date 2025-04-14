@@ -6,7 +6,7 @@ from PyQt5.QtGui import *
 # make scale red below min speed
 # make colours variables
 
-class PFDView(QLabel):
+class PFDView(QWidget):
     # Colors
     SKY_COLOR = QColor("#0079b4")
     GROUND_COLOR = QColor("#624408")

@@ -271,3 +271,6 @@ class MapView(QGraphicsView):
                 self.zoom -= 1
 
         self.render()  # Redraw the map after changes
+    
+    def resizeEvent(self, event):
+        self.render()

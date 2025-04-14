@@ -4,6 +4,7 @@ from PyQt5.QtGui import *
 import qdarktheme
 from instruments.planner import PlanView
 from instruments.params import ParamsView
+from instruments.calibration import Calibration
 from instruments.connect import ConnectView
 from instruments.flight_display import FlightDisplay
 from utils.utils import *
@@ -57,7 +58,7 @@ class MainView(QMainWindow):
         main_tabs.addTab(FlightDisplay(self.radio, self.gcs), "Flight")
         main_tabs.addTab(PlanView(self.radio, self.gcs), "Waypoints")
         main_tabs.addTab(ParamsView(), "Parameters")
-        main_tabs.addTab(QWidget(), "Calibration")
+        main_tabs.addTab(Calibration(), "Calibration")
         main_tabs.addTab(QWidget(), "Download Logs")
         main_tabs.addTab(ConnectView(self.radio), "Connect")
         

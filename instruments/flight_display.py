@@ -34,6 +34,9 @@ class FlightDisplay(QWidget):
         right_container.setLayout(self.right_layout)
         self.splitter.addWidget(right_container)
 
+        self.splitter.setStretchFactor(0, 1) 
+        self.splitter.setStretchFactor(1, 2) 
+
         self.add_left_widgets()
         self.add_right_widgets()
     
@@ -55,6 +58,9 @@ class FlightDisplay(QWidget):
         self.tabs.addTab(DataView(), "Quick")
         self.tabs.addTab(RawView(), "Raw")
         self.left_sub_layout.addWidget(self.tabs)
+
+        self.vsplitter.setStretchFactor(0, 1) 
+        self.vsplitter.setStretchFactor(1, 2)
 
     def add_right_widgets(self):
         self.right_layout.addWidget(NavDisplay(self.radio, self.gcs), 0, 0, 1, 1)

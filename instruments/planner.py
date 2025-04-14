@@ -7,7 +7,52 @@ from instruments.map import MapView
 from instruments.altitude_profile import AltitudeGraph
 
 # You still need lat/lon for download tiles because you download tiles at home, and create flight plan on field, so knowledge of waypoints does not exist yet
+# Maybe lat/lon and radius for input, hard to know top lfet and bottom right without map
 # Radius from home instead of min/max latlon
+
+class EditDialog(QDialog):
+    def __init__(self, default_lat, default_lon, default_alt):
+        super().__init__(None)
+
+        self.setStyleSheet("font-size: 12pt;")
+
+        self.layout = QGridLayout()
+        self.setLayout(self.layout)
+
+        self.layout.addWidget(QLabel("Latitude (deg):"))
+
+        self.lat_input = QDoubleSpinBox()
+        self.lat_input.setDecimals(7)
+        self.lat_input.setRange(-90, 90)
+        self.lat_input.setSingleStep(1E-7)
+        self.lat_input.setValue(default_lat)
+        self.layout.addWidget(self.lat_input)
+
+        self.layout.addWidget(QLabel("Longitude (deg):"))
+
+        self.lon_input = QDoubleSpinBox()
+        self.lon_input.setDecimals(7)
+        self.lon_input.setRange(-180, 180)
+        self.lon_input.setSingleStep(1E-7)
+        self.lon_input.setValue(default_lon)
+        self.layout.addWidget(self.lon_input)
+
+        self.layout.addWidget(QLabel("Altitude (m):"))
+
+        self.alt_input = QDoubleSpinBox()
+        self.alt_input.setDecimals(2)
+        self.alt_input.setRange(-10000, 10000)
+        self.alt_input.setSingleStep(1E-2)
+        self.alt_input.setValue(default_alt)
+        self.layout.addWidget(self.alt_input)
+
+        self.buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttons.accepted.connect(self.accept)
+        self.buttons.rejected.connect(self.reject)
+        self.layout.addWidget(self.buttons)
+    
+    def get_values(self):
+        return self.lat_input.value(), self.lon_input.value(), self.alt_input.value()
 
 class PlanMap(MapView):
     def __init__(self, radio, gcs, view):
@@ -24,6 +69,10 @@ class PlanMap(MapView):
         view.removeButton.clicked.connect(self.remove_btn_press)
         view.addButton.clicked.connect(self.add_btn_press)
         view.upload_btn.clicked.connect(self.upload)
+        view.editButton.clicked.connect(self.edit_btn_press)
+        view.deselect_btn.clicked.connect(self.deselect)
+
+        self.render()
     
     def set_waypoints(self, waypoints):
         self.waypoints = waypoints
@@ -76,6 +125,26 @@ class PlanMap(MapView):
     def upload(self):
         print("Upload")
         self.gcs.update_waypoints(self.waypoints)
+    
+    def edit_btn_press(self):
+        if self.plane_current_wp < len(self.waypoints):
+            print(self.waypoints[self.plane_current_wp].alt)
+            dialog = EditDialog(self.waypoints[self.plane_current_wp].lat,
+                                self.waypoints[self.plane_current_wp].lon, 
+                                self.waypoints[self.plane_current_wp].alt)
+            if dialog.exec_() == QDialog.Accepted:
+                lat, lon, alt = dialog.get_values()
+                self.waypoints[self.plane_current_wp].lat = lat
+                self.waypoints[self.plane_current_wp].lon = lon
+                self.waypoints[self.plane_current_wp].alt = alt
+                self.render()
+        else:
+            QMessageBox.about(self, "Error", "No waypoint selected")
+        
+    def deselect(self):
+        self.plane_current_wp = 10000
+        self.render()
+        
         
 class CustomTableWidget(QTableWidget):
     def __init__(self, *args, **kwargs):
@@ -125,12 +194,15 @@ class PlanView(QScrollArea):
         self.importButton.setStyleSheet("font-size: 12pt;")
         self.exportButton = QPushButton("Export File")
         self.exportButton.setStyleSheet("font-size: 12pt;")
+        self.deselect_btn = QPushButton("Deselect")
+        self.deselect_btn.setStyleSheet("font-size: 12pt;")
         
-        buttonLayout.addWidget(self.addButton, 0, 0, 1, 2)
-        buttonLayout.addWidget(self.removeButton, 0, 2, 1, 2)
-        buttonLayout.addWidget(self.editButton, 0, 4, 1, 2)
-        buttonLayout.addWidget(self.importButton, 1, 0, 1, 3)
-        buttonLayout.addWidget(self.exportButton, 1, 3, 1, 3)
+        buttonLayout.addWidget(self.addButton, 0, 0)
+        buttonLayout.addWidget(self.removeButton, 0, 1)
+        buttonLayout.addWidget(self.editButton, 1, 0)
+        buttonLayout.addWidget(self.deselect_btn, 1, 1)
+        buttonLayout.addWidget(self.importButton, 2, 0)
+        buttonLayout.addWidget(self.exportButton, 2, 1)
 
         self.add_tiles_downloader()
 
