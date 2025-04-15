@@ -14,7 +14,7 @@ class AltitudeGraph(pg.PlotWidget):
         self.getAxis('left').setStyle(tickFont=pg.QtGui.QFont('Arial', 14))
         self.getAxis('bottom').setStyle(tickFont=pg.QtGui.QFont('Arial', 14))
 
-        self.update(gcs.get_waypoints(), 0)
+        # self.update(gcs.get_waypoints(), 0)
     
     def update(self, waypoints, wp_idx):
         self.clear()

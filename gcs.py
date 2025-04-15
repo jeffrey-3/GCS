@@ -1,6 +1,5 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-from utils.tile_downloader import TileDownloader
 from utils.utils import *
 import json
 from dataclasses import dataclass
@@ -24,9 +23,6 @@ class GCS(QObject):
         super().__init__()
         self.waypoints = None
         self.params_json = None
-
-        # Before map loaded...
-        self.process_flightplan_file("resources/last_flightplan.json")
     
     def process_params_file(self, path):
         try:
@@ -34,20 +30,10 @@ class GCS(QObject):
             self.params_json = json.load(file)
             self.params_payload.set_data(**self.params_json)
             self.params_loaded.emit()
-            return True  # Success
+            return True
         except Exception as e:
             print(f"Error processing params file: {e}")
-            return False  # Failure
-    
-    # Tiles
-    def download(self, top_left_lat, top_left_lon, bottom_right_lat, bottom_right_lon, min_zoom, max_zoom):
-        downloader = TileDownloader(threads=10)
-        downloader.download_all_tiles((top_left_lat, top_left_lon), 
-                                      (bottom_right_lat, bottom_right_lon), 
-                                      min_zoom, 
-                                      max_zoom)
-
-        # QMessageBox.information(self, "Status", "Completed download")
+            return False
     
     def save_file(self, waypoints, file_path):
         if waypoints:
@@ -67,16 +53,14 @@ class GCS(QObject):
             with open(path, 'r') as f:
                 json_data = json.load(f)
             
-            self.waypoints = [
+            waypoints = [
                 Waypoint(float(wp['lat']), float(wp['lon']), float(wp['alt'])) 
                 for wp in json_data
             ]
-            print("waypoint update emitted")
-            self.waypoints_updated.emit(self.waypoints)
-            return True  # Success
+            return waypoints
         except Exception as e:
             print(f"Error processing flight plan file: {e}")
-            return False  # Failure
+            return None
     
     def update_waypoints(self, waypoints):
         self.waypoints = waypoints

@@ -3,8 +3,10 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
 
+# Fixed aspect ratio and then use width as size variable to scale 
+
 # make scale red below min speed
-# make colours variables
+
 
 class PFDView(QWidget):
     # Colors
@@ -128,6 +130,9 @@ class PFDView(QWidget):
             elif val == 270:
                 s = "W"
             painter.drawText(QRectF(x, self.size().height() - self.BOX_HEIGHT, self.HDG_SCALE_SPACING, self.BOX_HEIGHT), Qt.AlignCenter, s)
+
+    # def resizeEvent(self, event):
+        # self.setFixedHeight(event.size().width() * 0.5)
 
     def pitch_deg_to_px(self, deg):
         return deg * (self.PITCH_SCALE_SPACING / self.PITCH_SCALE_INTERVALS)

@@ -12,12 +12,14 @@ class Radio(QObject):
     vfr_hud_signal = pyqtSignal(float, float, float, float, float)
     nav_display_signal = pyqtSignal(float, float, int)
     rx_byte_rate_signal = pyqtSignal(float)
+    request_waypoint_signal = pyqtSignal(int)
 
     def __init__(self):
         super().__init__()
         self.aplink = APLink()
         self.ser = None
         self.port = None
+        self.connected = False
         self.bytes_read_sum = 0 # Bytes read since last byte rate calculation
         self.prev_rate_calc_time = time.time() # Time of last byte rate calculation
     
@@ -27,15 +29,25 @@ class Radio(QObject):
                 self.ser = serial.Serial(port, 115200, timeout=1000)
             except:
                 return False
+            
             self.port = port
             threading.Thread(target=self.receive_thread, daemon=True).start()
-            return True
         else:
             threading.Thread(target=self.testing_thread, daemon=True).start()
-            return True
+    
+        self.connected = True
 
-    def transmit(self):
-        self.ser.write(self.payload_to_packet(self._queue[0]))
+        return True
+    
+    def upload_waypoints(self, waypoints):
+        try:
+            self.ser.write(aplink_waypoints_count().pack(len(waypoints)))
+            return True
+        except:
+            return False
+
+    def send_waypoint(self, waypoint):
+        self.ser.write(aplink_waypoint().pack(waypoint.lat, waypoint.lon, waypoint.alt))
     
     def receive_thread(self):
         while True:
@@ -77,6 +89,10 @@ class Radio(QObject):
                         nav_display.pos_est_east,
                         nav_display.waypoint_index
                     )
+                elif msg_id == aplink_request_waypoint.msg_id:
+                    request_waypoint = aplink_request_waypoint()
+                    request_waypoint.unpack(payload)
+                    self.request_waypoint_signal.emit(request_waypoint.index)
     
     def testing_thread(self):
         while True:

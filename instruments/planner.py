@@ -5,10 +5,54 @@ from utils.utils import *
 from gcs import Waypoint
 from instruments.map import MapView
 from instruments.altitude_profile import AltitudeGraph
+from utils.tile_downloader import TileDownloader
+import threading
 
-# You still need lat/lon for download tiles because you download tiles at home, and create flight plan on field, so knowledge of waypoints does not exist yet
-# Maybe lat/lon and radius for input, hard to know top lfet and bottom right without map
-# Radius from home instead of min/max latlon
+# 1. Fix messy add waypoints stuff and 10000
+# 2. Add code in upload for uploading waypoints through radio
+
+class DownloadProgressDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Downloading Map Tiles")
+        self.setModal(True)
+        
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+        
+        self.progress_label = QLabel("Preparing download...")
+        layout.addWidget(self.progress_label)
+        
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setRange(0, 100)
+        layout.addWidget(self.progress_bar)
+        
+        self.cancel_button = QPushButton("Cancel")
+        self.cancel_button.clicked.connect(self.cancel)
+        layout.addWidget(self.cancel_button)
+        
+        self.downloader = None
+    
+    def start_download(self, downloader, center_lat, center_lon, size_meters, min_zoom, max_zoom):
+        self.downloader = downloader
+        self.downloader.progress_updated.connect(self.update_progress)
+        self.downloader.finished.connect(self.accept)
+        
+        # Start download in a separate thread
+        download_thread = threading.Thread(
+            target=self.downloader.download_all_tiles,
+            args=(center_lat, center_lon, size_meters, min_zoom, max_zoom)
+        )
+        download_thread.start()
+    
+    def update_progress(self, current, total):
+        self.progress_label.setText(f"Downloaded {current} of {total} tiles")
+        self.progress_bar.setValue(int((current / total) * 100))
+    
+    def cancel(self):
+        if self.downloader:
+            self.downloader.cancel()
+        self.reject()
 
 class EditDialog(QDialog):
     def __init__(self, default_lat, default_lon, default_alt):
@@ -57,22 +101,22 @@ class EditDialog(QDialog):
 class PlanMap(MapView):
     def __init__(self, radio, gcs, view):
         super().__init__(gcs)
+        self.view = view
+        self.radio = radio
         self.last_click_pos = None
         self.adding_waypoint = False
-        self.waypoints = gcs.get_waypoints().copy()
-
-        if self.waypoints is not None:
-            self.map_lat = self.waypoints[0].lat
-            self.map_lon = self.waypoints[0].lon
+        self.waypoints = []
 
         self.gcs.waypoints_updated.connect(self.set_waypoints)
+        self.radio.request_waypoint_signal.connect(self.send_waypoint)
         view.removeButton.clicked.connect(self.remove_btn_press)
         view.addButton.clicked.connect(self.add_btn_press)
         view.upload_btn.clicked.connect(self.upload)
         view.editButton.clicked.connect(self.edit_btn_press)
         view.deselect_btn.clicked.connect(self.deselect)
-
-        self.render()
+    
+    def send_waypoint(self, index):
+        self.radio.send_waypoint(self.waypoints[index])
     
     def set_waypoints(self, waypoints):
         self.waypoints = waypoints
@@ -92,11 +136,12 @@ class PlanMap(MapView):
                 self.adding_waypoint = False
                 self.plane_current_wp = 10000
                 self.render()
+                self.view.calculate_landing_stats(self.waypoints, 10)
             else:
                 selected = False
                 for i in range(len(self.waypoints)):
                     x, y = self.lat_lon_to_map_coords(self.waypoints[i].lat, self.waypoints[i].lon)
-                    if (math.sqrt((self.last_click_pos.x() - x)**2 + (self.last_click_pos.y() - y)**2) < 50):
+                    if (math.sqrt((self.last_click_pos.x() - x)**2 + (self.last_click_pos.y() - y)**2) < self.waypoint_radius):
                         print(i)
                         self.plane_current_wp = i
                         self.render()
@@ -104,7 +149,6 @@ class PlanMap(MapView):
                 if not selected:
                     lat, lon = self.pixel_to_lat_lon(self.last_click_pos.x(), self.last_click_pos.y())
                     self.waypoints[self.plane_current_wp] = Waypoint(lat, lon, self.waypoints[self.plane_current_wp].alt)
-                    
 
                     print("Reset map")
                     self.plane_current_wp = 10000
@@ -119,12 +163,14 @@ class PlanMap(MapView):
             self.render()
     
     def add_btn_press(self):
-        print("add btn press")
         self.adding_waypoint = True
     
     def upload(self):
-        print("Upload")
-        self.gcs.update_waypoints(self.waypoints)
+        if (self.radio.upload_waypoints(self.waypoints)):
+            self.gcs.update_waypoints(self.waypoints)
+            self.deselect()
+        else:
+            QMessageBox.about(self, "Error", "Upload failed")
     
     def edit_btn_press(self):
         if self.plane_current_wp < len(self.waypoints):
@@ -154,8 +200,6 @@ class CustomTableWidget(QTableWidget):
         event.ignore()
 
 class PlanView(QScrollArea):
-    updated_waypoints = pyqtSignal(list)
-
     def __init__(self, radio, gcs):
         super().__init__()
 
@@ -207,6 +251,10 @@ class PlanView(QScrollArea):
         self.add_tiles_downloader()
 
         self.map = PlanMap(radio, gcs, self)
+        self.map.waypoints = gcs.process_flightplan_file("resources/last_flightplan.json")
+        if len(self.map.waypoints) > 0:
+            self.map.map_lat = self.map.waypoints[0].lat
+            self.map.map_lon = self.map.waypoints[0].lon
         self.right_layout.addWidget(self.map)
         self.right_layout.setRowStretch(0, 3) 
         
@@ -226,45 +274,28 @@ class PlanView(QScrollArea):
 
         layout.addRow(QLabel("<h1>Download Map Tiles</h1>"))
 
-        self.top_left_lat_input = QLineEdit("43.884043")
-        self.top_left_lat_input.setStyleSheet("font-size: 12pt;")
-        self.top_left_lon_input = QLineEdit("-79.424526")
-        self.top_left_lon_input.setStyleSheet("font-size: 12pt;")
-        self.bottom_right_lat_input = QLineEdit("43.874797")
-        self.bottom_right_lat_input.setStyleSheet("font-size: 12pt;")
-        self.bottom_right_lon_input = QLineEdit("-79.404941")
-        self.bottom_right_lon_input.setStyleSheet("font-size: 12pt;")
-        self.min_zoom_input = QLineEdit("1")
-        self.min_zoom_input.setStyleSheet("font-size: 12pt;")
-        self.max_zoom_input = QLineEdit("19")
-        self.max_zoom_input.setStyleSheet("font-size: 12pt;")
+        self.lat_input = QLineEdit("43.884043")
+        self.lat_input.setStyleSheet("font-size: 12pt;")
+        self.lon_input = QLineEdit("-79.424526")
+        self.lon_input.setStyleSheet("font-size: 12pt;")
+        self.size_input = QLineEdit("1000")
+        self.size_input.setStyleSheet("font-size: 12pt;")
 
-        self.top_left_lat_label = QLabel("Top Left Lat:")
-        self.top_left_lat_label.setStyleSheet("font-size: 12pt;")
+        self.lat_label = QLabel("Latitude:")
+        self.lat_label.setStyleSheet("font-size: 12pt;")
 
-        self.top_left_lon_label = QLabel("Top Left Lon:")
-        self.top_left_lon_label.setStyleSheet("font-size: 12pt;")
+        self.lon_label = QLabel("Longitude:")
+        self.lon_label.setStyleSheet("font-size: 12pt;")
 
-        self.bottom_right_lat_label = QLabel("Bottom Right Lat:")
-        self.bottom_right_lat_label.setStyleSheet("font-size: 12pt;")
+        self.size_label = QLabel("Size (m):")
+        self.size_label.setStyleSheet("font-size: 12pt;")
 
-        self.bottom_right_lon_label = QLabel("Bottom Right Lon:")
-        self.bottom_right_lon_label.setStyleSheet("font-size: 12pt;")
-
-        self.min_zoom_label = QLabel("Min Zoom:")
-        self.min_zoom_label.setStyleSheet("font-size: 12pt;")
-
-        self.max_zoom_label = QLabel("Max Zoom:")
-        self.max_zoom_label.setStyleSheet("font-size: 12pt;")
-
-        layout.addRow(self.top_left_lat_label, self.top_left_lat_input)
-        layout.addRow(self.top_left_lon_label, self.top_left_lon_input)
-        layout.addRow(self.bottom_right_lat_label, self.bottom_right_lat_input)
-        layout.addRow(self.bottom_right_lon_label, self.bottom_right_lon_input)
-        layout.addRow(self.min_zoom_label, self.min_zoom_input)
-        layout.addRow(self.max_zoom_label, self.max_zoom_input)
+        layout.addRow(self.lat_label, self.lat_input)
+        layout.addRow(self.lon_label, self.lon_input)
+        layout.addRow(self.size_label, self.size_input)
 
         self.download_btn = QPushButton("Download Tiles")
+        self.download_btn.clicked.connect(self.download_tiles)
         self.download_btn.setStyleSheet("font-size: 12pt;")
         layout.addRow(self.download_btn)
 
@@ -281,3 +312,23 @@ class PlanView(QScrollArea):
             self.landing_label.setText(f"Glideslope Angle: {gs_angle:.1f}\nLanding Heading: {land_hdg:.1f}")
         else:
             self.landing_label.setText("Glideslope Angle:\nLanding Heading:")
+    
+    def download_tiles(self):
+        try:
+            center_lat = float(self.lat_input.text())
+            center_lon = float(self.lon_input.text())
+            size_meters = float(self.size_input.text())
+        except ValueError:
+            QMessageBox.warning(self, "Error", "Please enter valid numbers for coordinates and size")
+            return
+        
+        downloader = TileDownloader()
+        progress_dialog = DownloadProgressDialog(self)
+        progress_dialog.start_download(downloader, center_lat, center_lon, size_meters, 
+                                    self.map.MIN_ZOOM, self.map.MAX_ZOOM)
+        
+        if progress_dialog.exec_() == QDialog.Accepted:
+            self.map.render()
+            QMessageBox.information(self, "Status", "Completed download")
+        else:
+            QMessageBox.information(self, "Status", "Download canceled")

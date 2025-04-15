@@ -16,4 +16,9 @@ class ParamsView(QWidget):
         self.params_btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.layout.addWidget(self.params_btn)
 
+        self.upload_btn = QPushButton("Upload to Vehicle")
+        self.upload_btn.setStyleSheet("font-size: 12pt;")
+        self.upload_btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.layout.addWidget(self.upload_btn)
+
         self.layout.addStretch()

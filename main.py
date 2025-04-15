@@ -41,6 +41,9 @@ from radio import Radio
 # Or just re-converge every time you load new waypoints 
 # Or send lat/lon instead of float for position estimate
 
+# Flight software look at velocity estimate to see if converged (actually doesn't matter, user can just make sure before starting)
+
+
 class MainView(QMainWindow):
     def __init__(self, app, radio, gcs):
         super().__init__()

@@ -35,8 +35,7 @@ class MapView(QGraphicsView):
         self.zoom = 17  # Current zoom level
         self.waypoints = []  # List of waypoints
         self.tile_cache = {}  # Cache for loaded tiles to improve performance
-
-        self.render()
+        self.waypoint_radius = 20
 
     def render(self):
         """Render the map, waypoints, acceptance radius, and plane arrow."""
@@ -141,7 +140,7 @@ class MapView(QGraphicsView):
             # Draw waypoint markers
             for i, point in enumerate(points):
                 s = "H" if i == 0 else "L" if i == len(self.waypoints) - 1 else str(i)
-                radius = 20
+                radius = self.waypoint_radius
                 brush = QBrush(Qt.black)
                 if self.plane_current_wp == i:
                     brush = QBrush(QColor(139, 0, 139))  # Highlight current waypoint
