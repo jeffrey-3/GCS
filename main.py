@@ -8,7 +8,6 @@ from instruments.calibration import Calibration
 from instruments.connect import ConnectView
 from instruments.flight_display import FlightDisplay
 from utils.utils import *
-from gcs import GCS
 from radio import Radio
 
 # Scale font size based on window size
@@ -45,11 +44,10 @@ from radio import Radio
 
 
 class MainView(QMainWindow):
-    def __init__(self, app, radio, gcs):
+    def __init__(self, app):
         super().__init__()
         self.app = app
-        self.radio = radio
-        self.gcs = gcs
+        self.radio = Radio()
 
         self.tabs_font = QFont()
         self.tabs_font.setPointSize(12)
@@ -58,9 +56,9 @@ class MainView(QMainWindow):
         
         main_tabs = QTabWidget()
         main_tabs.setFont(self.tabs_font)
-        main_tabs.addTab(FlightDisplay(self.radio, self.gcs), "Flight")
-        main_tabs.addTab(PlanView(self.radio, self.gcs), "Waypoints")
-        main_tabs.addTab(ParamsView(), "Parameters")
+        main_tabs.addTab(FlightDisplay(self.radio), "Flight")
+        main_tabs.addTab(PlanView(self.radio), "Waypoints")
+        main_tabs.addTab(ParamsView(self.radio), "Parameters")
         main_tabs.addTab(Calibration(), "Calibration")
         main_tabs.addTab(QWidget(), "Download Logs")
         main_tabs.addTab(ConnectView(self.radio), "Connect")
@@ -74,10 +72,10 @@ if __name__ == "__main__":
     #     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
 
     app = QApplication([])
+
     qdarktheme.setup_theme(corner_shape="sharp")
     qdarktheme.load_palette()
-    gcs = GCS()
-    radio = Radio()
-    main_window = MainView(app, radio, gcs)
+
+    main_window = MainView(app)
     main_window.show()
     app.exec()

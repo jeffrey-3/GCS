@@ -2,20 +2,19 @@ from utils.utils import *
 from instruments.map import MapView
 
 class NavDisplay(MapView):
-    def __init__(self, radio, gcs):
-        super().__init__(gcs)
+    def __init__(self, radio):
+        super().__init__(radio)
         self.radio = radio
-        self.gcs = gcs
         self.waypoints = []
 
         if len(self.waypoints) > 0:
             self.map_lat = self.waypoints[0].lat
             self.map_lon = self.waypoints[0].lon
         self.radio.nav_display_signal.connect(self.nav_display_update)
-        self.gcs.waypoints_updated.connect(self.update_waypoints)
+        self.radio.waypoints_updated.connect(self.update_waypoints)
     
     def nav_display_update(self, north, east, waypoint_index):
-        self.waypoints = self.gcs.get_waypoints()
+        self.waypoints = self.radio.get_waypoints()
 
         if len(self.waypoints) == 0:
             return

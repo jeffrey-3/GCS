@@ -9,11 +9,10 @@ from instruments.altitude_profile import AltitudeGraph
 from instruments.nav_display import NavDisplay
 
 class FlightDisplay(QWidget):
-    def __init__(self, radio, gcs):
+    def __init__(self, radio):
         super().__init__()
 
         self.radio = radio
-        self.gcs = gcs
 
         self.tabs_font = QFont()
         self.tabs_font.setPointSize(12)
@@ -63,8 +62,8 @@ class FlightDisplay(QWidget):
         self.vsplitter.setStretchFactor(1, 2)
 
     def add_right_widgets(self):
-        self.right_layout.addWidget(NavDisplay(self.radio, self.gcs), 0, 0, 1, 1)
+        self.right_layout.addWidget(NavDisplay(self.radio), 0, 0, 1, 1)
         self.right_layout.setRowStretch(0, 3) 
         
-        self.right_layout.addWidget(AltitudeGraph(self.gcs), 1, 0, 1, 1)
+        self.right_layout.addWidget(AltitudeGraph(self.radio), 1, 0, 1, 1)
         self.right_layout.setRowStretch(1, 1)

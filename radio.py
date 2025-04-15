@@ -4,6 +4,13 @@ import serial
 import math
 from PyQt5.QtCore import *
 from aplink.aplink_messages import *
+from dataclasses import dataclass
+
+@dataclass
+class Waypoint:
+    lat: float
+    lon: float
+    alt: float
 
 class Radio(QObject):
     RATE_CALC_DT = 1 # Delta time to calculate received byte rate
@@ -14,6 +21,10 @@ class Radio(QObject):
     rx_byte_rate_signal = pyqtSignal(float)
     request_waypoint_signal = pyqtSignal(int)
 
+    waypoints_updated = pyqtSignal(list)
+    map_clicked_signal = pyqtSignal(tuple)
+    params_loaded = pyqtSignal()
+
     def __init__(self):
         super().__init__()
         self.aplink = APLink()
@@ -22,15 +33,27 @@ class Radio(QObject):
         self.connected = False
         self.bytes_read_sum = 0 # Bytes read since last byte rate calculation
         self.prev_rate_calc_time = time.time() # Time of last byte rate calculation
+        self.waypoints = []
+    
+    def update_waypoints(self, waypoints):
+        self.waypoints = waypoints
+        self.waypoints_updated.emit(waypoints)
+    
+    def map_clicked(self, pos):
+        self.map_clicked_signal.emit(pos)
+    
+    def get_waypoints(self):
+        return self.waypoints
     
     def start(self, port):
+        self.port = port
+        
         if port != 'Testing':
             try:
                 self.ser = serial.Serial(port, 115200, timeout=1000)
             except:
                 return False
             
-            self.port = port
             threading.Thread(target=self.receive_thread, daemon=True).start()
         else:
             threading.Thread(target=self.testing_thread, daemon=True).start()
@@ -40,6 +63,9 @@ class Radio(QObject):
         return True
     
     def upload_waypoints(self, waypoints):
+        if self.port == "Testing":
+            return True
+
         try:
             self.ser.write(aplink_waypoints_count().pack(len(waypoints)))
             return True

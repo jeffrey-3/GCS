@@ -2,11 +2,15 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from geopy.distance import geodesic
 from utils.utils import *
-from gcs import Waypoint
+from radio import Waypoint
 from instruments.map import MapView
 from instruments.altitude_profile import AltitudeGraph
 from utils.tile_downloader import TileDownloader
 import threading
+import json
+
+
+# Squeeze left buttons panel to smallest width
 
 # 1. Fix messy add waypoints stuff and 10000
 # 2. Add code in upload for uploading waypoints through radio
@@ -99,15 +103,15 @@ class EditDialog(QDialog):
         return self.lat_input.value(), self.lon_input.value(), self.alt_input.value()
 
 class PlanMap(MapView):
-    def __init__(self, radio, gcs, view):
-        super().__init__(gcs)
+    def __init__(self, radio, view):
+        super().__init__(radio)
         self.view = view
         self.radio = radio
         self.last_click_pos = None
         self.adding_waypoint = False
         self.waypoints = []
 
-        self.gcs.waypoints_updated.connect(self.set_waypoints)
+        self.radio.waypoints_updated.connect(self.set_waypoints)
         self.radio.request_waypoint_signal.connect(self.send_waypoint)
         view.removeButton.clicked.connect(self.remove_btn_press)
         view.addButton.clicked.connect(self.add_btn_press)
@@ -200,8 +204,9 @@ class CustomTableWidget(QTableWidget):
         event.ignore()
 
 class PlanView(QScrollArea):
-    def __init__(self, radio, gcs):
+    def __init__(self, radio):
         super().__init__()
+        self.radio = radio
 
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -250,15 +255,15 @@ class PlanView(QScrollArea):
 
         self.add_tiles_downloader()
 
-        self.map = PlanMap(radio, gcs, self)
-        self.map.waypoints = gcs.process_flightplan_file("resources/last_flightplan.json")
+        self.map = PlanMap(self.radio, self)
+        self.map.waypoints = self.process_flightplan_file("resources/last_flightplan.json")
         if len(self.map.waypoints) > 0:
             self.map.map_lat = self.map.waypoints[0].lat
             self.map.map_lon = self.map.waypoints[0].lon
         self.right_layout.addWidget(self.map)
         self.right_layout.setRowStretch(0, 3) 
         
-        self.right_layout.addWidget(AltitudeGraph(gcs))
+        self.right_layout.addWidget(AltitudeGraph(self.radio))
         self.right_layout.setRowStretch(1, 1)
 
         self.left_layout.addStretch()
@@ -332,3 +337,45 @@ class PlanView(QScrollArea):
             QMessageBox.information(self, "Status", "Completed download")
         else:
             QMessageBox.information(self, "Status", "Download canceled")
+    
+    def process_flightplan_file(self, path):
+        try:
+            with open(path, 'r') as f:
+                json_data = json.load(f)
+            
+            waypoints = [
+                Waypoint(float(wp['lat']), float(wp['lon']), float(wp['alt'])) 
+                for wp in json_data
+            ]
+            return waypoints
+        except Exception as e:
+            print(f"Error processing flight plan file: {e}")
+            return None
+        
+
+    def export_flightplan_file(self, waypoints, file_path):
+        if waypoints:
+            json_data = [
+                {"lat": wp.lat, "lon": wp.lon, "alt": wp.alt} 
+                for wp in waypoints
+            ]
+            
+            if file_path:
+                with open(file_path, "w") as json_file:
+                    json.dump(json_data, json_file, indent=4)
+                    return True
+        return False
+
+    def save_last_flightplan_and_params(self):
+        json_data = [
+            {"lat": wp.lat, "lon": wp.lon, "alt": wp.alt} 
+            for wp in self.waypoints
+        ]
+
+        f = open("app/resources/last_flightplan.json", "w")
+        json.dump(json_data, f, indent=4)
+
+        f = open("app/resources/last_params.json", 'w')
+        json.dump(self.params_json, f, indent=4)
+
+        print("Last flight plan and params saved")
