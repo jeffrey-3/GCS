@@ -4,7 +4,7 @@ from utils.utils import calculate_displacement_meters
 import math
 
 class AltitudeGraph(pg.PlotWidget):
-    def __init__(self, gcs):
+    def __init__(self):
         super().__init__()
         self.setMenuEnabled(False)
         self.hideButtons()
@@ -13,8 +13,6 @@ class AltitudeGraph(pg.PlotWidget):
         self.setBackground(None)
         self.getAxis('left').setStyle(tickFont=pg.QtGui.QFont('Arial', 14))
         self.getAxis('bottom').setStyle(tickFont=pg.QtGui.QFont('Arial', 14))
-
-        # self.update(gcs.get_waypoints(), 0)
     
     def update(self, waypoints, wp_idx):
         self.clear()

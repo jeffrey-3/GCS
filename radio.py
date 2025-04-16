@@ -4,13 +4,9 @@ import serial
 import math
 from PyQt5.QtCore import *
 from aplink.aplink_messages import *
-from dataclasses import dataclass
+import json
 
-@dataclass
-class Waypoint:
-    lat: float
-    lon: float
-    alt: float
+# IF you want to seperate GCS and radio, have radio library which GCS includes
 
 class Radio(QObject):
     RATE_CALC_DT = 1 # Delta time to calculate received byte rate
@@ -34,10 +30,16 @@ class Radio(QObject):
         self.bytes_read_sum = 0 # Bytes read since last byte rate calculation
         self.prev_rate_calc_time = time.time() # Time of last byte rate calculation
         self.waypoints = []
+        self.params = []
     
     def update_waypoints(self, waypoints):
         self.waypoints = waypoints
+        self.save_last_flightplan()
         self.waypoints_updated.emit(waypoints)
+    
+    def update_params(self, params):
+        self.params = params
+        self.save_params(params)
     
     def map_clicked(self, pos):
         self.map_clicked_signal.emit(pos)
@@ -139,3 +141,25 @@ class Radio(QObject):
             )
 
             time.sleep(0.02)        
+    
+    def save_params(self, params):
+        json_data = [
+            {"name": param.name, "value": param.value, "type": param.type} 
+            for param in params
+        ]
+
+        f = open("resources/last_params.json", 'w')
+        json.dump(json_data, f, indent=4)
+
+        print("Last params saved")
+    
+    def save_last_flightplan(self):
+        json_data = [
+            {"lat": wp.lat, "lon": wp.lon, "alt": wp.alt} 
+            for wp in self.waypoints
+        ]
+
+        f = open("resources/last_flightplan.json", "w")
+        json.dump(json_data, f, indent=4)
+
+        print("Last flight plan saved")

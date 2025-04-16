@@ -1,20 +1,27 @@
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 import json
+from dataclasses import dataclass
+
+@dataclass
+class Parameter:
+    name: str
+    value: float
+    type: str
 
 class ParamsView(QWidget):
-    def __init__(self, gcs):
+    def __init__(self, radio):
         super().__init__()
-        self.gcs = gcs
+        self.radio = radio
 
-        self.params_json = None
+        self.params = []
 
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
         self.layout.addWidget(QLabel("<h1>Parameters</h1>"))
 
-        self.file_path_label = QLabel("File Directory:")
+        self.file_path_label = QLabel("File Directory: Default")
         self.file_path_label.setStyleSheet("font-size: 12pt;")
         self.layout.addWidget(self.file_path_label)
 
@@ -45,15 +52,16 @@ class ParamsView(QWidget):
     def process_params_file(self, path):
         try:
             file = open(path, "r")
-            self.params_json = json.load(file)
-            print(self.params_json)
+            params_json = json.load(file)
+            self.params = [Parameter(param["name"], param["value"], param["type"]) for param in params_json]
             return True
         except Exception as e:
             print(f"Error processing params file: {e}")
             return False
     
     def upload_to_vehicle(self):
-        if self.params_json:
-            return
+        if len(self.params) > 0:
+            self.radio.update_params(self.params)
+            QMessageBox.about(self, "Status", "Successfully uploaded parameters")
         else:
             QMessageBox.information(self, "Error", "No parameters set")

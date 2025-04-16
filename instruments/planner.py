@@ -2,7 +2,6 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from geopy.distance import geodesic
 from utils.utils import *
-from radio import Waypoint
 from instruments.map import MapView
 from instruments.altitude_profile import AltitudeGraph
 from utils.tile_downloader import TileDownloader
@@ -14,6 +13,22 @@ import json
 
 # 1. Fix messy add waypoints stuff and 10000
 # 2. Add code in upload for uploading waypoints through radio
+
+from dataclasses import dataclass
+
+@dataclass
+class Waypoint:
+    lat: float
+    lon: float
+    alt: float
+
+
+class PlannerAltitudeProfile(AltitudeGraph):
+    def __init__(self):
+        super().__init__()
+    
+    def update_test(self, waypoints):
+        self.update(waypoints, 0)
 
 class DownloadProgressDialog(QDialog):
     def __init__(self, parent=None):
@@ -104,7 +119,7 @@ class EditDialog(QDialog):
 
 class PlanMap(MapView):
     def __init__(self, radio, view):
-        super().__init__(radio)
+        super().__init__()
         self.view = view
         self.radio = radio
         self.last_click_pos = None
@@ -165,14 +180,16 @@ class PlanMap(MapView):
             del self.waypoints[self.plane_current_wp]
             self.plane_current_wp = 10000
             self.render()
+            self.view.alt_profile.update_test(self.waypoints)
     
     def add_btn_press(self):
         self.adding_waypoint = True
     
     def upload(self):
         if (self.radio.upload_waypoints(self.waypoints)):
-            self.gcs.update_waypoints(self.waypoints)
+            self.radio.update_waypoints(self.waypoints)
             self.deselect()
+            QMessageBox.about(self, "Status", "Successfully uploaded waypoints")
         else:
             QMessageBox.about(self, "Error", "Upload failed")
     
@@ -213,7 +230,7 @@ class PlanView(QScrollArea):
         self.setWidgetResizable(True)
 
         self.upload_btn = QPushButton("Upload To Vehicle")
-        self.upload_btn.setStyleSheet("font-size: 20pt;")
+        self.upload_btn.setStyleSheet("font-size: 20pt; font-weight: bold;")
 
         self.layout = QHBoxLayout()
         self.setLayout(self.layout)
@@ -263,7 +280,8 @@ class PlanView(QScrollArea):
         self.right_layout.addWidget(self.map)
         self.right_layout.setRowStretch(0, 3) 
         
-        self.right_layout.addWidget(AltitudeGraph(self.radio))
+        self.alt_profile = PlannerAltitudeProfile()
+        self.right_layout.addWidget(self.alt_profile)
         self.right_layout.setRowStretch(1, 1)
 
         self.left_layout.addStretch()
@@ -352,7 +370,6 @@ class PlanView(QScrollArea):
             print(f"Error processing flight plan file: {e}")
             return None
         
-
     def export_flightplan_file(self, waypoints, file_path):
         if waypoints:
             json_data = [
@@ -365,17 +382,3 @@ class PlanView(QScrollArea):
                     json.dump(json_data, json_file, indent=4)
                     return True
         return False
-
-    def save_last_flightplan_and_params(self):
-        json_data = [
-            {"lat": wp.lat, "lon": wp.lon, "alt": wp.alt} 
-            for wp in self.waypoints
-        ]
-
-        f = open("app/resources/last_flightplan.json", "w")
-        json.dump(json_data, f, indent=4)
-
-        f = open("app/resources/last_params.json", 'w')
-        json.dump(self.params_json, f, indent=4)
-
-        print("Last flight plan and params saved")

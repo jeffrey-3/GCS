@@ -64,7 +64,11 @@ class PFDView(QWidget):
     def __init__(self, radio):
         super().__init__()
 
-        self.update_values(0, 0, 0, 0, 0)
+        self.roll = 0
+        self.pitch = 0
+        self.heading = 0
+        self.altitude = 0
+        self.airspeed = 0
 
         radio.vfr_hud_signal.connect(self.update_values)
 
@@ -130,9 +134,6 @@ class PFDView(QWidget):
             elif val == 270:
                 s = "W"
             painter.drawText(QRectF(x, self.size().height() - self.BOX_HEIGHT, self.HDG_SCALE_SPACING, self.BOX_HEIGHT), Qt.AlignCenter, s)
-
-    # def resizeEvent(self, event):
-        # self.setFixedHeight(event.size().width() * 0.5)
 
     def pitch_deg_to_px(self, deg):
         return deg * (self.PITCH_SCALE_SPACING / self.PITCH_SCALE_INTERVALS)
@@ -286,10 +287,28 @@ class PFDView(QWidget):
             point_right = (self.size().width()/2 + pitch_scale_length, height)
             painter.drawLine(QPointF(point_left[0], point_left[1]), QPointF(point_right[0], point_right[1]))
 
+            if i % 2 == 0:
+                horizontal_offset = 50
+                text_height = 100
+                text_width = 100
+                painter.setFont(QFont("Arial", 15))
+                painter.drawText(QRectF(point_left[0] - text_width/2 - horizontal_offset, point_left[1] - text_height/2, 100, 100), Qt.AlignCenter, str(i * self.PITCH_SCALE_INTERVALS))
+                painter.drawText(QRectF(point_right[0] - text_width/2 + horizontal_offset, point_left[1] - text_height/2, 100, 100), Qt.AlignCenter, str(i * self.PITCH_SCALE_INTERVALS))
+                painter.setFont(QFont("Arial", 20))
+
             height = self.size().height()/2 + i * self.PITCH_SCALE_SPACING + self.pitch_deg_to_px(pitch)
             point_left = (self.size().width()/2 - pitch_scale_length, height)
             point_right = (self.size().width()/2 + pitch_scale_length, height)
             painter.drawLine(QPointF(point_left[0], point_left[1]), QPointF(point_right[0], point_right[1]))
+
+            if i % 2 == 0:
+                horizontal_offset = 50
+                text_height = 100
+                text_width = 100
+                painter.setFont(QFont("Arial", 15))
+                painter.drawText(QRectF(point_left[0] - text_width/2 - horizontal_offset, point_left[1] - text_height/2, 100, 100), Qt.AlignCenter, str(-i * self.PITCH_SCALE_INTERVALS))
+                painter.drawText(QRectF(point_right[0] - text_width/2 + horizontal_offset, point_left[1] - text_height/2, 100, 100), Qt.AlignCenter, str(-i * self.PITCH_SCALE_INTERVALS))
+                painter.setFont(QFont("Arial", 20))
     
         painter.resetTransform()
 

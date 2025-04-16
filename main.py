@@ -26,13 +26,11 @@ from radio import Radio
 
 # PFD red areas
 
-# PFD pitch scale numbers
-
 # exe
 
-# Path nav dipaly trajcetory
-
 # modern theme
+
+# Maybe interpolate speed setpoints so it doesn't pitch up voilently immediately
 
 # if you change first waypoint, then center lat/lon will be off.... maybe use EKF center is better
 # Just prevent changing waypoint before the current waypoint in flight?
@@ -43,16 +41,18 @@ from radio import Radio
 # Flight software look at velocity estimate to see if converged (actually doesn't matter, user can just make sure before starting)
 
 
+# Still need map even if no waypoints loaded, but nno waypoints
+
+
 class MainView(QMainWindow):
-    def __init__(self, app):
+    def __init__(self):
         super().__init__()
-        self.app = app
         self.radio = Radio()
+
+        self.setWindowTitle("UAV Ground Control")
 
         self.tabs_font = QFont()
         self.tabs_font.setPointSize(12)
-        
-        self.setWindowTitle("UAV Ground Control")
         
         main_tabs = QTabWidget()
         main_tabs.setFont(self.tabs_font)
@@ -60,7 +60,7 @@ class MainView(QMainWindow):
         main_tabs.addTab(PlanView(self.radio), "Waypoints")
         main_tabs.addTab(ParamsView(self.radio), "Parameters")
         main_tabs.addTab(Calibration(), "Calibration")
-        main_tabs.addTab(QWidget(), "Download Logs")
+        main_tabs.addTab(QWidget(), "Parse Logs")
         main_tabs.addTab(ConnectView(self.radio), "Connect")
         
         self.setCentralWidget(main_tabs)
@@ -76,6 +76,7 @@ if __name__ == "__main__":
     qdarktheme.setup_theme(corner_shape="sharp")
     qdarktheme.load_palette()
 
-    main_window = MainView(app)
-    main_window.show()
+    main_window = MainView()
+    main_window.showFullScreen()
+
     app.exec()

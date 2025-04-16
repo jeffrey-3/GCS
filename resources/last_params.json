@@ -1,69 +1,327 @@
-{
-    "perf_throttle_cruise": 0.1,
-    "att_ctrl_ptch_kp": 0.1,
-    "att_ctrl_ptch_ki": 0.05,
-    "att_ctrl_roll_kp": 0.05,
-    "att_ctrl_roll_ki": 0.0,
-    "att_ctrl_fbw_ptch_lim": 20,
-    "att_ctrl_fbw_roll_lim": 30,
-    "takeoff_alt": 6.0,
-    "takeoff_ptch": 15.0,
-    "takeoff_roll_lim": 5.0,
-    "landing_flare_alt": 3.0,
-    "landing_flare_sink_rate": 0.2,
-    "landing_touchdown_speed": 10.0,
-    "tecs_aspd_cruise": 20.0,
-    "tecs_aspd_land": 15.0,
-    "tecs_min_aspd_mps": 5.0,
-    "tecs_max_aspd_mps": 30.0,
-    "tecs_total_energy_kp": 0.1,
-    "tecs_total_energy_ki": 0.02,
-    "tecs_energy_balance_kp": 0.2,
-    "tecs_energy_balance_ki": 0.02,
-    "tecs_ptch_lim_deg": 30.0,
-    "l1_ctrl_period": 10.0,
-    "l1_ctrl_roll_lim": 50.0,
-    "navigator_min_dist_wp": 50.0,
-    "sensors_enable_of": true,
-    "sensors_of_min": 50,
-    "sensors_of_max": 2000,
-    "mixer_pwm_max_ele": 2000,
-    "mixer_pwm_max_rud": 2000,
-    "mixer_pwm_max_thr": 2000,
-    "mixer_pwm_max_aux1": 2000,
-    "mixer_pwm_max_aux2": 2000,
-    "mixer_pwm_max_aux3": 2000,
-    "mixer_pwm_min_ele": 1000,
-    "mixer_pwm_min_rud": 1000,
-    "mixer_pwm_min_thr": 1000,
-    "mixer_pwm_min_aux1": 1000,
-    "mixer_pwm_min_aux2": 1000,
-    "mixer_pwm_min_aux3": 1000,
-    "mixer_pwm_rev_ele": true,
-    "mixer_pwm_rev_rud": false,
-    "mixer_pwm_rev_thr": false,
-    "mixer_pwm_rev_aux1": false,
-    "mixer_pwm_rev_aux2": false,
-    "mixer_pwm_rev_aux3": false,
-    "rc_input_max_duty": 1900,
-    "rc_input_min_duty": 1100,
-    "ahrs_beta_gain": 0.005,
-    "ahrs_mag_decl": -10.2,
-    "ahrs_acc_max": 2.0,
-    "ahrs_hard_iron_x": 0.0,
-    "ahrs_hard_iron_y": 0.0,
-    "ahrs_hard_iron_z": 0.0,
-    "ahrs_soft_iron_xx": 1.0,
-    "ahrs_soft_iron_xy": 0.0,
-    "ahrs_soft_iron_xz": 0.0,
-    "ahrs_soft_iron_yx": 0.0,
-    "ahrs_soft_iron_yy": 1.0,
-    "ahrs_soft_iron_yz": 0.0,
-    "ahrs_soft_iron_zx": 0.0,
-    "ahrs_soft_iron_zy": 0.0,
-    "ahrs_soft_iron_zz": 1.0,
-    "pos_estimator_baro_var": 1000.0,
-    "pos_estimator_gnss_var": 1000.0,
-    "pos_estimator_gnss_alt_var": 1000.0,
-    "hitl_enable": true
-}
+[
+    {
+        "name": "perf_throttle_cruise",
+        "value": 0.1,
+        "type": "f"
+    },
+    {
+        "name": "att_ctrl_ptch_kp",
+        "value": 0.1,
+        "type": "f"
+    },
+    {
+        "name": "att_ctrl_ptch_ki",
+        "value": 0.05,
+        "type": "f"
+    },
+    {
+        "name": "att_ctrl_roll_kp",
+        "value": 0.05,
+        "type": "f"
+    },
+    {
+        "name": "att_ctrl_roll_ki",
+        "value": 0.0,
+        "type": "f"
+    },
+    {
+        "name": "att_ctrl_fbw_ptch_lim",
+        "value": 20,
+        "type": "i"
+    },
+    {
+        "name": "att_ctrl_fbw_roll_lim",
+        "value": 30,
+        "type": "i"
+    },
+    {
+        "name": "takeoff_alt",
+        "value": 6.0,
+        "type": "f"
+    },
+    {
+        "name": "takeoff_ptch",
+        "value": 15.0,
+        "type": "f"
+    },
+    {
+        "name": "takeoff_roll_lim",
+        "value": 5.0,
+        "type": "f"
+    },
+    {
+        "name": "landing_flare_alt",
+        "value": 3.0,
+        "type": "f"
+    },
+    {
+        "name": "landing_flare_sink_rate",
+        "value": 0.2,
+        "type": "f"
+    },
+    {
+        "name": "landing_touchdown_speed",
+        "value": 10.0,
+        "type": "f"
+    },
+    {
+        "name": "tecs_aspd_cruise",
+        "value": 20.0,
+        "type": "f"
+    },
+    {
+        "name": "tecs_aspd_land",
+        "value": 15.0,
+        "type": "f"
+    },
+    {
+        "name": "tecs_min_aspd_mps",
+        "value": 5.0,
+        "type": "f"
+    },
+    {
+        "name": "tecs_max_aspd_mps",
+        "value": 30.0,
+        "type": "f"
+    },
+    {
+        "name": "tecs_total_energy_kp",
+        "value": 0.1,
+        "type": "f"
+    },
+    {
+        "name": "tecs_total_energy_ki",
+        "value": 0.02,
+        "type": "f"
+    },
+    {
+        "name": "tecs_energy_balance_kp",
+        "value": 0.2,
+        "type": "f"
+    },
+    {
+        "name": "tecs_energy_balance_ki",
+        "value": 0.05,
+        "type": "f"
+    },
+    {
+        "name": "tecs_ptch_lim_deg",
+        "value": 30.0,
+        "type": "f"
+    },
+    {
+        "name": "l1_ctrl_period",
+        "value": 10.0,
+        "type": "f"
+    },
+    {
+        "name": "l1_ctrl_roll_lim",
+        "value": 50.0,
+        "type": "f"
+    },
+    {
+        "name": "navigator_min_dist_wp",
+        "value": 50.0,
+        "type": "f"
+    },
+    {
+        "name": "sensors_of_min",
+        "value": 50,
+        "type": "i"
+    },
+    {
+        "name": "sensors_of_max",
+        "value": 2000,
+        "type": "i"
+    },
+    {
+        "name": "mixer_pwm_max_ele",
+        "value": 2000,
+        "type": "i"
+    },
+    {
+        "name": "mixer_pwm_max_rud",
+        "value": 2000,
+        "type": "i"
+    },
+    {
+        "name": "mixer_pwm_max_thr",
+        "value": 2000,
+        "type": "i"
+    },
+    {
+        "name": "mixer_pwm_max_aux1",
+        "value": 2000,
+        "type": "i"
+    },
+    {
+        "name": "mixer_pwm_max_aux2",
+        "value": 2000,
+        "type": "i"
+    },
+    {
+        "name": "mixer_pwm_max_aux3",
+        "value": 2000,
+        "type": "i"
+    },
+    {
+        "name": "mixer_pwm_min_ele",
+        "value": 1000,
+        "type": "i"
+    },
+    {
+        "name": "mixer_pwm_min_rud",
+        "value": 1000,
+        "type": "i"
+    },
+    {
+        "name": "mixer_pwm_min_thr",
+        "value": 1000,
+        "type": "i"
+    },
+    {
+        "name": "mixer_pwm_min_aux1",
+        "value": 1000,
+        "type": "i"
+    },
+    {
+        "name": "mixer_pwm_min_aux2",
+        "value": 1000,
+        "type": "i"
+    },
+    {
+        "name": "mixer_pwm_min_aux3",
+        "value": 1000,
+        "type": "i"
+    },
+    {
+        "name": "mixer_pwm_rev_ele",
+        "value": 1,
+        "type": "i"
+    },
+    {
+        "name": "mixer_pwm_rev_rud",
+        "value": 0,
+        "type": "i"
+    },
+    {
+        "name": "mixer_pwm_rev_thr",
+        "value": 0,
+        "type": "i"
+    },
+    {
+        "name": "mixer_pwm_rev_aux1",
+        "value": 0,
+        "type": "i"
+    },
+    {
+        "name": "mixer_pwm_rev_aux2",
+        "value": 0,
+        "type": "i"
+    },
+    {
+        "name": "mixer_pwm_rev_aux3",
+        "value": 0,
+        "type": "i"
+    },
+    {
+        "name": "rc_input_max_duty",
+        "value": 1900,
+        "type": "i"
+    },
+    {
+        "name": "rc_input_min_duty",
+        "value": 1100,
+        "type": "i"
+    },
+    {
+        "name": "ahrs_beta_gain",
+        "value": 0.005,
+        "type": "f"
+    },
+    {
+        "name": "ahrs_mag_decl",
+        "value": -10.2,
+        "type": "f"
+    },
+    {
+        "name": "ahrs_acc_max",
+        "value": 2.0,
+        "type": "f"
+    },
+    {
+        "name": "ahrs_hard_iron_x",
+        "value": 0.0,
+        "type": "f"
+    },
+    {
+        "name": "ahrs_hard_iron_y",
+        "value": 0.0,
+        "type": "f"
+    },
+    {
+        "name": "ahrs_hard_iron_z",
+        "value": 0.0,
+        "type": "f"
+    },
+    {
+        "name": "ahrs_soft_iron_xx",
+        "value": 1.0,
+        "type": "f"
+    },
+    {
+        "name": "ahrs_soft_iron_xy",
+        "value": 0.0,
+        "type": "f"
+    },
+    {
+        "name": "ahrs_soft_iron_xz",
+        "value": 0.0,
+        "type": "f"
+    },
+    {
+        "name": "ahrs_soft_iron_yx",
+        "value": 0.0,
+        "type": "f"
+    },
+    {
+        "name": "ahrs_soft_iron_yy",
+        "value": 1.0,
+        "type": "f"
+    },
+    {
+        "name": "ahrs_soft_iron_yz",
+        "value": 0.0,
+        "type": "f"
+    },
+    {
+        "name": "ahrs_soft_iron_zx",
+        "value": 0.0,
+        "type": "f"
+    },
+    {
+        "name": "ahrs_soft_iron_zy",
+        "value": 0.0,
+        "type": "f"
+    },
+    {
+        "name": "ahrs_soft_iron_zz",
+        "value": 1.0,
+        "type": "f"
+    },
+    {
+        "name": "pos_estimator_baro_var",
+        "value": 1000.0,
+        "type": "f"
+    },
+    {
+        "name": "pos_estimator_gnss_var",
+        "value": 1000.0,
+        "type": "f"
+    },
+    {
+        "name": "pos_estimator_gnss_alt_var",
+        "value": 1000.0,
+        "type": "f"
+    }
+]

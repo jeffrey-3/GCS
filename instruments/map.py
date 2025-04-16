@@ -12,9 +12,8 @@ class MapView(QGraphicsView):
     clicked = pyqtSignal(tuple)  # Signal emitted when the map is clicked
     key_press_signal = pyqtSignal(QKeyEvent)  # Signal emitted on key press
 
-    def __init__(self, gcs):
+    def __init__(self):
         super().__init__()
-        self.gcs = gcs
 
         # Disable scroll bars
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -36,11 +35,18 @@ class MapView(QGraphicsView):
         self.waypoints = []  # List of waypoints
         self.tile_cache = {}  # Cache for loaded tiles to improve performance
         self.waypoint_radius = 20
+        self.plane_pos_history = []
+    
+    def set_plane_coords(self, lat, lon):
+        self.plane_lat = lat
+        self.plane_lon = lon
+        self.plane_pos_history.append([lat, lon])
 
     def render(self):
         """Render the map, waypoints, acceptance radius, and plane arrow."""
         self.scene.clear()  # Clear the scene before redrawing
         self.draw_tiles()  # Draw map tiles
+        self.draw_path()
         self.draw_accept_radius()  # Draw acceptance radius around waypoints
         self.draw_waypoints()  # Draw waypoints and connecting lines
         self.draw_arrow()  # Draw the plane's arrow
@@ -119,6 +125,21 @@ class MapView(QGraphicsView):
 
         # Adjust scene rectangle to match viewport size
         self.setSceneRect(0, 0, viewport_width, viewport_height)
+
+    def draw_path(self):
+        if len(self.plane_pos_history) > 0:
+            points = [self.lat_lon_to_map_coords(point[0], point[1]) for point in self.plane_pos_history]
+
+            # Draw connecting lines
+            path = QPainterPath()
+            start_point = QPointF(points[0][0], points[0][1])  # Convert tuple to QPointF
+            path.moveTo(start_point)
+            for point in points[1:]:
+                qpoint = QPointF(point[0], point[1])  # Convert tuple to QPointF
+                path.lineTo(qpoint)
+            polyline_item = QGraphicsPathItem(path)
+            polyline_item.setPen(QPen(Qt.red, 3))
+            self.scene.addItem(polyline_item)
 
     def draw_waypoints(self):
         """Draw waypoints and connecting lines."""
