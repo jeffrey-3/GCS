@@ -8,44 +8,66 @@ from aplink.aplink_helpers import APLink
 
 class PARAM_TYPE(Enum):
     
-    PARAM_TYPE_INT32 = 0,
+    INT32 = 0,
     
-    PARAM_TYPE_FLOAT = 1,
+    FLOAT = 1,
     
 
 class COMMAND_ID(Enum):
     
     CALIBRATE = 0,
     
-    LOAD_WAYPOINTS = 1,
-    
-    HITL_ENABLE = 2,
-    
  
 
         
-class aplink_nav_display:
-    format = "=ffB"
+class aplink_vehicle_status_full:
+    format = "=hhhhhhhhhiiBBBBB"
     msg_id = 0  
                       
     
-    pos_est_north = None
+    roll = None
     
-    pos_est_east = None
+    roll_sp = None
+    
+    pitch = None
+    
+    pitch_sp = None
+    
+    yaw = None
+    
+    alt = None
+    
+    alt_sp = None
+    
+    spd = None
+    
+    spd_sp = None
+    
+    lat = None
+    
+    lon = None
     
     current_waypoint = None
+    
+    system_mode = None
+    
+    flight_mode = None
+    
+    manual_mode = None
+    
+    auto_mode = None
     
     
     def unpack(self, payload: bytes):
         if len(payload) != struct.calcsize(self.format):
             return False
                     
-        self.pos_est_north, self.pos_est_east, self.current_waypoint, = struct.unpack(self.format, payload)
+        self.roll, self.roll_sp, self.pitch, self.pitch_sp, self.yaw, self.alt, self.alt_sp, self.spd, self.spd_sp, self.lat, self.lon, self.current_waypoint, self.system_mode, self.flight_mode, self.manual_mode, self.auto_mode, = struct.unpack(self.format, payload)
                     
         return True
     
-    def pack(self, pos_est_north, pos_est_east, current_waypoint):
-        payload = struct.pack(format, pos_est_north, pos_est_east, current_waypoint)
+    def pack(self, roll, roll_sp, pitch, pitch_sp, yaw, alt, alt_sp, spd, spd_sp, lat, lon, current_waypoint, system_mode, flight_mode, manual_mode, auto_mode):
+        payload = struct.pack(format, roll, roll_sp, pitch, pitch_sp, yaw, alt, alt_sp, spd, spd_sp, lat, lon, current_waypoint, system_mode, flight_mode, manual_mode, auto_mode)
         return APLink().pack(payload, self.msg_id)
         
 class aplink_cal_sensors:
@@ -108,53 +130,9 @@ class aplink_waypoint:
         payload = struct.pack(format, lat, lon, alt)
         return APLink().pack(payload, self.msg_id)
         
-class aplink_vfr_hud:
-    format = "=hhhhhhhhhBBBB"
-    msg_id = 3  
-                      
-    
-    roll = None
-    
-    roll_sp = None
-    
-    pitch = None
-    
-    pitch_sp = None
-    
-    yaw = None
-    
-    alt = None
-    
-    alt_sp = None
-    
-    spd = None
-    
-    spd_sp = None
-    
-    system_mode = None
-    
-    flight_mode = None
-    
-    manual_mode = None
-    
-    auto_mode = None
-    
-    
-    def unpack(self, payload: bytes):
-        if len(payload) != struct.calcsize(self.format):
-            return False
-                    
-        self.roll, self.roll_sp, self.pitch, self.pitch_sp, self.yaw, self.alt, self.alt_sp, self.spd, self.spd_sp, self.system_mode, self.flight_mode, self.manual_mode, self.auto_mode, = struct.unpack(self.format, payload)
-                    
-        return True
-    
-    def pack(self, roll, roll_sp, pitch, pitch_sp, yaw, alt, alt_sp, spd, spd_sp, system_mode, flight_mode, manual_mode, auto_mode):
-        payload = struct.pack(format, roll, roll_sp, pitch, pitch_sp, yaw, alt, alt_sp, spd, spd_sp, system_mode, flight_mode, manual_mode, auto_mode)
-        return APLink().pack(payload, self.msg_id)
-        
 class aplink_gps_raw:
     format = "=iiB?"
-    msg_id = 4  
+    msg_id = 3  
                       
     
     lat = None
@@ -180,7 +158,7 @@ class aplink_gps_raw:
         
 class aplink_hitl_sensors:
     format = "=ffffffffffiihh"
-    msg_id = 5  
+    msg_id = 4  
                       
     
     imu_ax = None
@@ -226,7 +204,7 @@ class aplink_hitl_sensors:
         
 class aplink_hitl_commands:
     format = "=HHH"
-    msg_id = 6  
+    msg_id = 5  
                       
     
     rud_pwm = None
@@ -250,7 +228,7 @@ class aplink_hitl_commands:
         
 class aplink_waypoints_count:
     format = "=B"
-    msg_id = 7  
+    msg_id = 6  
                       
     
     num_waypoints = None
@@ -270,7 +248,7 @@ class aplink_waypoints_count:
         
 class aplink_request_waypoint:
     format = "=B"
-    msg_id = 8  
+    msg_id = 7  
                       
     
     index = None
@@ -290,7 +268,7 @@ class aplink_request_waypoint:
         
 class aplink_waypoints_ack:
     format = "=B"
-    msg_id = 9  
+    msg_id = 8  
                       
     
     waypoints_loaded = None
@@ -310,7 +288,7 @@ class aplink_waypoints_ack:
         
 class aplink_time_since_epoch:
     format = "=Q"
-    msg_id = 10  
+    msg_id = 9  
                       
     
     microseconds = None
@@ -330,7 +308,7 @@ class aplink_time_since_epoch:
         
 class aplink_rc_input:
     format = "=bbbb"
-    msg_id = 11  
+    msg_id = 10  
                       
     
     ail = None
@@ -356,7 +334,7 @@ class aplink_rc_input:
         
 class aplink_power:
     format = "=HHHH"
-    msg_id = 12  
+    msg_id = 11  
                       
     
     batt_volt = None
@@ -382,7 +360,7 @@ class aplink_power:
         
 class aplink_param_set:
     format = "=ccccccccccccccccBBBBB"
-    msg_id = 13  
+    msg_id = 12  
                       
     
     name = None
@@ -406,7 +384,7 @@ class aplink_param_set:
         
 class aplink_params_ack:
     format = "=B"
-    msg_id = 14  
+    msg_id = 13  
                       
     
     params_loaded = None
@@ -426,7 +404,7 @@ class aplink_params_ack:
         
 class aplink_command:
     format = "=B"
-    msg_id = 15  
+    msg_id = 14  
                       
     
     command_id = None
@@ -446,7 +424,7 @@ class aplink_command:
         
 class aplink_acknowledgement:
     format = "=B"
-    msg_id = 16  
+    msg_id = 15  
                       
     
     command_id = None

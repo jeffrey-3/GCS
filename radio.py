@@ -11,11 +11,10 @@ import json
 class Radio(QObject):
     RATE_CALC_DT = 1 # Delta time to calculate received byte rate
 
-    cal_sensors_signal = pyqtSignal(float, float, float, float, float, float, float, float, float)
-    vfr_hud_signal = pyqtSignal(float, float, float, float, float)
-    nav_display_signal = pyqtSignal(float, float, int)
+    cal_sensors_signal = pyqtSignal(list)
+    vehicle_status_full_signal = pyqtSignal(aplink_vehicle_status_full)
+
     rx_byte_rate_signal = pyqtSignal(float)
-    request_waypoint_signal = pyqtSignal(int)
 
     waypoints_updated = pyqtSignal(list)
     map_clicked_signal = pyqtSignal(tuple)
@@ -73,9 +72,6 @@ class Radio(QObject):
             return True
         except:
             return False
-
-    def send_waypoint(self, waypoint):
-        self.ser.write(aplink_waypoint().pack(waypoint.lat, waypoint.lon, waypoint.alt))
     
     def receive_thread(self):
         while True:
@@ -120,25 +116,24 @@ class Radio(QObject):
                 elif msg_id == aplink_request_waypoint.msg_id:
                     request_waypoint = aplink_request_waypoint()
                     request_waypoint.unpack(payload)
-                    self.request_waypoint_signal.emit(request_waypoint.index)
+                    
+                    self.ser.write(aplink_waypoint().pack(self.waypoints[request_waypoint.index].lat, 
+                                                          self.waypoints[request_waypoint.index].lon, 
+                                                          self.waypoints[request_waypoint.index].alt))
     
     def testing_thread(self):
         while True:
             t = time.time()
 
-            self.nav_display_signal.emit(
-                100 * math.sin(t / 2),
-                100 * math.cos(t / 2),
-                2
-            )
-
-            self.vfr_hud_signal.emit(
-                10 * math.sin(t / 2),
-                10 * math.sin(t / 2),
-                10 * math.sin(t / 2),
-                15 + 10 * math.sin(t / 2),
-                15 + 10 * math.sin(t / 2)
-            )
+            vehicle_status_full = aplink_vehicle_status_full()
+            vehicle_status_full.pitch = 10 * math.sin(t / 2)
+            vehicle_status_full.roll = 10 * math.sin(t / 2)
+            vehicle_status_full.yaw = 10 * math.sin(t / 2)
+            vehicle_status_full.alt = 15 + 10 * math.sin(t / 2)
+            vehicle_status_full.spd = 15 + 10 * math.sin(t / 2)
+            vehicle_status_full.lat = 43.878960 + 0.001 * math.sin(t / 2)
+            vehicle_status_full.lon = -79.413383 + 0.001 * math.cos(t / 2)
+            self.vehicle_status_full_signal.emit(vehicle_status_full)
 
             time.sleep(0.02)        
     

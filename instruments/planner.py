@@ -22,14 +22,6 @@ class Waypoint:
     lon: float
     alt: float
 
-
-class PlannerAltitudeProfile(AltitudeGraph):
-    def __init__(self):
-        super().__init__()
-    
-    def update_test(self, waypoints):
-        self.update(waypoints, 0)
-
 class DownloadProgressDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -127,15 +119,11 @@ class PlanMap(MapView):
         self.waypoints = []
 
         self.radio.waypoints_updated.connect(self.set_waypoints)
-        self.radio.request_waypoint_signal.connect(self.send_waypoint)
         view.removeButton.clicked.connect(self.remove_btn_press)
         view.addButton.clicked.connect(self.add_btn_press)
         view.upload_btn.clicked.connect(self.upload)
         view.editButton.clicked.connect(self.edit_btn_press)
         view.deselect_btn.clicked.connect(self.deselect)
-    
-    def send_waypoint(self, index):
-        self.radio.send_waypoint(self.waypoints[index])
     
     def set_waypoints(self, waypoints):
         self.waypoints = waypoints
@@ -180,7 +168,7 @@ class PlanMap(MapView):
             del self.waypoints[self.plane_current_wp]
             self.plane_current_wp = 10000
             self.render()
-            self.view.alt_profile.update_test(self.waypoints)
+            self.view.alt_profile.update(self.waypoints, 0)
     
     def add_btn_press(self):
         self.adding_waypoint = True
@@ -280,7 +268,7 @@ class PlanView(QScrollArea):
         self.right_layout.addWidget(self.map)
         self.right_layout.setRowStretch(0, 3) 
         
-        self.alt_profile = PlannerAltitudeProfile()
+        self.alt_profile = AltitudeGraph()
         self.right_layout.addWidget(self.alt_profile)
         self.right_layout.setRowStretch(1, 1)
 

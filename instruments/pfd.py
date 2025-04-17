@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-
+from aplink.aplink_messages import *
 
 # Fixed aspect ratio and then use width as size variable to scale 
 
@@ -70,14 +70,14 @@ class PFDView(QWidget):
         self.altitude = 0
         self.airspeed = 0
 
-        radio.vfr_hud_signal.connect(self.update_values)
+        radio.vehicle_status_full_signal.connect(self.update_vehicle_status_full)
 
-    def update_values(self, roll, pitch, heading, altitude, airspeed):
-        self.roll = roll
-        self.pitch = pitch
-        self.heading = heading
-        self.altitude = altitude
-        self.airspeed = airspeed
+    def update_vehicle_status_full(self, vehicle_status: aplink_vehicle_status_full):
+        self.roll = vehicle_status.roll
+        self.pitch = vehicle_status.pitch
+        self.heading = vehicle_status.yaw
+        self.altitude = vehicle_status.alt
+        self.airspeed = vehicle_status.spd
         self.update() # Trigger paint event
 
     def paintEvent(self, event):

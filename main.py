@@ -21,12 +21,19 @@ from radio import Radio
 
 # Top bar using qhboxlayout with buttons
 
+# Negative on pfd scales
+
 # Clickable map is simpler code wise becuase you can just store waypoints in a single module, write this in GCS docs
 # Buttons and planner both in same planner.py file so its easy to transfer between
 
 # PFD red areas
 
 # exe
+
+# point on altitude graph that shows where plane is, calculate based on cross track error
+
+# Altitude graph
+# Move logic from plan map to planner
 
 # modern theme
 

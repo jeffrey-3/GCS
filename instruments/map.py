@@ -9,9 +9,6 @@ class MapView(QGraphicsView):
     MAX_ZOOM = 19
     TILE_SIZE = 256  # Size of tiles in pixels
 
-    clicked = pyqtSignal(tuple)  # Signal emitted when the map is clicked
-    key_press_signal = pyqtSignal(QKeyEvent)  # Signal emitted on key press
-
     def __init__(self):
         super().__init__()
 
@@ -264,8 +261,6 @@ class MapView(QGraphicsView):
 
     def keyPressEvent(self, event):
         """Handle key press events for map navigation and zooming."""
-        # Emit the key press signal
-        self.key_press_signal.emit(event)
 
         # Handle map-specific key events
         movement_pixels = 100  # Move by 100 pixels per key press

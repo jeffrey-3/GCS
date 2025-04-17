@@ -1,3 +1,5 @@
 logs/
 tiles/
 **/__pycache__/
+build/
+dist/
