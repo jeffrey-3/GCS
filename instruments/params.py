@@ -1,16 +1,10 @@
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 import json
-from dataclasses import dataclass
-
-@dataclass
-class Parameter:
-    name: str
-    value: float
-    type: str
+from radio import *
 
 class ParamsView(QWidget):
-    def __init__(self, radio):
+    def __init__(self, radio: Radio):
         super().__init__()
         self.radio = radio
 
@@ -46,6 +40,7 @@ class ParamsView(QWidget):
         if file_path:
             if self.process_params_file(file_path):
                 self.file_path_label.setText("File Directory: " + file_path)
+                self.radio.update_params(self.params)
             else:
                 QMessageBox.information(self, "Error", "File format incorrect")
     

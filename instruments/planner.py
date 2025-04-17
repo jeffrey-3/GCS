@@ -7,6 +7,7 @@ from instruments.altitude_profile import AltitudeGraph
 from utils.tile_downloader import TileDownloader
 import threading
 import json
+from radio import *
 
 
 # Squeeze left buttons panel to smallest width
@@ -14,13 +15,7 @@ import json
 # 1. Fix messy add waypoints stuff and 10000
 # 2. Add code in upload for uploading waypoints through radio
 
-from dataclasses import dataclass
 
-@dataclass
-class Waypoint:
-    lat: float
-    lon: float
-    alt: float
 
 class DownloadProgressDialog(QDialog):
     def __init__(self, parent=None):
@@ -110,17 +105,16 @@ class EditDialog(QDialog):
         return self.lat_input.value(), self.lon_input.value(), self.alt_input.value()
 
 class PlanMap(MapView):
-    def __init__(self, radio, view):
+    def __init__(self, radio: Radio, view):
         super().__init__()
         self.view = view
         self.radio = radio
         self.last_click_pos = None
         self.adding_waypoint = False
+        self.zoom = 17
         self.waypoints = []
 
-        self.radio.waypoints_updated.connect(self.set_waypoints)
         view.removeButton.clicked.connect(self.remove_btn_press)
-        view.addButton.clicked.connect(self.add_btn_press)
         view.upload_btn.clicked.connect(self.upload)
         view.editButton.clicked.connect(self.edit_btn_press)
         view.deselect_btn.clicked.connect(self.deselect)
@@ -168,14 +162,10 @@ class PlanMap(MapView):
             del self.waypoints[self.plane_current_wp]
             self.plane_current_wp = 10000
             self.render()
-            self.view.alt_profile.update(self.waypoints, 0)
-    
-    def add_btn_press(self):
-        self.adding_waypoint = True
+            self.view.alt_profile.update(self.waypoints, None)
     
     def upload(self):
         if (self.radio.upload_waypoints(self.waypoints)):
-            self.radio.update_waypoints(self.waypoints)
             self.deselect()
             QMessageBox.about(self, "Status", "Successfully uploaded waypoints")
         else:
@@ -199,23 +189,13 @@ class PlanMap(MapView):
     def deselect(self):
         self.plane_current_wp = 10000
         self.render()
-        
-        
-class CustomTableWidget(QTableWidget):
-    def __init__(self, *args, **kwargs):
-        super(CustomTableWidget, self).__init__(*args, **kwargs)
 
-    def keyPressEvent(self, event):
-        event.ignore()
-
-class PlanView(QScrollArea):
+class PlanView(QWidget):
     def __init__(self, radio):
         super().__init__()
         self.radio = radio
 
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.setWidgetResizable(True)
+        self.radio.waypoints_updated.connect(self.waypoints_updated)
 
         self.upload_btn = QPushButton("Upload To Vehicle")
         self.upload_btn.setStyleSheet("font-size: 20pt; font-weight: bold;")
@@ -269,6 +249,7 @@ class PlanView(QScrollArea):
         self.right_layout.setRowStretch(0, 3) 
         
         self.alt_profile = AltitudeGraph()
+        self.alt_profile.set_waypoints(self.map.waypoints)
         self.right_layout.addWidget(self.alt_profile)
         self.right_layout.setRowStretch(1, 1)
 
@@ -276,9 +257,16 @@ class PlanView(QScrollArea):
 
         self.left_layout.addWidget(self.upload_btn)
 
-        container = QWidget()
-        container.setLayout(self.layout)
-        self.setWidget(container)
+        self.setLayout(self.layout)
+
+        self.addButton.clicked.connect(self.add_btn_press)
+    
+    def add_btn_press(self):
+        self.map.adding_waypoint = True
+    
+    def waypoints_updated(self, waypoints):
+        self.map.set_waypoints(waypoints)
+        self.alt_profile.set_waypoints(waypoints)
     
     def add_tiles_downloader(self):
         layout = QFormLayout()

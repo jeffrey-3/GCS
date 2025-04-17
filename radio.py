@@ -4,7 +4,22 @@ import serial
 import math
 from PyQt5.QtCore import *
 from aplink.aplink_messages import *
+from typing import List
 import json
+from dataclasses import dataclass
+
+@dataclass
+class Waypoint:
+    lat: float
+    lon: float
+    alt: float
+
+@dataclass
+class Parameter:
+    name: str
+    value: float
+    type: str
+
 
 # IF you want to seperate GCS and radio, have radio library which GCS includes
 
@@ -29,16 +44,39 @@ class Radio(QObject):
         self.bytes_read_sum = 0 # Bytes read since last byte rate calculation
         self.prev_rate_calc_time = time.time() # Time of last byte rate calculation
         self.waypoints = []
-        self.params = []
+        self.params: List[Parameter] = []
     
-    def update_waypoints(self, waypoints):
+    def upload_params(self, params):
+        self.params = params
+
+        if not self.port == "Testing":
+            for param in self.params:
+                aplink_param = aplink_param_set()
+                aplink_param.name = param.name
+
+                if param.name == "f":
+                    aplink_param.name = PARAM_TYPE.FLOAT
+                elif param.name == "i":
+                    aplink_param.name = PARAM_TYPE.INT32
+
+                self.ser.write(aplink_param)
+
+        self.save_params(params)
+    
+    def upload_waypoints(self, waypoints: List[Waypoint]):
+        if not self.port == "Testing":
+            try:
+                waypoints_count = aplink_waypoints_count()
+                waypoints_count.num_waypoints = len(waypoints)
+                self.ser.write(waypoints_count)
+            except:
+                return False
+    
         self.waypoints = waypoints
         self.save_last_flightplan()
         self.waypoints_updated.emit(waypoints)
-    
-    def update_params(self, params):
-        self.params = params
-        self.save_params(params)
+
+        return True
     
     def map_clicked(self, pos):
         self.map_clicked_signal.emit(pos)
@@ -62,16 +100,6 @@ class Radio(QObject):
         self.connected = True
 
         return True
-    
-    def upload_waypoints(self, waypoints):
-        if self.port == "Testing":
-            return True
-
-        try:
-            self.ser.write(aplink_waypoints_count().pack(len(waypoints)))
-            return True
-        except:
-            return False
     
     def receive_thread(self):
         while True:
@@ -133,6 +161,7 @@ class Radio(QObject):
             vehicle_status_full.spd = 15 + 10 * math.sin(t / 2)
             vehicle_status_full.lat = 43.878960 + 0.001 * math.sin(t / 2)
             vehicle_status_full.lon = -79.413383 + 0.001 * math.cos(t / 2)
+            vehicle_status_full.current_waypoint = 1
             self.vehicle_status_full_signal.emit(vehicle_status_full)
 
             time.sleep(0.02)        

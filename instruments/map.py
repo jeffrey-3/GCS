@@ -28,7 +28,7 @@ class MapView(QGraphicsView):
         self.plane_current_wp = 1000  # Index of the current waypoint
         self.map_lat = 0  # Map's center latitude
         self.map_lon = 0  # Map's center longitude
-        self.zoom = 17  # Current zoom level
+        self.zoom = 1  # Current zoom level
         self.waypoints = []  # List of waypoints
         self.tile_cache = {}  # Cache for loaded tiles to improve performance
         self.waypoint_radius = 20

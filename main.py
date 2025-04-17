@@ -10,6 +10,10 @@ from instruments.flight_display import FlightDisplay
 from utils.utils import *
 from radio import Radio
 
+# circle to show acceptance radius 
+
+# Put connect button on top bar not its own page so I can see flight display while connecting. If I go to connect page, I can't see flight display anymore.
+
 # Scale font size based on window size
 
 # Add more signals to radio and more aplink messages
@@ -47,8 +51,6 @@ from radio import Radio
 
 # Flight software look at velocity estimate to see if converged (actually doesn't matter, user can just make sure before starting)
 
-
-# Still need map even if no waypoints loaded, but nno waypoints
 
 
 class MainView(QMainWindow):

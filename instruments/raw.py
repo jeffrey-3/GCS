@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
+from radio import *
 
 class RawTable(QWidget):
     def __init__(self, names, units):
@@ -24,8 +25,11 @@ class RawTable(QWidget):
             self.layout.itemAtPosition(row, 1).widget().setText(values[row])
 
 class RawView(QScrollArea):
-    def __init__(self):
+    def __init__(self, radio: Radio):
         super().__init__()
+
+        self.radio = radio
+        self.radio.vehicle_status_full_signal.connect(self.vehicle_status_full_update)
 
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -65,22 +69,9 @@ class RawView(QScrollArea):
         container.setLayout(self.layout)
         self.setWidget(container)
     
-    def update(self, ahrs_roll, ahrs_pitch, ahrs_heading, gnss_lat, gnss_lon, 
-               queue_len, nav_alt, nav_as, nav_north, nav_east):
-        self.gnss_table.update([str(round(gnss_lat, 7)),
-                                str(round(gnss_lon, 7)),
-                                str(0),
-                                str(0)])
-        self.tlm_table.update([str(queue_len), 
-                               str(0),
-                               str(0)])
-        self.nav_table.update([str(round(nav_north, 2)),
-                               str(round(nav_east, 2)),
-                               str(round(nav_alt, 2)),
-                               str(round(nav_as, 2))])
-        self.ahrs_table.update([str(round(ahrs_roll, 2)),
-                               str(round(ahrs_pitch, 2)),
-                               str(round(ahrs_heading, 2))])
-        # self.rc_table.update([str(round(, 2)),
-        #                       str(round(, 2)),
-        #                       str(round(, 2))])
+    def vehicle_status_full_update(self, vehicle_status: aplink_vehicle_status_full):
+        self.ahrs_table.update([str(round(vehicle_status.roll, 2)),
+                               str(round(vehicle_status.pitch, 2)),
+                               str(round(vehicle_status.yaw, 2))])
+
+# Maybe auto generate based on packet names

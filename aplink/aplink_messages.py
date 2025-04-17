@@ -17,11 +17,28 @@ class COMMAND_ID(Enum):
     
     CALIBRATE = 0,
     
+
+class VEHICLE_MODE(Enum):
+    
+    CONFIG = 0,
+    
+    MANUAL = 1,
+    
+    FBW = 2,
+    
+    TAKEOFF = 3,
+    
+    MISSION = 4,
+    
+    LAND = 5,
+    
+    FLARE = 6,
+    
  
 
         
 class aplink_vehicle_status_full:
-    format = "=hhhhhhhhhiiBBBBB"
+    format = "=hhhhhhhhhiiBB"
     msg_id = 0  
                       
     
@@ -49,25 +66,19 @@ class aplink_vehicle_status_full:
     
     current_waypoint = None
     
-    system_mode = None
-    
-    flight_mode = None
-    
-    manual_mode = None
-    
-    auto_mode = None
+    vehicle_mode = None
     
     
     def unpack(self, payload: bytes):
         if len(payload) != struct.calcsize(self.format):
             return False
                     
-        self.roll, self.roll_sp, self.pitch, self.pitch_sp, self.yaw, self.alt, self.alt_sp, self.spd, self.spd_sp, self.lat, self.lon, self.current_waypoint, self.system_mode, self.flight_mode, self.manual_mode, self.auto_mode, = struct.unpack(self.format, payload)
+        self.roll, self.roll_sp, self.pitch, self.pitch_sp, self.yaw, self.alt, self.alt_sp, self.spd, self.spd_sp, self.lat, self.lon, self.current_waypoint, self.vehicle_mode, = struct.unpack(self.format, payload)
                     
         return True
     
-    def pack(self, roll, roll_sp, pitch, pitch_sp, yaw, alt, alt_sp, spd, spd_sp, lat, lon, current_waypoint, system_mode, flight_mode, manual_mode, auto_mode):
-        payload = struct.pack(format, roll, roll_sp, pitch, pitch_sp, yaw, alt, alt_sp, spd, spd_sp, lat, lon, current_waypoint, system_mode, flight_mode, manual_mode, auto_mode)
+    def pack(self, roll, roll_sp, pitch, pitch_sp, yaw, alt, alt_sp, spd, spd_sp, lat, lon, current_waypoint, vehicle_mode):
+        payload = struct.pack(format, roll, roll_sp, pitch, pitch_sp, yaw, alt, alt_sp, spd, spd_sp, lat, lon, current_waypoint, vehicle_mode)
         return APLink().pack(payload, self.msg_id)
         
 class aplink_cal_sensors:

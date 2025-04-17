@@ -10,32 +10,8 @@ from utils.utils import *
 from instruments.map import MapView
 from aplink.aplink_messages import *
 from radio import *
-
-class NavDisplay(MapView):
-    def __init__(self, radio: Radio):
-        super().__init__()
-        self.radio = radio
-        self.waypoints = []
-        self.zoom = 2
-        self.radio.vehicle_status_full_signal.connect(self.update_vehicle_status_full)
-        self.radio.waypoints_updated.connect(self.update_waypoints)
-    
-    def update_vehicle_status_full(self, vehicle_status: aplink_vehicle_status_full):
-        self.waypoints = self.radio.get_waypoints()
-
-        self.set_plane_coords(vehicle_status.lat, vehicle_status.lon)
-        self.map_lat = vehicle_status.lat
-        self.map_lon = vehicle_status.lon
-        self.plane_hdg = vehicle_status.yaw
-        self.plane_current_wp = vehicle_status.current_waypoint
-        
-        self.render()
-    
-    def update_waypoints(self, waypoints):
-        self.waypoints = waypoints
-        self.map_lat = self.waypoints[0].lat # well not really needed because I will never upload waypoints without vehicle connected
-        self.map_lon = self.waypoints[0].lon # Actually maybe needed because I can upload waypoints before GPS fix and before position estimate
-        self.render()
+from typing import List
+from instruments.planner import Waypoint
 
 class FlightDisplay(QWidget):
     def __init__(self, radio: Radio):
@@ -43,6 +19,7 @@ class FlightDisplay(QWidget):
 
         self.radio = radio
         self.radio.waypoints_updated.connect(self.waypoints_updated)
+        self.radio.vehicle_status_full_signal.connect(self.vehicle_status_full_update)
 
         self.tabs_font = QFont()
         self.tabs_font.setPointSize(12)
@@ -69,8 +46,25 @@ class FlightDisplay(QWidget):
         self.add_left_widgets()
         self.add_right_widgets()
     
-    def waypoints_updated(self, waypoints):
-        self.alt_graph.update(waypoints, 0)
+    def vehicle_status_full_update(self, vehicle_status: aplink_vehicle_status_full):
+        if vehicle_status.current_waypoint != self.alt_graph.current_waypoint_index:
+            self.alt_graph.set_current_waypoint_index(vehicle_status.current_waypoint)
+        
+        self.map.set_plane_coords(vehicle_status.lat, vehicle_status.lon)
+        self.map.map_lat = vehicle_status.lat
+        self.map.map_lon = vehicle_status.lon
+        self.map.plane_hdg = vehicle_status.yaw
+        self.map.plane_current_wp = vehicle_status.current_waypoint
+        
+        self.map.render()
+
+    def waypoints_updated(self, waypoints: List[Waypoint]):
+        self.alt_graph.set_waypoints(waypoints)
+
+        self.map.waypoints = waypoints
+        self.map.map_lat = self.waypoints[0].lat
+        self.map.map_lon = self.waypoints[0].lon
+        self.map.render()
     
     def add_left_widgets(self):
         self.vsplitter = QSplitter(Qt.Vertical)
@@ -88,7 +82,7 @@ class FlightDisplay(QWidget):
         self.tabs = QTabWidget()
         self.tabs.setFont(self.tabs_font)
         self.tabs.addTab(DataView(), "Quick")
-        self.tabs.addTab(RawView(), "Raw")
+        self.tabs.addTab(RawView(self.radio), "Raw")
         self.left_sub_layout.addWidget(self.tabs)
 
         self.vsplitter.setStretchFactor(0, 10) 
@@ -96,9 +90,10 @@ class FlightDisplay(QWidget):
         self.vsplitter.setHandleWidth(0)  # Hide the resize handle
 
     def add_right_widgets(self):
-        self.right_layout.addWidget(NavDisplay(self.radio), 0, 0, 1, 1)
+        self.map = MapView()
+        self.right_layout.addWidget(self.map, 0, 0, 1, 1)
         self.right_layout.setRowStretch(0, 3) 
         
-        self.alt_graph =AltitudeGraph()
+        self.alt_graph = AltitudeGraph()
         self.right_layout.addWidget(self.alt_graph, 1, 0, 1, 1)
         self.right_layout.setRowStretch(1, 1)

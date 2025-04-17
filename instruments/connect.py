@@ -50,4 +50,7 @@ class ConnectView(QWidget):
         self.com_port_dropdown.addItem("Testing")
     
     def connect(self):
-        self.radio.start(self.com_port_dropdown.currentText())
+        if self.radio.start(self.com_port_dropdown.currentText()):
+            QMessageBox.information(self, "Status", "Connected")
+        else:
+            QMessageBox.information(self, "Error", "Failed to connect")
