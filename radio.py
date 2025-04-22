@@ -5,7 +5,8 @@ import math
 from PyQt5.QtCore import *
 from aplink.aplink_messages import *
 from typing import List
-import json
+import array
+import random
 from dataclasses import dataclass
 
 @dataclass
@@ -20,89 +21,132 @@ class Parameter:
     value: float
     type: str
 
-
-# IF you want to seperate GCS and radio, have radio library which GCS includes
-
 class Radio(QObject):
     RATE_CALC_DT = 1 # Delta time to calculate received byte rate
 
-    cal_sensors_signal = pyqtSignal(list)
+    cal_sensors_signal = pyqtSignal(aplink_cal_sensors)
+    gps_raw_signal = pyqtSignal(aplink_gps_raw)
     vehicle_status_full_signal = pyqtSignal(aplink_vehicle_status_full)
+    power_signal = pyqtSignal(aplink_power)
 
-    rx_byte_rate_signal = pyqtSignal(float)
+    rx_byte_rate_signal = pyqtSignal(int)
 
     waypoints_updated = pyqtSignal(list)
-    map_clicked_signal = pyqtSignal(tuple)
-    params_loaded = pyqtSignal()
+    params_updated = pyqtSignal(list)
 
     def __init__(self):
         super().__init__()
         self.aplink = APLink()
         self.ser = None
         self.port = None
-        self.connected = False
         self.bytes_read_sum = 0 # Bytes read since last byte rate calculation
         self.prev_rate_calc_time = time.time() # Time of last byte rate calculation
-        self.waypoints = []
+        self.waypoints: List[Waypoint] = []
         self.params: List[Parameter] = []
-    
-    def upload_params(self, params):
-        self.params = params
-
-        if not self.port == "Testing":
-            for param in self.params:
-                aplink_param = aplink_param_set()
-                aplink_param.name = param.name
-
-                if param.name == "f":
-                    aplink_param.name = PARAM_TYPE.FLOAT
-                elif param.name == "i":
-                    aplink_param.name = PARAM_TYPE.INT32
-
-                self.ser.write(aplink_param)
-
-        self.save_params(params)
-    
-    def upload_waypoints(self, waypoints: List[Waypoint]):
-        if not self.port == "Testing":
-            try:
-                waypoints_count = aplink_waypoints_count()
-                waypoints_count.num_waypoints = len(waypoints)
-                self.ser.write(waypoints_count)
-            except:
-                return False
-    
-        self.waypoints = waypoints
-        self.save_last_flightplan()
-        self.waypoints_updated.emit(waypoints)
-
-        return True
-    
-    def map_clicked(self, pos):
-        self.map_clicked_signal.emit(pos)
-    
-    def get_waypoints(self):
-        return self.waypoints
+        self.polling_active = True
+        self.poll_thread = None
     
     def start(self, port):
         self.port = port
         
-        if port != 'Testing':
+        if port == 'Testing':
+            threading.Thread(target=self.testing_thread, daemon=True).start()
+        else:
             try:
-                self.ser = serial.Serial(port, 115200, timeout=1000)
+                self.ser = serial.Serial(port, 115200, timeout=1)
+                self.poll_thread = threading.Thread(target=self.poll_loop, daemon=True)
+                self.poll_thread.start()
             except:
                 return False
-            
-            threading.Thread(target=self.receive_thread, daemon=True).start()
-        else:
-            threading.Thread(target=self.testing_thread, daemon=True).start()
-    
-        self.connected = True
 
         return True
-    
-    def receive_thread(self):
-        while True:
+
+    def poll_loop(self):
+        while self.polling_active:
+            self.poll()
+            time.sleep(0.001)  # Small sleep to prevent CPU overload
+                
+    def send_waypoints(self, waypoints: List[Waypoint]):
+        self.waypoints = waypoints
+        
+        self.polling_active = False  # Stop background polling
+
+        # Notify plane that GCS is about to send waypoints
+        self.ser.write(aplink_waypoints_count().pack(len(self.waypoints)))
+
+        # Listen for plane to request each waypoint
+        timeout_sec = 1
+        start_time = time.time()
+        while time.time() - start_time < timeout_sec:
+            byte = self.ser.read(1)
+            result = self.aplink.parse_byte(byte)
+            if result is not None:
+                payload, msg_id = result
+
+                if msg_id == aplink_request_waypoint.msg_id:
+                    request_waypoint = aplink_request_waypoint()
+                    request_waypoint.unpack(payload)
+
+                    # If plane requests waypoint, send the waypoint
+                    self.ser.write(aplink_waypoint().pack(
+                        self.waypoints[request_waypoint.index].lat * 1e7, 
+                        self.waypoints[request_waypoint.index].lon * 1e7, 
+                        self.waypoints[request_waypoint.index].alt)
+                    )
+
+                    start_time = time.time() # Reset timeout
+                elif msg_id == aplink_waypoints_ack.msg_id:
+                    # Exit when plane uses waypoints_count to confirm all waypoints have been loaded
+                    ack = aplink_waypoints_ack()
+                    ack.unpack(payload)
+                    self.polling_active = True  # Resume background polling
+                    self.waypoints_updated.emit(waypoints)
+                    return True
+        self.polling_active = True  # Resume background polling if timeout
+        
+        return False
+        
+    # Send param_set and plane replies with the same param_set to confirm
+    def send_params(self, params: List[Parameter]):
+        self.params = params
+
+        self.polling_active = False  # Stop background polling
+        for param in self.params:
+            param_name = param.name.ljust(16, '\x00')[16:].encode('utf-8') # Convert to 16-byte char array
+            param_value = None
+            param_type = None
+
+            if param.name == "f":
+                param_type = PARAM_TYPE.FLOAT
+                param_value = array.array('B', struct.pack('=f', param.value))
+            elif param.name == "i":
+                param_type = PARAM_TYPE.INT32
+                param_value = array.array('B', struct.pack('=i', param.value))
+
+            self.ser.write(aplink_param_set().pack(param_name, param_value, param_type))
+
+            timeout_sec = 1
+            start_time = time.time()
+            while time.time() - start_time < timeout_sec:
+                byte = self.ser.read(1)
+                result = self.aplink.parse_byte(byte)
+                if result is not None:
+                    payload, msg_id = result
+                    if msg_id == aplink_param_set.msg_id:
+                        start_time = time.time()
+                        continue
+        self.polling_active = True  # Resume background polling
+        return False
+
+        self.params_updated.emit(self.params)
+
+        return True
+
+    def poll(self):
+        if not self.ser or not self.polling_active:
+            return None, None
+
+        while self.ser.in_waiting > 0:
             byte = self.ser.read(1)
             result = self.aplink.parse_byte(byte)
             if result is not None:
@@ -118,40 +162,21 @@ class Radio(QObject):
                 if msg_id == aplink_cal_sensors.msg_id:
                     cal_sensors = aplink_cal_sensors()
                     cal_sensors.unpack(payload)
-                    print(cal_sensors.az)
-                    self.cal_sensors_signal.emit(
-                        cal_sensors.ax, cal_sensors.ay, cal_sensors.az, 
-                        cal_sensors.gx, cal_sensors.gy, cal_sensors.gz,
-                        cal_sensors.mx, cal_sensors.my, cal_sensors.mz
-                    )
-                elif msg_id == aplink_vfr_hud.msg_id:
-                    vfr_hud = aplink_vfr_hud()
-                    vfr_hud.unpack(payload)
-                    print(vfr_hud.alt)
-                    self.vfr_hud_signal.emit(
-                        vfr_hud.roll, 
-                        vfr_hud.pitch, 
-                        vfr_hud.yaw
-                    )
-                elif msg_id == aplink_nav_display.msg_id:
-                    nav_display = aplink_nav_display()
-                    nav_display.unpack(payload)
-                    self.nav_display_signal.emit(
-                        nav_display.pos_est_north,
-                        nav_display.pos_est_east,
-                        nav_display.waypoint_index
-                    )
-                elif msg_id == aplink_request_waypoint.msg_id:
-                    request_waypoint = aplink_request_waypoint()
-                    request_waypoint.unpack(payload)
-                    
-                    self.ser.write(aplink_waypoint().pack(self.waypoints[request_waypoint.index].lat, 
-                                                          self.waypoints[request_waypoint.index].lon, 
-                                                          self.waypoints[request_waypoint.index].alt))
+                    self.cal_sensors_signal.emit(vehicle_status)
+                elif msg_id == aplink_vehicle_status_full.msg_id:
+                    vehicle_status = aplink_vehicle_status_full()
+                    vehicle_status.unpack(payload)
+                    self.vfr_hud_signal.emit(vehicle_status)
+
+                return payload, msg_id
+        return None, None
     
     def testing_thread(self):
         while True:
             t = time.time()
+
+            lat = 43.878960 + 0.001 * math.sin(t / 2)
+            lon = -79.413383 + 0.001 * math.cos(t / 2)
 
             vehicle_status_full = aplink_vehicle_status_full()
             vehicle_status_full.pitch = 10 * math.sin(t / 2)
@@ -159,31 +184,25 @@ class Radio(QObject):
             vehicle_status_full.yaw = 10 * math.sin(t / 2)
             vehicle_status_full.alt = 15 + 10 * math.sin(t / 2)
             vehicle_status_full.spd = 15 + 10 * math.sin(t / 2)
-            vehicle_status_full.lat = 43.878960 + 0.001 * math.sin(t / 2)
-            vehicle_status_full.lon = -79.413383 + 0.001 * math.cos(t / 2)
+            vehicle_status_full.lat = lat
+            vehicle_status_full.lon = lon
             vehicle_status_full.current_waypoint = 1
+            vehicle_status_full.mode_id = MODE_ID.TAKEOFF
             self.vehicle_status_full_signal.emit(vehicle_status_full)
 
-            time.sleep(0.02)        
-    
-    def save_params(self, params):
-        json_data = [
-            {"name": param.name, "value": param.value, "type": param.type} 
-            for param in params
-        ]
+            gps_raw = aplink_gps_raw()
+            gps_raw.lat = lat
+            gps_raw.lon = lon
+            gps_raw.fix = True
+            gps_raw.sats = random.randint(9,12)
+            self.gps_raw_signal.emit(gps_raw)
 
-        f = open("resources/last_params.json", 'w')
-        json.dump(json_data, f, indent=4)
+            power = aplink_power()
+            power.batt_volt = 12.67
+            power.batt_curr = 11.4
+            power.batt_used = 607
+            self.power_signal.emit(power)
 
-        print("Last params saved")
-    
-    def save_last_flightplan(self):
-        json_data = [
-            {"lat": wp.lat, "lon": wp.lon, "alt": wp.alt} 
-            for wp in self.waypoints
-        ]
+            self.rx_byte_rate_signal.emit(random.randint(900, 1500))
 
-        f = open("resources/last_flightplan.json", "w")
-        json.dump(json_data, f, indent=4)
-
-        print("Last flight plan saved")
+            time.sleep(0.03)

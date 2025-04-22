@@ -3,8 +3,14 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from utils.utils import *
 import math
+from typing import List
+from radio import *
+
+NO_WAYPOINT_HOVERED = 10000
 
 class MapView(QGraphicsView):
+    clicked_signal = pyqtSignal(int, int)
+
     MIN_ZOOM = 1
     MAX_ZOOM = 19
     TILE_SIZE = 256  # Size of tiles in pixels
@@ -21,7 +27,7 @@ class MapView(QGraphicsView):
         self.setScene(self.scene)
 
         # Initialize map and plane state variables
-        self.accept_radius = 0  # Radius for waypoint acceptance
+        self.accept_radius = 10  # Radius for waypoint acceptance
         self.plane_lat = 0  # Plane's current latitude
         self.plane_lon = 0  # Plane's current longitude
         self.plane_hdg = 0  # Plane's current heading
@@ -29,15 +35,29 @@ class MapView(QGraphicsView):
         self.map_lat = 0  # Map's center latitude
         self.map_lon = 0  # Map's center longitude
         self.zoom = 1  # Current zoom level
-        self.waypoints = []  # List of waypoints
+        self.waypoints: List[Waypoint] = []  # List of waypoints
         self.tile_cache = {}  # Cache for loaded tiles to improve performance
         self.waypoint_radius = 20
         self.plane_pos_history = []
+        self.history_max_len = 300
+        self.hovered_waypoint = NO_WAYPOINT_HOVERED
+    
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.clicked_signal.emit(event.pos().x(), event.pos().y())
     
     def set_plane_coords(self, lat, lon):
         self.plane_lat = lat
         self.plane_lon = lon
         self.plane_pos_history.append([lat, lon])
+        if len(self.plane_pos_history) > self.history_max_len:
+            self.plane_pos_history.pop(0)
+    
+    def set_waypoints(self, waypoints: List[Waypoint]):
+        self.waypoints = waypoints
+        if self.map_lat == 0:  # If the map is not yet centered
+            self.map_lat = waypoints[0].lat
+            self.map_lon = waypoints[0].lon
 
     def render(self):
         """Render the map, waypoints, acceptance radius, and plane arrow."""
@@ -51,32 +71,6 @@ class MapView(QGraphicsView):
     def wheelEvent(self, event):
         """Ignore wheel events to disable scrolling."""
         event.ignore()
-
-    def keyPressEvent(self, event):
-        """Handle key press events for map navigation and zooming."""
-        movement_pixels = 100  # Move by 100 pixels per key press
-        movement_meters = self.pixels_to_meters(movement_pixels, self.map_lat)
-
-        # Convert movement in meters to degrees
-        lat_increment = movement_meters / 111320  # 1° latitude ≈ 111.32 km
-        lon_increment = movement_meters / (111320 * math.cos(math.radians(self.map_lat)))  # Adjust for longitude
-
-        if event.key() == Qt.Key_Left:
-            self.map_lon -= lon_increment
-        elif event.key() == Qt.Key_Right:
-            self.map_lon += lon_increment
-        elif event.key() == Qt.Key_Up:
-            self.map_lat += lat_increment
-        elif event.key() == Qt.Key_Down:
-            self.map_lat -= lat_increment
-        elif event.key() == Qt.Key_Equal:  # Zoom in
-            if self.zoom < self.MAX_ZOOM:
-                self.zoom += 1
-        elif event.key() == Qt.Key_Minus:  # Zoom out
-            if self.zoom > self.MIN_ZOOM:
-                self.zoom -= 1
-
-        self.render()  # Redraw the map after changes
 
     def draw_tiles(self):
         """Draw map tiles based on the current zoom level and map center."""
@@ -160,12 +154,16 @@ class MapView(QGraphicsView):
                 s = "H" if i == 0 else "L" if i == len(self.waypoints) - 1 else str(i)
                 radius = self.waypoint_radius
                 brush = QBrush(Qt.black)
+                pen = QPen(Qt.magenta, 5)
+                if self.hovered_waypoint == i:
+                    brush = QBrush(QColor(139, 0, 139))
                 if self.plane_current_wp == i:
-                    brush = QBrush(QColor(139, 0, 139))  # Highlight current waypoint
+                    brush = QBrush(Qt.magenta)
+                    # pen = QPen(Qt.white, 5)
                     # radius = 30
                 circle = QGraphicsEllipseItem(QRectF(-radius, -radius, 2 * radius, 2 * radius))
                 circle.setBrush(brush)
-                circle.setPen(QPen(Qt.magenta, 5))
+                circle.setPen(pen)
                 circle.setPos(QPointF(point[0], point[1]))  # Convert tuple to QPointF
                 self.scene.addItem(circle)
 
@@ -175,6 +173,26 @@ class MapView(QGraphicsView):
                 text.setDefaultTextColor(Qt.white)
                 text.setPos(point[0] - text.boundingRect().width() / 2, point[1] - text.boundingRect().height() / 2)
                 self.scene.addItem(text)
+
+    def mouseMoveEvent(self, event):
+        """Handle mouse move events to detect waypoint hovering."""
+        pos = event.pos()
+        scene_pos = self.mapToScene(pos)
+        
+        # Check if mouse is over any waypoint
+        for i, wp in enumerate(self.waypoints):
+            wp_x, wp_y = self.lat_lon_to_map_coords(wp.lat, wp.lon)
+            distance = math.sqrt((scene_pos.x() - wp_x)**2 + (scene_pos.y() - wp_y)**2)
+            
+            if distance <= self.waypoint_radius:
+                self.hovered_waypoint = i
+                self.draw_waypoints()
+                return
+        
+        self.hovered_waypoint = NO_WAYPOINT_HOVERED
+        self.draw_waypoints()
+
+        super().mouseMoveEvent(event)
 
     def draw_arrow(self):
         """Draw the plane's arrow at its current position and heading."""

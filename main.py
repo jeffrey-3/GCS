@@ -10,14 +10,39 @@ from instruments.flight_display import FlightDisplay
 from utils.utils import *
 from radio import Radio
 
+# Spend time on bigger tasks first not this nickpick
+
+# Laggy after running for long time because path
+
+# Look at alt setpoint for flare instead of altitude?
+
+# In the case it overshoots runway on approach, it will keep extrapolating the altitude downwards from glideslope so its fine
+
+# You don't need deselect button if you have drag and drop
+# When you click outside waypoint it deselects it, when you drag and drop it moves it
+
+# What happens if GCS accidentally closed? A button to load params from vehicle in that case, actually no, as soon as you press connect button it automatically requests from vehicle
+
+# Altitude graph cut off at the bottom
+
+# Only scale based on width, not height, because height is just to make everything fit pretend lik height is fixed
+
+# BUTTONS INSTEAD OF ARROW KEYS FOR PANNING MAP BECAUSE TOO FINICKY
+# - actually its fine, just remove form in download map tiles 
+# - or use buttons for planner, but no buttons for flight display (because only zoom needed, no pan)
+# - nah too finicky, buttons for everything
+
+# EKF uses NED internally but publishes north east and altitude (up)
+# Global frame is lat/lon/alt
+# Nevermind, if you use NED for everything instead of both NED and alt then you don't have to worry about it
+
 # circle to show acceptance radius 
 
 # Put connect button on top bar not its own page so I can see flight display while connecting. If I go to connect page, I can't see flight display anymore.
 
 # Scale font size based on window size
 
-# Add more signals to radio and more aplink messages
-# Then you can test the other instruments like raw
+# Force takeoff waypoint to 0 alt
 
 # 1. Figure out how to make aplink python lib cleaner
 # 2. add more signals
@@ -25,32 +50,21 @@ from radio import Radio
 
 # Top bar using qhboxlayout with buttons
 
-# Negative on pfd scales
-
-# Clickable map is simpler code wise becuase you can just store waypoints in a single module, write this in GCS docs
-# Buttons and planner both in same planner.py file so its easy to transfer between
-
 # PFD red areas
 
 # exe
 
-# point on altitude graph that shows where plane is, calculate based on cross track error
+# Logger
 
-# Altitude graph
-# Move logic from plan map to planner
+# point on altitude graph that shows where plane is, calculate based on cross track error
 
 # modern theme
 
 # Maybe interpolate speed setpoints so it doesn't pitch up voilently immediately
 
-# if you change first waypoint, then center lat/lon will be off.... maybe use EKF center is better
-# Just prevent changing waypoint before the current waypoint in flight?
-# But what happens if you load waypoints, ekf initialize, then you change takeoff point agian before flight, it will take time to converge...
-# Or just re-converge every time you load new waypoints 
-# Or send lat/lon instead of float for position estimate
-
 # Flight software look at velocity estimate to see if converged (actually doesn't matter, user can just make sure before starting)
 
+# Log file replay
 
 
 class MainView(QMainWindow):

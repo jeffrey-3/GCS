@@ -2,10 +2,14 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import time
+from radio import *
 
 class StateView(QWidget):
-    def __init__(self):
+    def __init__(self, radio: Radio):
         super().__init__()
+
+        self.radio = radio
+        self.radio.vehicle_status_full_signal.connect(self.update_vehicle_status_full)
 
         self.layout = QHBoxLayout()
         self.setLayout(self.layout)
@@ -22,30 +26,28 @@ class StateView(QWidget):
 
         self.start_time = None
     
-    def update(self, mode_id):
+    def update_vehicle_status_full(self, vehicle_status: aplink_vehicle_status_full):
         if not self.start_time:
             self.start_time = time.time()
 
-        if mode_id == 0:
+        if vehicle_status.mode_id == MODE_ID.CONFIG:
             state = "CONFIG"
-        elif mode_id == 1:
+        elif vehicle_status.mode_id == MODE_ID.STARTUP:
             state = "STARTUP"
-        elif mode_id == 2:
+        elif vehicle_status.mode_id == MODE_ID.TAKEOFF:
             state = "TAKEOFF"
-        elif mode_id == 3:
+        elif vehicle_status.mode_id == MODE_ID.MISSION:
             state = "MISSION"
-        elif mode_id == 4:
+        elif vehicle_status.mode_id == MODE_ID.LAND:
             state = "LAND"
-        elif mode_id == 5:
+        elif vehicle_status.mode_id == MODE_ID.FLARE:
             state = "FLARE"
-        elif mode_id == 6:
-            state = "CONTACT"
-        elif mode_id == 7:
+        elif vehicle_status.mode_id == MODE_ID.MANUAL:
             state = "DIRECT"
-        elif mode_id == 8:
+        elif vehicle_status.mode_id == MODE_ID.FBW:
             state = "STAB"
         else:
-            state = f"ERR: {mode_id}"
+            state = f"ERR: {vehicle_status.mode_id}"
         
         elapsed_time = time.time() - self.start_time
         elapsed_hours = int(elapsed_time // 3600)

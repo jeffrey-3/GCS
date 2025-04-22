@@ -60,10 +60,7 @@ class FlightDisplay(QWidget):
 
     def waypoints_updated(self, waypoints: List[Waypoint]):
         self.alt_graph.set_waypoints(waypoints)
-
-        self.map.waypoints = waypoints
-        self.map.map_lat = self.waypoints[0].lat
-        self.map.map_lon = self.waypoints[0].lon
+        self.map.set_waypoints(waypoints)
         self.map.render()
     
     def add_left_widgets(self):
@@ -77,11 +74,11 @@ class FlightDisplay(QWidget):
         container.setLayout(self.left_sub_layout)
         self.vsplitter.addWidget(container)
 
-        self.left_sub_layout.addWidget(StateView())
+        self.left_sub_layout.addWidget(StateView(self.radio))
 
         self.tabs = QTabWidget()
         self.tabs.setFont(self.tabs_font)
-        self.tabs.addTab(DataView(), "Quick")
+        self.tabs.addTab(DataView(self.radio), "Quick")
         self.tabs.addTab(RawView(self.radio), "Raw")
         self.left_sub_layout.addWidget(self.tabs)
 

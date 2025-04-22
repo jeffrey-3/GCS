@@ -1,4 +1,5 @@
 import pyqtgraph as pg
+from PyQt5.QtCore import *
 from PyQt5.QtGui import QColor, QFont
 from utils.utils import calculate_displacement_meters
 import math
@@ -39,10 +40,10 @@ class AltitudeGraph(pg.PlotWidget):
                                                         self.waypoints[0].lon)
             dist = math.sqrt((wp_pos[0] - prev_wp_pos[0])**2 + (wp_pos[1] - prev_wp_pos[1])**2)
             x.append(x[i - 1] + dist)
-        y = [-wp.alt for wp in self.waypoints]
+        y = [wp.alt for wp in self.waypoints]
         brush_color = [QColor("black")] * len(x)
-        if self.current_waypoint_index:
-            brush_color[self.current_waypoint_index] = QColor(139, 0, 139)
+        if self.current_waypoint_index and self.current_waypoint_index < len(self.waypoints):
+            brush_color[self.current_waypoint_index] = QColor(Qt.magenta)
         self.plot(x, 
                 y,
                 pen=pg.mkPen('magenta', width=5), 
