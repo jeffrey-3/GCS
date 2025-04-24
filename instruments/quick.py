@@ -42,7 +42,18 @@ class DataView(QWidget):
     def render(self):
         for row in range(len(self.names)):
             for col in range(len(self.names[0])):
-                self.layout.itemAtPosition(row, col).widget().setText(
-                    f"<div style='font-size: 50px;'>{self.names[row][col]}</div>"
-                    f"<div style='font-size: 100px; font-weight: bold;'>{self.values[row][col]}</div>"
+                label = self.layout.itemAtPosition(row, col).widget()
+                w = self.height()
+                small_font_size = int(0.1 * w)
+                large_font_size = int(0.2 * w)
+                
+                label.setText(
+                    f"<div align='center'>"
+                    f"<span style='font-size:{small_font_size}px;'>{self.names[row][col]}</span><br>"
+                    f"<b><span style='font-size:{large_font_size}px;'>{self.values[row][col]}</span></b>"
+                    f"</div>"
                 )
+
+    
+    def resizeEvent(self, event):
+        self.render()

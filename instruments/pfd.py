@@ -9,8 +9,8 @@ from aplink.aplink_messages import *
 
 
 class PFDView(QWidget):
-    FONT_SIZE_LARGE = 0.02
-    FONT_SIZE_SMALL = 0.015
+    FONT_SIZE_LARGE = 0.04
+    FONT_SIZE_SMALL = 0.03
 
     # Colors
     SKY_COLOR = QColor("#0079b4")
@@ -20,11 +20,11 @@ class PFDView(QWidget):
     YELLOW = QColor("#f6d210")
 
     # Wings
-    WINGS_CENTER_SQUARE_SIZE = 12
-    WINGS_WIDTH = 8
+    WINGS_CENTER_SQUARE_SIZE = 0.015
+    WINGS_WIDTH = 0.01
     WINGS_BORDER_WIDTH = 2
     WINGS_LENGTH = 0.1
-    WINGS_HEIGHT = 20
+    WINGS_HEIGHT = 0.02
     WINGS_STARTING = 0.3
 
     # Horizon
@@ -42,8 +42,8 @@ class PFDView(QWidget):
 
     # Altitude and speed scale
     SCALE_WIDTH = 0.18
-    TICK_LENGTH = 30
-    TICK_THICKNESS = 4
+    TICK_LENGTH = 0.03
+    TICK_THICKNESS = 2
     BOX_HEIGHT = 0.07
 
     # Speed scale
@@ -117,7 +117,7 @@ class PFDView(QWidget):
         # Box
         painter.setPen(QPen(self.LIGHT_GREY, self.TICK_THICKNESS, Qt.SolidLine))
         painter.setBrush(QBrush(self.DARK_GREY, Qt.SolidPattern))
-        self.draw_rect_center(painter, self.size().width()/2, self.size().height() - self.BOX_HEIGHT * self.size().width()/2, self.SCALE_WIDTH * self.size().width(), self.BOX_HEIGHT * self.size().width())
+        self.draw_rect_center(painter, self.size().width()/2, self.size().height() - self.BOX_HEIGHT * self.size().width()/2 - self.TICK_THICKNESS / 2, self.SCALE_WIDTH * self.size().width(), self.BOX_HEIGHT * self.size().width())
 
         painter.setPen(QPen(QColor("white"), 1, Qt.SolidLine))
         painter.drawText(QRectF(self.size().width()/2 - self.SCALE_WIDTH * self.size().width()/2, self.size().height() - self.BOX_HEIGHT * self.size().width(), self.SCALE_WIDTH * self.size().width(), self.BOX_HEIGHT * self.size().width()), Qt.AlignCenter, "{:.1f}".format(heading))
@@ -179,7 +179,7 @@ class PFDView(QWidget):
         painter.drawLine(QPointF(x, self.size().height()/2 - self.FLIGHT_DIRECTOR_LENGTH - pitch_setpoint),
                               QPointF(x, self.size().height()/2 + self.FLIGHT_DIRECTOR_LENGTH - pitch_setpoint))
 
-    def draw_speed_scale(self, painter, speed, setpoint):
+    def draw_speed_scale(self, painter: QPainter, speed, setpoint):
         painter.setPen(QPen(QColor("black"), 1, Qt.SolidLine))
         painter.setBrush(QBrush(QColor("black"), Qt.SolidPattern))
         painter.setOpacity(0.3)
@@ -187,19 +187,31 @@ class PFDView(QWidget):
         # Grey container
         painter.drawRect(QRectF(0, 0, self.SCALE_WIDTH * self.size().width(), self.size().height()))
 
+        painter.setPen(QPen(Qt.NoPen))
+        painter.setBrush(QBrush(Qt.red))
+        painter.setOpacity(0.2)
+        painter.drawRect(0, self.size().height() / 2 + self.speed_to_px(speed), self.SCALE_WIDTH * self.size().width(), self.size().height())
+        painter.setOpacity(1)
+
         # Tick marks
         painter.setOpacity(1.0)
         painter.setPen(QPen(self.LIGHT_GREY, self.TICK_THICKNESS, Qt.SolidLine))
         for i in range(-self.SPEED_SCALE_N_TICKS, self.SPEED_SCALE_N_TICKS):
             offset = i * self.SPEED_SCALE_SPACING * self.size().width() - self.size().height()/2
             x1 = 0
-            x2 = self.TICK_LENGTH
+            x2 = self.TICK_LENGTH * self.size().width()
             y = -offset + self.speed_to_px(speed)
 
             painter.drawLine(QPointF(x1, y), QPointF(x2, y))
 
-            margin = 30
-            painter.drawText(QRectF(self.TICK_LENGTH + margin, y - self.SPEED_SCALE_SPACING * self.size().width()/2, self.SCALE_WIDTH * self.size().width() - self.TICK_LENGTH, self.SPEED_SCALE_SPACING * self.size().width()), Qt.AlignVCenter | Qt.AlignLeft, str(i * self.SPEED_SCALE_INTERVALS))
+            mark = i * self.SPEED_SCALE_INTERVALS
+            if abs(mark) < 10:
+                mark = f"\u00A0{mark}"
+            painter.drawText(QRectF(self.TICK_LENGTH * self.size().width(), 
+                             y - self.SPEED_SCALE_SPACING * self.size().width() / 2, 
+                             self.SCALE_WIDTH * self.size().width() - self.TICK_LENGTH * self.size().width(), 
+                             self.SPEED_SCALE_SPACING * self.size().width()), 
+                             Qt.AlignCenter, str(mark))
 
         painter.drawLine(QPointF(self.TICK_THICKNESS/2, 0),
                               QPointF(self.TICK_THICKNESS/2, self.size().height()))  # Scale
@@ -234,22 +246,40 @@ class PFDView(QWidget):
         # Grey container
         painter.drawRect(QRectF(self.size().width() - self.SCALE_WIDTH * self.size().width(), 0, self.size().width(), self.size().height()))
 
+        painter.setPen(QPen(Qt.NoPen))
+        painter.setBrush(QBrush(Qt.red))
+        painter.setOpacity(0.2)
+        painter.drawRect(self.size().width() - self.SCALE_WIDTH * self.size().width(), 
+                         self.size().height() / 2 + self.altitude_to_px(altitude), 
+                         self.SCALE_WIDTH * self.size().width(), 
+                         self.size().height())
+        painter.setOpacity(1)
+
         # Tick marks
         painter.setOpacity(1.0)
         painter.setPen(QPen(self.LIGHT_GREY, self.TICK_THICKNESS, Qt.SolidLine))
         for i in range(-self.ALTITUDE_SCALE_N_TICKS, self.ALTITUDE_SCALE_N_TICKS):
             offset = i * self.ALTITUDE_SCALE_SPACING * self.size().width() - self.size().height()/2
             x1 = self.size().width()
-            x2 = self.size().width() - self.TICK_LENGTH
+            x2 = self.size().width() - self.TICK_LENGTH * self.size().width()
             y = -offset + self.altitude_to_px(altitude)
 
             painter.drawLine(QPointF(x1, y), QPointF(x2, y))
 
-            margin = 30
+            mark = int(i * self.ALTITUDE_SCALE_INTERVALS)
+            if abs(mark) < 10:
+                mark = f"\u00A0{mark}"
+            painter.drawText(QRectF(self.TICK_LENGTH * self.size().width(), 
+                             y - self.SPEED_SCALE_SPACING * self.size().width() / 2, 
+                             self.SCALE_WIDTH * self.size().width() - self.TICK_LENGTH * self.size().width(), 
+                             self.SPEED_SCALE_SPACING * self.size().width()), 
+                             Qt.AlignCenter, str(mark))
             painter.drawText(QRectF(self.size().width() - self.SCALE_WIDTH * self.size().width(),
                                         y - self.ALTITUDE_SCALE_SPACING * self.size().width()/2,
-                                        self.SCALE_WIDTH * self.size().width() - self.TICK_LENGTH - margin,
-                                        self.ALTITUDE_SCALE_SPACING * self.size().width()), Qt.AlignVCenter | Qt.AlignRight, str(int(i * self.ALTITUDE_SCALE_INTERVALS)))
+                                        self.SCALE_WIDTH * self.size().width() - self.TICK_LENGTH * self.size().width(),
+                                        self.ALTITUDE_SCALE_SPACING * self.size().width()), 
+                                        Qt.AlignCenter, 
+                                        str(mark))
 
         painter.drawLine(QPointF(self.size().width() - self.TICK_THICKNESS/2, 0), 
                               QPointF(self.size().width() - self.TICK_THICKNESS/2, self.size().height()))  # Scale
@@ -274,7 +304,11 @@ class PFDView(QWidget):
         painter.setBrush(QBrush(self.DARK_GREY, Qt.SolidPattern))
         self.draw_rect_center(painter, self.size().width() - self.SCALE_WIDTH * self.size().width()/2, self.size().height()/2, self.SCALE_WIDTH * self.size().width() - self.TICK_THICKNESS, self.BOX_HEIGHT * self.size().width())
         painter.setPen(QPen(QColor("white"), 1, Qt.SolidLine))
-        painter.drawText(QRectF(self.size().width() - self.SCALE_WIDTH * self.size().width(), self.size().height()/2 - self.BOX_HEIGHT * self.size().width()/2, self.SCALE_WIDTH * self.size().width(), self.BOX_HEIGHT * self.size().width()), Qt.AlignCenter, "{:.1f}".format(altitude))
+        painter.drawText(QRectF(self.size().width() - self.SCALE_WIDTH * self.size().width(), 
+                                self.size().height()/2 - self.BOX_HEIGHT * self.size().width()/2, 
+                                self.SCALE_WIDTH * self.size().width(), 
+                                self.BOX_HEIGHT * self.size().width()), 
+                                Qt.AlignCenter, "{:.1f}".format(altitude))
 
     def draw_rect_center(self, painter, x, y, width, height):
         painter.drawRect(QRectF(x - width/2, y - height/2, width, height))
@@ -328,11 +362,11 @@ class PFDView(QWidget):
         wing_points = [
             QPointF(self.WINGS_STARTING * self.size().width(), self.size().height()/2),
             QPointF(self.WINGS_STARTING * self.size().width() + self.WINGS_LENGTH * self.size().width(), self.size().height()/2),
-            QPointF(self.WINGS_STARTING * self.size().width() + self.WINGS_LENGTH * self.size().width(), self.size().height()/2 + self.WINGS_HEIGHT)
+            QPointF(self.WINGS_STARTING * self.size().width() + self.WINGS_LENGTH * self.size().width(), self.size().height()/2 + self.WINGS_HEIGHT * self.size().width())
         ]
 
         # Left wing
-        painter.setPen(QPen(self.YELLOW, self.WINGS_WIDTH + self.WINGS_BORDER_WIDTH*2, Qt.SolidLine))
+        painter.setPen(QPen(self.YELLOW, self.WINGS_WIDTH * self.size().width() + self.WINGS_BORDER_WIDTH*2, Qt.SolidLine))
         painter.drawLine(
             wing_points[0].x(),
             wing_points[0].y(),
@@ -345,7 +379,7 @@ class PFDView(QWidget):
             wing_points[2].x(),
             wing_points[2].y(),
         )
-        painter.setPen(QPen(QColor("black"), self.WINGS_WIDTH, Qt.SolidLine))
+        painter.setPen(QPen(QColor("black"), self.WINGS_WIDTH * self.size().width(), Qt.SolidLine))
         painter.drawLine(
             wing_points[0].x(),
             wing_points[0].y(),
@@ -364,7 +398,7 @@ class PFDView(QWidget):
             point.setX(-(point.x() - self.size().width() / 2) + self.size().width() / 2)
 
         # Right wing
-        painter.setPen(QPen(self.YELLOW, self.WINGS_WIDTH + self.WINGS_BORDER_WIDTH*2, Qt.SolidLine))
+        painter.setPen(QPen(self.YELLOW, self.WINGS_WIDTH * self.size().width() + self.WINGS_BORDER_WIDTH*2, Qt.SolidLine))
         painter.drawLine(
             wing_points[0].x(),
             wing_points[0].y(),
@@ -377,7 +411,7 @@ class PFDView(QWidget):
             wing_points[2].x(),
             wing_points[2].y(),
         )
-        painter.setPen(QPen(QColor("black"), self.WINGS_WIDTH, Qt.SolidLine))
+        painter.setPen(QPen(QColor("black"), self.WINGS_WIDTH * self.size().width(), Qt.SolidLine))
         painter.drawLine(
             wing_points[0].x(),
             wing_points[0].y(),
@@ -392,10 +426,19 @@ class PFDView(QWidget):
         )
 
         # Center Square
-        painter.setPen(QPen(self.YELLOW, self.WINGS_CENTER_SQUARE_SIZE + self.WINGS_BORDER_WIDTH*2)) # must be even
-        painter.drawLine(self.size().width()/2, self.size().height()/2, self.size().width()/2, self.size().height()/2)
-        painter.setPen(QPen(QColor("black"), self.WINGS_CENTER_SQUARE_SIZE))
-        painter.drawLine(self.size().width()/2, self.size().height()/2, self.size().width()/2, self.size().height()/2)
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(QBrush(self.YELLOW)) # must be even
+        self.draw_rect_center(painter, 
+                              self.size().width() / 2, 
+                              self.size().height() / 2, 
+                              self.WINGS_CENTER_SQUARE_SIZE * self.size().width() + self.WINGS_BORDER_WIDTH*2,
+                              self.WINGS_CENTER_SQUARE_SIZE * self.size().width() + self.WINGS_BORDER_WIDTH*2)
+        painter.setBrush(QBrush(QColor("black")))
+        self.draw_rect_center(painter, 
+                              self.size().width() / 2, 
+                              self.size().height() / 2, 
+                              self.WINGS_CENTER_SQUARE_SIZE * self.size().width(),
+                              self.WINGS_CENTER_SQUARE_SIZE * self.size().width())
 
     def draw_background(self, painter, roll, pitch):
         # Set up transformations

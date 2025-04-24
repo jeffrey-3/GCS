@@ -25,23 +25,23 @@ class FlightDisplay(QWidget):
         self.tabs_font.setPointSize(12)
 
         self.main_layout = QHBoxLayout()
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.main_layout)
 
         self.splitter = QSplitter(Qt.Horizontal)
         self.main_layout.addWidget(self.splitter)
 
         self.left_layout = QVBoxLayout()
+        self.left_layout.setContentsMargins(0, 0, 0, 0)
         left_container = QWidget()
         left_container.setLayout(self.left_layout)
         self.splitter.addWidget(left_container)
 
         self.right_layout = QGridLayout()
+        self.right_layout.setContentsMargins(0, 0, 0, 0)
         right_container = QWidget()
         right_container.setLayout(self.right_layout)
         self.splitter.addWidget(right_container)
-
-        self.splitter.setStretchFactor(0, 1) 
-        self.splitter.setStretchFactor(1, 2) 
 
         self.add_left_widgets()
         self.add_right_widgets()
@@ -70,6 +70,7 @@ class FlightDisplay(QWidget):
         self.vsplitter.addWidget(PFDView(self.radio))
 
         self.left_sub_layout = QVBoxLayout()
+        self.left_sub_layout.setContentsMargins(0, 0, 0, 0)
         container = QWidget()
         container.setLayout(self.left_sub_layout)
         self.vsplitter.addWidget(container)
@@ -84,7 +85,7 @@ class FlightDisplay(QWidget):
 
         self.vsplitter.setStretchFactor(0, 10) 
         self.vsplitter.setStretchFactor(1, 1)
-        self.vsplitter.setHandleWidth(0)  # Hide the resize handle
+        # self.vsplitter.setHandleWidth(0)  # Hide the resize handle
 
     def add_right_widgets(self):
         self.map = MapView()

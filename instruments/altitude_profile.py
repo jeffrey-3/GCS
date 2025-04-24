@@ -1,6 +1,7 @@
 import pyqtgraph as pg
 from PyQt5.QtCore import *
-from PyQt5.QtGui import QColor, QFont
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
 from utils.utils import calculate_displacement_meters
 import math
 
@@ -69,3 +70,12 @@ class AltitudeGraph(pg.PlotWidget):
     def keyPressEvent(self, event):
         # Propagate the key press event to the parent widget
         self.parent().keyPressEvent(event)
+
+# Test
+if __name__ == "__main__":
+    app = QApplication([])
+
+    alt_graph = AltitudeGraph()
+    alt_graph.show()
+
+    app.exec()

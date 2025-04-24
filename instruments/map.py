@@ -14,6 +14,7 @@ class MapView(QGraphicsView):
     MIN_ZOOM = 1
     MAX_ZOOM = 19
     TILE_SIZE = 256  # Size of tiles in pixels
+    ARROW_SIZE = 0.05
 
     def __init__(self):
         super().__init__()
@@ -197,9 +198,9 @@ class MapView(QGraphicsView):
     def draw_arrow(self):
         """Draw the plane's arrow at its current position and heading."""
         x, y = self.lat_lon_to_map_coords(self.plane_lat, self.plane_lon)
-        arrow_pixmap = QPixmap("resources/arrow.png").scaled(50, 50)
+        arrow_pixmap = QPixmap("resources/arrow.png").scaled(self.ARROW_SIZE * self.size().width(), self.ARROW_SIZE * self.size().width())
         arrow = self.scene.addPixmap(arrow_pixmap)
-        arrow.setPos(x - 25, y - 25)  # Center the arrow
+        arrow.setPos(x - self.ARROW_SIZE * self.size().width() / 2, y - self.ARROW_SIZE * self.size().width() / 2)  # Center the arrow
         arrow.setTransformOriginPoint(arrow_pixmap.width() / 2, arrow_pixmap.height() / 2)
         arrow.setRotation(self.plane_hdg + 180)  # Rotate the arrow to match heading
 

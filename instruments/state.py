@@ -8,6 +8,8 @@ class StateView(QWidget):
     def __init__(self, radio: Radio):
         super().__init__()
 
+        self.setStyleSheet("font-size: 40pt; font-weight: bold;")
+
         self.radio = radio
         self.radio.vehicle_status_full_signal.connect(self.update_vehicle_status_full)
 
@@ -15,16 +17,18 @@ class StateView(QWidget):
         self.setLayout(self.layout)
 
         self.state_label = QLabel("---")
-        self.state_label.setStyleSheet("font-size: 40pt; font-weight: bold;")
+        self.state_label
         self.state_label.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.state_label)
 
         self.time_label = QLabel("---")
-        self.time_label.setStyleSheet("font-size: 40pt; font-weight: bold;")
         self.time_label.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.time_label)
 
         self.start_time = None
+    
+    def resizeEvent(self, event):
+        self.setStyleSheet(f"font-size: {0.06 * self.size().width()}pt; font-weight: bold;")
     
     def update_vehicle_status_full(self, vehicle_status: aplink_vehicle_status_full):
         if not self.start_time:

@@ -9,6 +9,9 @@ import array
 import random
 from dataclasses import dataclass
 
+# Single poll function with signals for everything, then functions that listen for handling acks
+# This way, you don't have to toggle poll on and off
+
 @dataclass
 class Waypoint:
     lat: float
@@ -43,8 +46,7 @@ class Radio(QObject):
         self.prev_rate_calc_time = time.time() # Time of last byte rate calculation
         self.waypoints: List[Waypoint] = []
         self.params: List[Parameter] = []
-        self.polling_active = True
-        self.poll_thread = None
+        self.get_telemetry_active = True
     
     def start(self, port):
         self.port = port
@@ -54,22 +56,48 @@ class Radio(QObject):
         else:
             try:
                 self.ser = serial.Serial(port, 115200, timeout=1)
-                self.poll_thread = threading.Thread(target=self.poll_loop, daemon=True)
-                self.poll_thread.start()
+                threading.Thread(target=self.get_telemetry, daemon=True).start()
             except:
                 return False
 
         return True
 
-    def poll_loop(self):
-        while self.polling_active:
-            self.poll()
-            time.sleep(0.001)  # Small sleep to prevent CPU overload
-                
+    def get_telemetry(self):
+        while True:
+            if self.get_telemetry_active:
+                byte = self.ser.read(1)
+                result = self.aplink.parse_byte(byte)
+                if result is not None:
+                    payload, msg_id = result
+
+                    self.bytes_read_sum += APLink.calculate_packet_size(len(payload))
+                    elapsed = time.time() - self.prev_rate_calc_time
+                    if elapsed >= self.RATE_CALC_DT:
+                        self.rx_byte_rate_signal.emit(self.bytes_read_sum / elapsed)
+                        self.bytes_read_sum = 0
+                        self.prev_rate_calc_time = time.time()
+
+                    if msg_id == aplink_cal_sensors.msg_id:
+                        cal_sensors = aplink_cal_sensors()
+                        cal_sensors.unpack(payload)
+                        self.cal_sensors_signal.emit(vehicle_status)
+                    elif msg_id == aplink_vehicle_status_full.msg_id:
+                        vehicle_status = aplink_vehicle_status_full()
+                        vehicle_status.unpack(payload)
+                        self.vfr_hud_signal.emit(vehicle_status)
+
+                    return payload, msg_id
+            else:
+                time.sleep(0.01)
+                    
     def send_waypoints(self, waypoints: List[Waypoint]):
         self.waypoints = waypoints
+
+        if self.port == "Testing":
+            self.waypoints_updated.emit(waypoints)
+            return True
         
-        self.polling_active = False  # Stop background polling
+        self.get_telemetry_active = False  # Stop background polling
 
         # Notify plane that GCS is about to send waypoints
         self.ser.write(aplink_waypoints_count().pack(len(self.waypoints)))
@@ -91,31 +119,34 @@ class Radio(QObject):
                     self.ser.write(aplink_waypoint().pack(
                         self.waypoints[request_waypoint.index].lat * 1e7, 
                         self.waypoints[request_waypoint.index].lon * 1e7, 
-                        self.waypoints[request_waypoint.index].alt)
-                    )
+                        self.waypoints[request_waypoint.index].alt
+                    ))
 
                     start_time = time.time() # Reset timeout
                 elif msg_id == aplink_waypoints_ack.msg_id:
                     # Exit when plane uses waypoints_count to confirm all waypoints have been loaded
                     ack = aplink_waypoints_ack()
                     ack.unpack(payload)
-                    self.polling_active = True  # Resume background polling
+                    self.get_telemetry_active = True  # Resume background polling
                     self.waypoints_updated.emit(waypoints)
                     return True
-        self.polling_active = True  # Resume background polling if timeout
-        
+                
+        self.get_telemetry_active = True  # Resume background polling if timeout
         return False
         
     # Send param_set and plane replies with the same param_set to confirm
     def send_params(self, params: List[Parameter]):
         self.params = params
 
-        self.polling_active = False  # Stop background polling
+        if self.port == "Testing":
+            self.params_updated.emit(self.params)
+            return True
+
+        self.get_telemetry_active = False  # Stop background polling
         for param in self.params:
             param_name = param.name.ljust(16, '\x00')[16:].encode('utf-8') # Convert to 16-byte char array
             param_value = None
             param_type = None
-
             if param.name == "f":
                 param_type = PARAM_TYPE.FLOAT
                 param_value = array.array('B', struct.pack('=f', param.value))
@@ -135,42 +166,13 @@ class Radio(QObject):
                     if msg_id == aplink_param_set.msg_id:
                         start_time = time.time()
                         continue
-        self.polling_active = True  # Resume background polling
-        return False
+        
+            return False
 
+        self.get_telemetry_active = True  # Resume background polling
         self.params_updated.emit(self.params)
-
         return True
 
-    def poll(self):
-        if not self.ser or not self.polling_active:
-            return None, None
-
-        while self.ser.in_waiting > 0:
-            byte = self.ser.read(1)
-            result = self.aplink.parse_byte(byte)
-            if result is not None:
-                payload, msg_id = result
-
-                self.bytes_read_sum += APLink.calculate_packet_size(len(payload))
-                elapsed = time.time() - self.prev_rate_calc_time
-                if elapsed >= self.RATE_CALC_DT:
-                    self.rx_byte_rate_signal.emit(self.bytes_read_sum / elapsed)
-                    self.bytes_read_sum = 0
-                    self.prev_rate_calc_time = time.time()
-
-                if msg_id == aplink_cal_sensors.msg_id:
-                    cal_sensors = aplink_cal_sensors()
-                    cal_sensors.unpack(payload)
-                    self.cal_sensors_signal.emit(vehicle_status)
-                elif msg_id == aplink_vehicle_status_full.msg_id:
-                    vehicle_status = aplink_vehicle_status_full()
-                    vehicle_status.unpack(payload)
-                    self.vfr_hud_signal.emit(vehicle_status)
-
-                return payload, msg_id
-        return None, None
-    
     def testing_thread(self):
         while True:
             t = time.time()
@@ -205,4 +207,4 @@ class Radio(QObject):
 
             self.rx_byte_rate_signal.emit(random.randint(900, 1500))
 
-            time.sleep(0.03)
+            time.sleep(0.02)

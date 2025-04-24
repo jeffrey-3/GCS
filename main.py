@@ -10,6 +10,10 @@ from instruments.flight_display import FlightDisplay
 from utils.utils import *
 from radio import Radio
 
+# NUMBER ONE PRIORITY GETTING RADIO TO WORK
+
+# Slow performance on higher res screen
+
 # Spend time on bigger tasks first not this nickpick
 
 # Laggy after running for long time because path
@@ -40,9 +44,11 @@ from radio import Radio
 
 # Put connect button on top bar not its own page so I can see flight display while connecting. If I go to connect page, I can't see flight display anymore.
 
-# Scale font size based on window size
-
 # Force takeoff waypoint to 0 alt
+
+# Quick view fix to 4 characters so it doesnt go smaller than it can
+
+# Move state view to quick
 
 # 1. Figure out how to make aplink python lib cleaner
 # 2. add more signals
@@ -66,6 +72,9 @@ from radio import Radio
 
 # Log file replay
 
+# Scale state, raw, and quick view text size with width
+
+# Pyqt6 has dark mode
 
 class MainView(QMainWindow):
     def __init__(self):
@@ -89,17 +98,15 @@ class MainView(QMainWindow):
         self.setCentralWidget(main_tabs)
         
 if __name__ == "__main__":
-    # if hasattr(Qt, 'AA_EnableHighDpiScaling'):
-    #     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-    # if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
-    #     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
 
     app = QApplication([])
 
-    qdarktheme.setup_theme(corner_shape="sharp")
-    qdarktheme.load_palette()
+    # qdarktheme.setup_theme(corner_shape="sharp")
+    # qdarktheme.load_palette() # This causes bottom of altitude profile to be cut off, need to fix
 
     main_window = MainView()
-    main_window.showFullScreen()
+    # main_window.showFullScreen()
+    main_window.showMaximized()
 
     app.exec()
