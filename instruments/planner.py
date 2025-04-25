@@ -8,7 +8,7 @@ from utils.tile_downloader import TileDownloader
 import threading
 import datetime
 import json
-from radio import *
+from gcs import *
 
 
 # Squeeze left buttons panel to smallest width
@@ -108,9 +108,9 @@ class EditDialog(QDialog):
         return self.lat_input.value(), self.lon_input.value(), self.alt_input.value()
 
 class PlanView(QWidget):
-    def __init__(self, radio: Radio):
+    def __init__(self, gcs: GCS):
         super().__init__()
-        self.radio = radio
+        self.gcs = gcs
         self.waypoints = self.process_flightplan_file("resources/last_flightplan.json")
         self.adding_waypoint = False
         self.selected_waypoint = NO_WAYPOINT_SELECTED
@@ -231,7 +231,7 @@ class PlanView(QWidget):
             QMessageBox.about(self, "Error", "No waypoint selected")
     
     def upload(self):
-        if (self.radio.send_waypoints(self.waypoints)):
+        if (self.gcs.send_waypoints(self.waypoints)):
             self.deselect()
             self.save_last_flightplan()
             QMessageBox.about(self, "Status", "Successfully uploaded waypoints")

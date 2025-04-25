@@ -8,7 +8,7 @@ from instruments.calibration import Calibration
 from instruments.connect import ConnectView
 from instruments.flight_display import FlightDisplay
 from utils.utils import *
-from radio import Radio
+from gcs import GCS
 
 # NUMBER ONE PRIORITY GETTING RADIO TO WORK
 
@@ -43,6 +43,8 @@ from radio import Radio
 # circle to show acceptance radius 
 
 # Put connect button on top bar not its own page so I can see flight display while connecting. If I go to connect page, I can't see flight display anymore.
+
+# Vsplitter for altitude profile, on larger screens can be smaller
 
 # Force takeoff waypoint to 0 alt
 
@@ -79,7 +81,7 @@ from radio import Radio
 class MainView(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.radio = Radio()
+        self.gcs = GCS()
 
         self.setWindowTitle("UAV Ground Control")
 
@@ -88,12 +90,12 @@ class MainView(QMainWindow):
         
         main_tabs = QTabWidget()
         main_tabs.setFont(self.tabs_font)
-        main_tabs.addTab(FlightDisplay(self.radio), "Flight")
-        main_tabs.addTab(PlanView(self.radio), "Waypoints")
-        main_tabs.addTab(ParamsView(self.radio), "Parameters")
+        main_tabs.addTab(FlightDisplay(self.gcs), "Flight")
+        main_tabs.addTab(PlanView(self.gcs), "Waypoints")
+        main_tabs.addTab(ParamsView(self.gcs), "Parameters")
         main_tabs.addTab(Calibration(), "Calibration")
         main_tabs.addTab(QWidget(), "Parse Logs")
-        main_tabs.addTab(ConnectView(self.radio), "Connect")
+        main_tabs.addTab(ConnectView(self.gcs), "Connect")
         
         self.setCentralWidget(main_tabs)
         
@@ -102,11 +104,36 @@ if __name__ == "__main__":
 
     app = QApplication([])
 
+    # Force the style to be the same on all OSs:
+    app.setStyle("Fusion")
+
+    dark_palette = QPalette()
+    dark_palette.setColor(QPalette.Window, QColor(53, 53, 53))
+    dark_palette.setColor(QPalette.WindowText, Qt.white)
+    dark_palette.setColor(QPalette.Base, QColor(35, 35, 35))
+    dark_palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
+    dark_palette.setColor(QPalette.ToolTipBase, QColor(25, 25, 25))
+    dark_palette.setColor(QPalette.ToolTipText, Qt.white)
+    dark_palette.setColor(QPalette.Text, Qt.white)
+    dark_palette.setColor(QPalette.Button, QColor(53, 53, 53))
+    dark_palette.setColor(QPalette.ButtonText, Qt.white)
+    dark_palette.setColor(QPalette.BrightText, Qt.red)
+    dark_palette.setColor(QPalette.Link, QColor(42, 130, 218))
+    dark_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
+    dark_palette.setColor(QPalette.HighlightedText, QColor(35, 35, 35))
+    dark_palette.setColor(QPalette.Active, QPalette.Button, QColor(53, 53, 53))
+    dark_palette.setColor(QPalette.Disabled, QPalette.ButtonText, Qt.darkGray)
+    dark_palette.setColor(QPalette.Disabled, QPalette.WindowText, Qt.darkGray)
+    dark_palette.setColor(QPalette.Disabled, QPalette.Text, Qt.darkGray)
+    dark_palette.setColor(QPalette.Disabled, QPalette.Light, QColor(53, 53, 53))
+    QApplication.setPalette(dark_palette)
+    
     # qdarktheme.setup_theme(corner_shape="sharp")
     # qdarktheme.load_palette() # This causes bottom of altitude profile to be cut off, need to fix
 
     main_window = MainView()
     # main_window.showFullScreen()
-    main_window.showMaximized()
+    # main_window.showMaximized()
+    main_window.show()
 
     app.exec()

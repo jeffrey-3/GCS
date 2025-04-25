@@ -4,7 +4,7 @@ from PyQt5.QtCore import *
 from utils.utils import *
 import math
 from typing import List
-from radio import *
+from gcs import *
 
 NO_WAYPOINT_HOVERED = 10000
 

@@ -2,16 +2,16 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import time
-from radio import *
+from gcs import *
 
 class StateView(QWidget):
-    def __init__(self, radio: Radio):
+    def __init__(self, gcs: GCS):
         super().__init__()
 
         self.setStyleSheet("font-size: 40pt; font-weight: bold;")
 
-        self.radio = radio
-        self.radio.vehicle_status_full_signal.connect(self.update_vehicle_status_full)
+        self.gcs = gcs
+        self.gcs.vehicle_status_full_signal.connect(self.update_vehicle_status_full)
 
         self.layout = QHBoxLayout()
         self.setLayout(self.layout)

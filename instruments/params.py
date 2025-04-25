@@ -1,12 +1,12 @@
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 import json
-from radio import *
+from gcs import *
 
 class ParamsView(QWidget):
-    def __init__(self, radio: Radio):
+    def __init__(self, gcs: GCS):
         super().__init__()
-        self.radio = radio
+        self.gcs = gcs
 
         self.params = []
 
@@ -40,7 +40,7 @@ class ParamsView(QWidget):
         if file_path:
             if self.process_params_file(file_path):
                 self.file_path_label.setText("File Directory: " + file_path)
-                self.radio.upload_params(self.params)
+                self.gcs.upload_params(self.params)
             else:
                 QMessageBox.information(self, "Error", "File format incorrect")
     
@@ -56,7 +56,7 @@ class ParamsView(QWidget):
     
     def upload_to_vehicle(self):
         if len(self.params) > 0:
-            self.radio.send_params(self.params)
+            self.gcs.send_params(self.params)
             self.save_params(self.params)
             QMessageBox.about(self, "Status", "Successfully uploaded parameters")
         else:

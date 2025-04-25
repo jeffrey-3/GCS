@@ -1,14 +1,14 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-from radio import *
+from gcs import *
 
 class DataView(QWidget):
-    def __init__(self, radio: Radio):
+    def __init__(self, gcs: GCS):
         super().__init__()
-        self.radio = radio
-        self.radio.gps_raw_signal.connect(self.update_gps_raw)
-        self.radio.rx_byte_rate_signal.connect(self.update_byte_rate)
-        self.radio.power_signal.connect(self.update_power)
+        self.gcs = gcs
+        self.gcs.gps_raw_signal.connect(self.update_gps_raw)
+        self.gcs.rx_byte_rate_signal.connect(self.update_byte_rate)
+        self.gcs.power_signal.connect(self.update_power)
 
         self.layout = QGridLayout()
         self.setLayout(self.layout)

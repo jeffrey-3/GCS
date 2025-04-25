@@ -1,10 +1,11 @@
 import serial.tools.list_ports
 from PyQt5.QtWidgets import *
+from gcs import GCS
 
 class ConnectView(QWidget):
-    def __init__(self, radio):
+    def __init__(self, gcs: GCS):
         super().__init__()
-        self.radio = radio
+        self.gcs = gcs
         self.create()
         self.refresh_button.clicked.connect(self.refresh_com_ports)
         self.connect_button.clicked.connect(self.connect)
@@ -50,7 +51,7 @@ class ConnectView(QWidget):
         self.com_port_dropdown.addItem("Testing")
     
     def connect(self):
-        if self.radio.start(self.com_port_dropdown.currentText()):
+        if self.gcs.start(self.com_port_dropdown.currentText()):
             QMessageBox.information(self, "Status", "Connected")
         else:
             QMessageBox.information(self, "Error", "Failed to connect")

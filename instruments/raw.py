@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from radio import *
+from gcs import *
 
 class RawTable(QWidget):
     def __init__(self, names, units):
@@ -25,11 +25,11 @@ class RawTable(QWidget):
             self.layout.itemAtPosition(row, 1).widget().setText(values[row])
 
 class RawView(QScrollArea):
-    def __init__(self, radio: Radio):
+    def __init__(self, gcs: GCS):
         super().__init__()
 
-        self.radio = radio
-        self.radio.vehicle_status_full_signal.connect(self.vehicle_status_full_update)
+        self.gcs = gcs
+        self.gcs.vehicle_status_full_signal.connect(self.vehicle_status_full_update)
 
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)

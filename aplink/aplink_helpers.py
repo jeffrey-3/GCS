@@ -48,17 +48,22 @@ class APLink:
         return None
     
     def unpack(self, packet: bytes) -> Optional[Tuple[bytes, int]]:
+        print("Unpack aplink")
+
         """Unpack a complete APLink packet"""
         if len(packet) < self.HEADER_LEN + self.FOOTER_LEN:
+            print("aplink len too small")
             return None
             
         if packet[0] != self.START_BYTE:
+            print("aplink start byte wrong")
             return None
             
         payload_len = packet[1]
         msg_id = packet[2]
         
         if len(packet) != self.HEADER_LEN + payload_len + self.FOOTER_LEN:
+            print("aplink len small 2")
             return None
         
         # Verify checksum (excludes START_BYTE)
@@ -67,9 +72,12 @@ class APLink:
         received_crc = (packet[-2] << 8) | packet[-1]
         
         if expected_crc != received_crc:
+            print("aplink checksum wrong")
+            print(expected_crc, received_crc)
             return None
             
         payload = packet[self.HEADER_LEN:self.HEADER_LEN+payload_len]
+        print("aplink all good")
         return (payload, msg_id)
     
     def pack(self, payload: bytes, msg_id: int) -> bytes:
@@ -80,7 +88,7 @@ class APLink:
         header = struct.pack('=BBB', self.START_BYTE, len(payload), msg_id)
         body = header[1:] + payload  # For checksum calculation
         checksum = self._crc16(body)
-        footer = struct.pack('=H', checksum)
+        footer = struct.pack('>H', checksum)
         
         return header + payload + footer
 

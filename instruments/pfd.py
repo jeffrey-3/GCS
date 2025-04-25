@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from aplink.aplink_messages import *
+from gcs import GCS
 
 # Fixed aspect ratio and then use width as size variable to scale 
 
@@ -63,10 +64,10 @@ class PFDView(QWidget):
 
     # Heading scale
     HDG_SCALE_SPACING = 0.2
-    HDG_SCALE_LENGTH = 30
+    HDG_SCALE_LENGTH = 0.03
     HDG_TICK_INTERVAL = 22.5  # Degrees per tick on scale
 
-    def __init__(self, radio):
+    def __init__(self, gcs: GCS):
         super().__init__()
 
         self.roll = 0
@@ -75,7 +76,7 @@ class PFDView(QWidget):
         self.altitude = 0
         self.airspeed = 0
 
-        radio.vehicle_status_full_signal.connect(self.update_vehicle_status_full)
+        gcs.vehicle_status_full_signal.connect(self.update_vehicle_status_full)
 
     def update_vehicle_status_full(self, vehicle_status: aplink_vehicle_status_full):
         self.roll = vehicle_status.roll
@@ -127,7 +128,7 @@ class PFDView(QWidget):
         painter.setPen(QPen(QColor("white"), self.TICK_THICKNESS, Qt.SolidLine))
         for i in range(num_ticks):
             x = i * self.HDG_SCALE_SPACING * self.size().width() + x_offset
-            painter.drawLine(QPointF(x, self.size().height()), QPointF(x, self.size().height() - self.HDG_SCALE_LENGTH))
+            painter.drawLine(QPointF(x, self.size().height()), QPointF(x, self.size().height() - self.HDG_SCALE_LENGTH * self.size().width()))
 
             val = i * self.HDG_TICK_INTERVAL
             s = ""
@@ -147,7 +148,7 @@ class PFDView(QWidget):
                 s = "W"
             elif val == 315:
                 s = "NW"
-            painter.drawText(QRectF(x, self.size().height() - self.BOX_HEIGHT * self.size().width(), self.HDG_SCALE_SPACING * self.size().width() / 1.5, self.BOX_HEIGHT * self.size().width()), Qt.AlignCenter, s)
+            painter.drawText(QRectF(x, self.size().height() - self.BOX_HEIGHT * self.size().width(), self.HDG_SCALE_SPACING * self.size().width() / 1.5, self.BOX_HEIGHT * self.size().width()), Qt.AlignVCenter | Qt.AlignLeft, s)
 
     def pitch_deg_to_px(self, deg):
         return deg * (self.PITCH_SCALE_SPACING * self.size().width() / self.PITCH_SCALE_INTERVALS)
