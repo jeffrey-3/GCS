@@ -111,6 +111,7 @@ class PlanView(QWidget):
     def __init__(self, gcs: GCS):
         super().__init__()
         self.gcs = gcs
+        self.acc_rad = 0
         self.waypoints = self.process_flightplan_file("resources/last_flightplan.json")
         self.adding_waypoint = False
         self.selected_waypoint = NO_WAYPOINT_SELECTED
@@ -128,6 +129,8 @@ class PlanView(QWidget):
         self.map.clicked_signal.connect(self.clicked)
         self.importButton.clicked.connect(self.import_file)
         self.exportButton.clicked.connect(self.export_file)
+        self.gcs.params_updated.connect(self.update_params)
+        self.gcs.waypoints_updated.connect(self.waypoints_updated)
 
         self.update_map()
 
@@ -171,6 +174,9 @@ class PlanView(QWidget):
         buttonLayout.addWidget(self.deselect_btn, 1, 1)
         buttonLayout.addWidget(self.importButton, 2, 0)
         buttonLayout.addWidget(self.exportButton, 2, 1)
+
+        for i in range(buttonLayout.count()):
+            buttonLayout.itemAt(i).widget().setFocusPolicy(Qt.NoFocus)
     
     def setup_right_panel(self):
         self.map = MapView()
@@ -181,7 +187,7 @@ class PlanView(QWidget):
 
         self.right_layout.addWidget(self.map)
         self.right_layout.addWidget(self.alt_profile)
-        self.right_layout.setRowStretch(0, 3) 
+        self.right_layout.setRowStretch(0, 4) 
         self.right_layout.setRowStretch(1, 1)
 
         self.upload_btn = QPushButton("Upload To Vehicle")
@@ -214,7 +220,14 @@ class PlanView(QWidget):
         self.map.plane_current_wp = self.selected_waypoint
         self.map.render()
         self.alt_profile.set_waypoints(self.waypoints)
-        self.calculate_landing_stats(self.map.waypoints, 0)
+        self.calculate_landing_stats(self.map.waypoints, self.acc_rad)
+    
+    def update_params(self, params: List[Parameter]):
+        for param in params:
+            if param.name == "NAV_ACC_RAD":
+                self.acc_rad = param.value
+                self.map.accept_radius = self.acc_rad
+                self.update_map()
 
     def edit_btn_press(self):
         if self.selected_waypoint != NO_WAYPOINT_SELECTED:
@@ -231,12 +244,9 @@ class PlanView(QWidget):
             QMessageBox.about(self, "Error", "No waypoint selected")
     
     def upload(self):
-        if (self.gcs.send_waypoints(self.waypoints)):
-            self.deselect()
-            self.save_last_flightplan()
-            QMessageBox.about(self, "Status", "Successfully uploaded waypoints")
-        else:
-            QMessageBox.about(self, "Error", "Upload failed")
+        self.gcs.send_waypoints(self.waypoints)
+        self.deselect()
+        self.save_last_flightplan()
     
     def remove_btn_press(self):
         if len(self.waypoints) > 3:
@@ -280,6 +290,9 @@ class PlanView(QWidget):
         self.download_btn.clicked.connect(self.download_tiles)
         self.download_btn.setStyleSheet("font-size: 12pt;")
         layout.addRow(self.download_btn)
+
+        for i in range(layout.count()):
+            layout.itemAt(i).widget().setFocusPolicy(Qt.NoFocus)
 
         self.left_layout.addLayout(layout)
 
@@ -366,3 +379,6 @@ class PlanView(QWidget):
         json.dump(json_data, f, indent=4)
 
         print("Last flight plan saved")
+    
+    def waypoints_updated(self, waypoints):
+        QMessageBox.about(self, "Status", "Successfully uploaded waypoints")

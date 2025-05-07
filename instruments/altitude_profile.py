@@ -8,6 +8,7 @@ import math
 class AltitudeGraph(pg.PlotWidget):
     def __init__(self):
         super().__init__()
+        self.setFocusPolicy(Qt.NoFocus)
         self.setMenuEnabled(False)
         self.hideButtons()
         self.showGrid(x=True, y=True)
@@ -51,7 +52,7 @@ class AltitudeGraph(pg.PlotWidget):
                 fillLevel=0, 
                 brush=QColor(255, 0, 255, 50), 
                 symbol="o", 
-                symbolSize=40, 
+                symbolSize=30, 
                 symbolBrush=brush_color, 
                 symbolPen=pg.mkPen(QColor("magenta"), width=5))
 

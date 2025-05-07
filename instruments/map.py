@@ -14,7 +14,7 @@ class MapView(QGraphicsView):
     MIN_ZOOM = 1
     MAX_ZOOM = 19
     TILE_SIZE = 256  # Size of tiles in pixels
-    ARROW_SIZE = 0.05
+    ARROW_SIZE = 0.03
 
     def __init__(self):
         super().__init__()
@@ -28,7 +28,7 @@ class MapView(QGraphicsView):
         self.setScene(self.scene)
 
         # Initialize map and plane state variables
-        self.accept_radius = 10  # Radius for waypoint acceptance
+        self.accept_radius = 0  # Radius for waypoint acceptance
         self.plane_lat = 0  # Plane's current latitude
         self.plane_lon = 0  # Plane's current longitude
         self.plane_hdg = 0  # Plane's current heading
@@ -38,7 +38,7 @@ class MapView(QGraphicsView):
         self.zoom = 1  # Current zoom level
         self.waypoints: List[Waypoint] = []  # List of waypoints
         self.tile_cache = {}  # Cache for loaded tiles to improve performance
-        self.waypoint_radius = 20
+        self.waypoint_radius = 15
         self.plane_pos_history = []
         self.history_max_len = 300
         self.hovered_waypoint = NO_WAYPOINT_HOVERED
@@ -99,7 +99,7 @@ class MapView(QGraphicsView):
                     pixmap = self.tile_cache[tile_key]
                 else:
                     pixmap = QPixmap(f"tiles/{self.zoom}/{tile_x}/{tile_y}.png")
-                    pixmap = QPixmap.fromImage(pixmap.toImage().convertToFormat(QImage.Format_Grayscale8))
+                    # pixmap = QPixmap.fromImage(pixmap.toImage().convertToFormat(QImage.Format_Grayscale8))
 
                     if not pixmap.isNull():
                         pixmap = pixmap.scaled(self.TILE_SIZE, self.TILE_SIZE)
@@ -132,6 +132,8 @@ class MapView(QGraphicsView):
             polyline_item = QGraphicsPathItem(path)
             polyline_item.setPen(QPen(Qt.red, 3))
             self.scene.addItem(polyline_item)
+
+            
 
     def draw_waypoints(self):
         """Draw waypoints and connecting lines."""
@@ -194,13 +196,24 @@ class MapView(QGraphicsView):
         self.draw_waypoints()
 
         super().mouseMoveEvent(event)
+    
+    def get_window_size(self):
+        """Returns the size of the main window containing this view."""
+        parent = self.parent()
+        while parent is not None and not isinstance(parent, QMainWindow):
+            parent = parent.parent()
+        
+        if parent is not None:
+            return parent.size()
+        else:
+            return self.size()
 
     def draw_arrow(self):
         """Draw the plane's arrow at its current position and heading."""
         x, y = self.lat_lon_to_map_coords(self.plane_lat, self.plane_lon)
-        arrow_pixmap = QPixmap("resources/arrow.png").scaled(self.ARROW_SIZE * self.size().width(), self.ARROW_SIZE * self.size().width())
+        arrow_pixmap = QPixmap("resources/arrow.png").scaled(self.ARROW_SIZE * self.get_window_size().width(), self.ARROW_SIZE * self.get_window_size().width())
         arrow = self.scene.addPixmap(arrow_pixmap)
-        arrow.setPos(x - self.ARROW_SIZE * self.size().width() / 2, y - self.ARROW_SIZE * self.size().width() / 2)  # Center the arrow
+        arrow.setPos(x - self.ARROW_SIZE * self.get_window_size().width() / 2, y - self.ARROW_SIZE * self.get_window_size().width() / 2)  # Center the arrow
         arrow.setTransformOriginPoint(arrow_pixmap.width() / 2, arrow_pixmap.height() / 2)
         arrow.setRotation(self.plane_hdg + 180)  # Rotate the arrow to match heading
 

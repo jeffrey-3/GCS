@@ -12,7 +12,7 @@ class APLink:
     MAX_PACKET_LEN = MAX_PAYLOAD_LEN + HEADER_LEN + FOOTER_LEN
     
     def __init__(self):
-        self._crc16 = crcmod.mkCrcFun(0x18005, initCrc=0xFFFF, xorOut=0x0000)
+        self._crc16 = crcmod.mkCrcFun(0x18005, initCrc=0xFFFF, xorOut=0x0000, rev=False)
         self._reset_parser()
     
     def _reset_parser(self):

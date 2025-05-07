@@ -2,23 +2,23 @@
 # Auto-generated Python
 
 import struct
-from enum import Enum
+from enum import IntEnum
 from aplink.aplink_helpers import APLink
                     
 
-class PARAM_TYPE(Enum):
+class PARAM_TYPE(IntEnum):
     
     INT32 = 0,
     
     FLOAT = 1,
     
 
-class COMMAND_ID(Enum):
+class COMMAND_ID(IntEnum):
     
     CALIBRATE = 0,
     
 
-class MODE_ID(Enum):
+class MODE_ID(IntEnum):
     
     CONFIG = 0,
     
@@ -71,9 +71,6 @@ class aplink_vehicle_status_full:
     
     
     def unpack(self, payload: bytes):
-        if len(payload) != struct.calcsize(self.format):
-            return False
-                    
         self.roll, self.roll_sp, self.pitch, self.pitch_sp, self.yaw, self.alt, self.alt_sp, self.spd, self.spd_sp, self.lat, self.lon, self.current_waypoint, self.mode_id, = struct.unpack("=hhhhhhhhhiiBB", payload)
                     
         return True
@@ -106,9 +103,6 @@ class aplink_cal_sensors:
     
     
     def unpack(self, payload: bytes):
-        if len(payload) != struct.calcsize(self.format):
-            return False
-                    
         self.gx, self.gy, self.gz, self.ax, self.ay, self.az, self.mx, self.my, self.mz, = struct.unpack("=fffffffff", payload)
                     
         return True
@@ -129,9 +123,6 @@ class aplink_waypoint:
     
     
     def unpack(self, payload: bytes):
-        if len(payload) != struct.calcsize(self.format):
-            return False
-                    
         self.lat, self.lon, self.alt, = struct.unpack("=iif", payload)
                     
         return True
@@ -154,9 +145,6 @@ class aplink_gps_raw:
     
     
     def unpack(self, payload: bytes):
-        if len(payload) != struct.calcsize(self.format):
-            return False
-                    
         self.lat, self.lon, self.sats, self.fix, = struct.unpack("=iiB?", payload)
                     
         return True
@@ -199,9 +187,6 @@ class aplink_hitl_sensors:
     
     
     def unpack(self, payload: bytes):
-        if len(payload) != struct.calcsize(self.format):
-            return False
-                    
         self.imu_ax, self.imu_ay, self.imu_az, self.imu_gx, self.imu_gy, self.imu_gz, self.mag_x, self.mag_y, self.mag_z, self.baro_asl, self.gps_lat, self.gps_lon, self.of_x, self.of_y, = struct.unpack("=ffffffffffiihh", payload)
                     
         return True
@@ -222,9 +207,6 @@ class aplink_hitl_commands:
     
     
     def unpack(self, payload: bytes):
-        if len(payload) != struct.calcsize(self.format):
-            return False
-                    
         self.rud_pwm, self.ele_pwm, self.thr_pwm, = struct.unpack("=HHH", payload)
                     
         return True
@@ -241,9 +223,6 @@ class aplink_waypoints_count:
     
     
     def unpack(self, payload: bytes):
-        if len(payload) != struct.calcsize(self.format):
-            return False
-                    
         self.num_waypoints, = struct.unpack("=B", payload)
                     
         return True
@@ -260,9 +239,6 @@ class aplink_request_waypoint:
     
     
     def unpack(self, payload: bytes):
-        if len(payload) != struct.calcsize(self.format):
-            return False
-                    
         self.index, = struct.unpack("=B", payload)
                     
         return True
@@ -279,9 +255,6 @@ class aplink_waypoints_ack:
     
     
     def unpack(self, payload: bytes):
-        if len(payload) != struct.calcsize(self.format):
-            return False
-                    
         self.success, = struct.unpack("=?", payload)
                     
         return True
@@ -298,9 +271,6 @@ class aplink_time_since_epoch:
     
     
     def unpack(self, payload: bytes):
-        if len(payload) != struct.calcsize(self.format):
-            return False
-                    
         self.microseconds, = struct.unpack("=Q", payload)
                     
         return True
@@ -323,9 +293,6 @@ class aplink_rc_input:
     
     
     def unpack(self, payload: bytes):
-        if len(payload) != struct.calcsize(self.format):
-            return False
-                    
         self.ail, self.ele, self.rud, self.thr, = struct.unpack("=bbbb", payload)
                     
         return True
@@ -348,9 +315,6 @@ class aplink_power:
     
     
     def unpack(self, payload: bytes):
-        if len(payload) != struct.calcsize(self.format):
-            return False
-                    
         self.batt_volt, self.batt_curr, self.batt_used, self.ap_curr, = struct.unpack("=HHHH", payload)
                     
         return True
@@ -371,15 +335,12 @@ class aplink_param_set:
     
     
     def unpack(self, payload: bytes):
-        if len(payload) != struct.calcsize(self.format):
-            return False
-                    
-        self.name, self.value, self.type, = struct.unpack("=ccccccccccccccccBBBBB", payload)
+        self.name, self.value, self.type, = struct.unpack("=BBBBBBBBBBBBBBBBBBBBB", payload)
                     
         return True
     
     def pack(self, name, value, type):
-        payload = struct.pack("=ccccccccccccccccBBBBB", *name, *value, type)
+        payload = struct.pack("=BBBBBBBBBBBBBBBBBBBBB", *name, *value, type)
         return APLink().pack(payload, self.msg_id)
         
 class aplink_command:
@@ -390,9 +351,6 @@ class aplink_command:
     
     
     def unpack(self, payload: bytes):
-        if len(payload) != struct.calcsize(self.format):
-            return False
-                    
         self.command_id, = struct.unpack("=B", payload)
                     
         return True

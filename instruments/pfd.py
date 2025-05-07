@@ -181,7 +181,7 @@ class PFDView(QWidget):
                               QPointF(x, self.size().height()/2 + self.FLIGHT_DIRECTOR_LENGTH - pitch_setpoint))
 
     def draw_speed_scale(self, painter: QPainter, speed, setpoint):
-        painter.setPen(QPen(QColor("black"), 1, Qt.SolidLine))
+        painter.setPen(Qt.NoPen)
         painter.setBrush(QBrush(QColor("black"), Qt.SolidPattern))
         painter.setOpacity(0.3)
 
@@ -240,7 +240,7 @@ class PFDView(QWidget):
         painter.drawText(QRectF(0, self.size().height()/2 - self.BOX_HEIGHT * self.size().width()/2, self.SCALE_WIDTH * self.size().width(), self.BOX_HEIGHT * self.size().width()), Qt.AlignCenter, "{:.1f}".format(speed))
 
     def draw_altitude_scale(self, painter, altitude, setpoint):
-        painter.setPen(QPen(QColor("black"), 1, Qt.SolidLine))
+        painter.setPen(Qt.NoPen)
         painter.setBrush(QBrush(QColor("black"), Qt.SolidPattern))
         painter.setOpacity(0.3)
 

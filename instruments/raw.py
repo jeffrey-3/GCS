@@ -28,6 +28,8 @@ class RawView(QScrollArea):
     def __init__(self, gcs: GCS):
         super().__init__()
 
+        self.setFocusPolicy(Qt.NoFocus)
+
         self.gcs = gcs
         self.gcs.vehicle_status_full_signal.connect(self.vehicle_status_full_update)
 

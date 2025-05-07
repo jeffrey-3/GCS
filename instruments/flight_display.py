@@ -19,6 +19,7 @@ class FlightDisplay(QWidget):
 
         self.gcs = gcs
         self.gcs.waypoints_updated.connect(self.waypoints_updated)
+        self.gcs.params_updated.connect(self.update_params)
         self.gcs.vehicle_status_full_signal.connect(self.vehicle_status_full_update)
 
         self.tabs_font = QFont()
@@ -37,11 +38,8 @@ class FlightDisplay(QWidget):
         left_container.setLayout(self.left_layout)
         self.splitter.addWidget(left_container)
 
-        self.right_layout = QGridLayout()
-        self.right_layout.setContentsMargins(0, 0, 0, 0)
-        right_container = QWidget()
-        right_container.setLayout(self.right_layout)
-        self.splitter.addWidget(right_container)
+        self.right_layout = QSplitter(Qt.Vertical)
+        self.splitter.addWidget(self.right_layout)
 
         self.add_left_widgets()
         self.add_right_widgets()
@@ -63,6 +61,13 @@ class FlightDisplay(QWidget):
         self.map.set_waypoints(waypoints)
         self.map.render()
     
+    def update_params(self, params: List[Parameter]):
+        for param in params:
+            if param.name == "NAV_ACC_RAD":
+                self.acc_rad = param.value
+                self.map.accept_radius = self.acc_rad
+                self.update_map()
+    
     def add_left_widgets(self):
         self.vsplitter = QSplitter(Qt.Vertical)
         self.left_layout.addWidget(self.vsplitter)
@@ -78,6 +83,7 @@ class FlightDisplay(QWidget):
         self.left_sub_layout.addWidget(StateView(self.gcs))
 
         self.tabs = QTabWidget()
+        self.tabs.setFocusPolicy(Qt.NoFocus)
         self.tabs.setFont(self.tabs_font)
         self.tabs.addTab(DataView(self.gcs), "Quick")
         self.tabs.addTab(RawView(self.gcs), "Raw")
@@ -85,13 +91,12 @@ class FlightDisplay(QWidget):
 
         self.vsplitter.setStretchFactor(0, 1) 
         self.vsplitter.setStretchFactor(1, 1)
-        # self.vsplitter.setHandleWidth(0)  # Hide the resize handle
 
     def add_right_widgets(self):
         self.map = MapView()
-        self.right_layout.addWidget(self.map, 0, 0, 1, 1)
-        self.right_layout.setRowStretch(0, 3) 
+        self.right_layout.addWidget(self.map)
         
         self.alt_graph = AltitudeGraph()
-        self.right_layout.addWidget(self.alt_graph, 1, 0, 1, 1)
-        self.right_layout.setRowStretch(1, 1)
+        self.right_layout.addWidget(self.alt_graph)
+
+        self.right_layout.setSizes([5, 1])

@@ -34,13 +34,14 @@ class ParamsView(QWidget):
         self.params_btn.clicked.connect(self.open_params)
         self.upload_btn.clicked.connect(self.upload_to_vehicle)
         self.process_params_file("resources/last_params.json")
+
+        self.gcs.params_updated.connect(self.params_updated)
     
     def open_params(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Open File", "", "All Files (*)")
         if file_path:
             if self.process_params_file(file_path):
                 self.file_path_label.setText("File Directory: " + file_path)
-                self.gcs.upload_params(self.params)
             else:
                 QMessageBox.information(self, "Error", "File format incorrect")
     
@@ -58,7 +59,6 @@ class ParamsView(QWidget):
         if len(self.params) > 0:
             self.gcs.send_params(self.params)
             self.save_params(self.params)
-            QMessageBox.about(self, "Status", "Successfully uploaded parameters")
         else:
             QMessageBox.information(self, "Error", "No parameters set")
     
@@ -72,3 +72,6 @@ class ParamsView(QWidget):
         json.dump(json_data, f, indent=4)
 
         print("Last params saved")
+    
+    def params_updated(self, params):
+        QMessageBox.about(self, "Status", "Successfully uploaded parameters")

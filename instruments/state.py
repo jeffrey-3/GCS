@@ -31,33 +31,35 @@ class StateView(QWidget):
         self.setStyleSheet(f"font-size: {0.06 * self.size().width()}pt; font-weight: bold;")
     
     def update_vehicle_status_full(self, vehicle_status: aplink_vehicle_status_full):
-        if not self.start_time:
-            self.start_time = time.time()
-
         if vehicle_status.mode_id == MODE_ID.CONFIG:
-            state = "CONFIG"
+            state = "CFG"
         elif vehicle_status.mode_id == MODE_ID.STARTUP:
-            state = "STARTUP"
+            state = "ARM"
         elif vehicle_status.mode_id == MODE_ID.TAKEOFF:
-            state = "TAKEOFF"
+            state = "TKO"
         elif vehicle_status.mode_id == MODE_ID.MISSION:
-            state = "MISSION"
+            state = "MIS"
+            if not self.start_time:
+                self.start_time = time.time()
         elif vehicle_status.mode_id == MODE_ID.LAND:
-            state = "LAND"
+            state = "LND"
         elif vehicle_status.mode_id == MODE_ID.FLARE:
-            state = "FLARE"
+            state = "FLR"
         elif vehicle_status.mode_id == MODE_ID.MANUAL:
-            state = "DIRECT"
+            state = "MAN"
         elif vehicle_status.mode_id == MODE_ID.FBW:
-            state = "STAB"
+            state = "FBW"
         else:
-            state = f"ERR: {vehicle_status.mode_id}"
+            state = "ERR"
         
-        elapsed_time = time.time() - self.start_time
-        elapsed_hours = int(elapsed_time // 3600)
-        elapsed_minutes = int((elapsed_time % 3600) // 60)
-        elapsed_seconds = int(elapsed_time % 60)
-        formatted_time = f"{elapsed_hours:02}:{elapsed_minutes:02}:{elapsed_seconds:02}"
+        if self.start_time:
+            elapsed_time = time.time() - self.start_time
+            elapsed_hours = int(elapsed_time // 3600)
+            elapsed_minutes = int((elapsed_time % 3600) // 60)
+            elapsed_seconds = int(elapsed_time % 60)
+            formatted_time = f"{elapsed_hours:02}:{elapsed_minutes:02}:{elapsed_seconds:02}"
+        else:
+            formatted_time = "00:00:00"
         
         self.state_label.setText(state)
         self.time_label.setText(formatted_time)

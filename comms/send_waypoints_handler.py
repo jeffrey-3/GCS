@@ -1,15 +1,12 @@
-from comms.serial_radio import *
+from comms.base_radio import *
 from typing import List
-
-
-# self.ser not defined
 
 class SendWaypointsHandler(QObject):
     finished_signal = pyqtSignal(bool)
 
     TIMEOUT_MS = 1000
 
-    def __init__(self, radio: SerialRadio):
+    def __init__(self, radio: BaseRadio):
         super().__init__()
         self.radio = radio
         self.waypoints: List[Waypoint] = []
@@ -28,7 +25,7 @@ class SendWaypointsHandler(QObject):
         self.radio.transmit(aplink_waypoints_count().pack(len(self.waypoints)))
     
     def _request_waypoint_handler(self, request_waypoint: aplink_request_waypoint):
-        self.radio.write(aplink_waypoint().pack(
+        self.radio.transmit(aplink_waypoint().pack(
             self.waypoints[request_waypoint.index].lat * 1e7, 
             self.waypoints[request_waypoint.index].lon * 1e7, 
             self.waypoints[request_waypoint.index].alt

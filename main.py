@@ -1,7 +1,6 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-import qdarktheme
 from instruments.planner import PlanView
 from instruments.params import ParamsView
 from instruments.calibration import Calibration
@@ -9,6 +8,14 @@ from instruments.connect import ConnectView
 from instruments.flight_display import FlightDisplay
 from utils.utils import *
 from gcs import GCS
+import unreal_stylesheet
+
+# Lines on navigastion display add black outline so theres two colours 
+
+# CAlib ui
+
+# QUICK VIEW IS WHATS CAUSING THE LAG
+# WHEN I GO TO RAW VIEW THERES NO MORE LAG
 
 # NUMBER ONE PRIORITY GETTING RADIO TO WORK
 
@@ -18,18 +25,14 @@ from gcs import GCS
 
 # Laggy after running for long time because path
 
-# Look at alt setpoint for flare instead of altitude?
-
 # In the case it overshoots runway on approach, it will keep extrapolating the altitude downwards from glideslope so its fine
 
 # You don't need deselect button if you have drag and drop
 # When you click outside waypoint it deselects it, when you drag and drop it moves it
 
+# Maybe implement the rate TECS so it only targets descent rate instead of alt. That way avoids the big dip down if it doesn't follow glidesope.
+
 # What happens if GCS accidentally closed? A button to load params from vehicle in that case, actually no, as soon as you press connect button it automatically requests from vehicle
-
-# Altitude graph cut off at the bottom
-
-# Only scale based on width, not height, because height is just to make everything fit pretend lik height is fixed
 
 # BUTTONS INSTEAD OF ARROW KEYS FOR PANNING MAP BECAUSE TOO FINICKY
 # - actually its fine, just remove form in download map tiles 
@@ -40,20 +43,24 @@ from gcs import GCS
 # Global frame is lat/lon/alt
 # Nevermind, if you use NED for everything instead of both NED and alt then you don't have to worry about it
 
-# circle to show acceptance radius 
-
 # Put connect button on top bar not its own page so I can see flight display while connecting. If I go to connect page, I can't see flight display anymore.
 
-# Vsplitter for altitude profile, on larger screens can be smaller
+# Don't calculate landing stats if parameters not loaded (bnecause dont have acc rad yet) and add indicator that params not loaded
+
+# Indicator for adding waypoint
 
 # Force takeoff waypoint to 0 alt
 
+# Like mission planner, in quick view make text smaller if its more digits so it fits in 3x3 grid evenly
+
 # Quick view fix to 4 characters so it doesnt go smaller than it can
+# Actually in reality it wont jitter that much...
+
+# In flight display when not clicked on map the arrow keys don't work
 
 # Move state view to quick
 
 # 1. Figure out how to make aplink python lib cleaner
-# 2. add more signals
 # 4. rename everything
 
 # Top bar using qhboxlayout with buttons
@@ -64,17 +71,15 @@ from gcs import GCS
 
 # Logger
 
-# point on altitude graph that shows where plane is, calculate based on cross track error
-
 # modern theme
 
 # Maybe interpolate speed setpoints so it doesn't pitch up voilently immediately
 
-# Flight software look at velocity estimate to see if converged (actually doesn't matter, user can just make sure before starting)
+# Draw triangle instead of image and then you can use white outline
 
 # Log file replay
 
-# Scale state, raw, and quick view text size with width
+# Scale raw view with width because if its too small
 
 # Pyqt6 has dark mode
 
@@ -89,11 +94,12 @@ class MainView(QMainWindow):
         self.tabs_font.setPointSize(12)
         
         main_tabs = QTabWidget()
+        main_tabs.setFocusPolicy(Qt.NoFocus)
         main_tabs.setFont(self.tabs_font)
         main_tabs.addTab(FlightDisplay(self.gcs), "Flight")
         main_tabs.addTab(PlanView(self.gcs), "Waypoints")
         main_tabs.addTab(ParamsView(self.gcs), "Parameters")
-        main_tabs.addTab(Calibration(), "Calibration")
+        main_tabs.addTab(Calibration(self.gcs), "Calibration")
         main_tabs.addTab(QWidget(), "Parse Logs")
         main_tabs.addTab(ConnectView(self.gcs), "Connect")
         
@@ -104,36 +110,10 @@ if __name__ == "__main__":
 
     app = QApplication([])
 
-    # Force the style to be the same on all OSs:
-    app.setStyle("Fusion")
-
-    dark_palette = QPalette()
-    dark_palette.setColor(QPalette.Window, QColor(53, 53, 53))
-    dark_palette.setColor(QPalette.WindowText, Qt.white)
-    dark_palette.setColor(QPalette.Base, QColor(35, 35, 35))
-    dark_palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
-    dark_palette.setColor(QPalette.ToolTipBase, QColor(25, 25, 25))
-    dark_palette.setColor(QPalette.ToolTipText, Qt.white)
-    dark_palette.setColor(QPalette.Text, Qt.white)
-    dark_palette.setColor(QPalette.Button, QColor(53, 53, 53))
-    dark_palette.setColor(QPalette.ButtonText, Qt.white)
-    dark_palette.setColor(QPalette.BrightText, Qt.red)
-    dark_palette.setColor(QPalette.Link, QColor(42, 130, 218))
-    dark_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
-    dark_palette.setColor(QPalette.HighlightedText, QColor(35, 35, 35))
-    dark_palette.setColor(QPalette.Active, QPalette.Button, QColor(53, 53, 53))
-    dark_palette.setColor(QPalette.Disabled, QPalette.ButtonText, Qt.darkGray)
-    dark_palette.setColor(QPalette.Disabled, QPalette.WindowText, Qt.darkGray)
-    dark_palette.setColor(QPalette.Disabled, QPalette.Text, Qt.darkGray)
-    dark_palette.setColor(QPalette.Disabled, QPalette.Light, QColor(53, 53, 53))
-    QApplication.setPalette(dark_palette)
-    
-    # qdarktheme.setup_theme(corner_shape="sharp")
-    # qdarktheme.load_palette() # This causes bottom of altitude profile to be cut off, need to fix
-
+    unreal_stylesheet.setup()
+        
     main_window = MainView()
     # main_window.showFullScreen()
-    # main_window.showMaximized()
     main_window.show()
 
     app.exec()
